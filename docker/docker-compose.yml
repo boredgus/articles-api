@@ -1,0 +1,28 @@
+version: "2.19"
+
+services:
+  server:
+    container_name: ${API_CONTAINER}
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile.server
+    ports:
+      - 8080:8080
+
+  database:
+    container_name: ${DB_CONTAINER}
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile.db
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_HOST=${API_CONTAINER}
+      - MYSQL_DATABASE=${MYSQL_DB_DATABASE}
+    volumes:
+      - db:/var/lib/mysql
+
+volumes:
+  db:
