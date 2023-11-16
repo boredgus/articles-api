@@ -10,4 +10,5 @@ restart:
 	docker rm articles-api
 	docker rmi $(composeName)-database
 	docker rmi $(composeName)-server
+	docker volume rm $(composeName)_db
 	docker compose -p $(composeName) -f $(composeFile) --env-file .env up

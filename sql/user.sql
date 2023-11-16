@@ -1,19 +1,9 @@
-CREATE TABLE user (
+create table user (
   id int auto_increment,
   o_id varchar(36) unique not null,
   username varchar(100) unique not null,
   pswd varchar(200) not null,
   primary key (id)
-);
-
-drop table user_profile;
-drop table user;
-
-create table user (
-	id int auto_increment,
-    username varchar(255) unique not null,
-	pswd VARCHAR(255) not null,
-	primary key (id)
 );
 
 -- create table user_profile (

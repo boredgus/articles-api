@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"database/sql"
 	"fmt"
+	"time"
 	"user-management/config"
 
 	mysql "github.com/go-sql-driver/mysql"
@@ -46,6 +47,10 @@ func NewMySQLStore() (MySQLStore, error) {
 
 	db.SetMaxOpenConns(5)
 	db.SetMaxIdleConns(5)
+
+	time.Sleep(10 * time.Second)
+	err = db.Ping()
+	logrus.Infof("after ping: %v", err)
 
 	return MySQLStore{db: db}, nil
 }

@@ -20,7 +20,7 @@ func main() {
 		return
 	}
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(10 * time.Second)
 	rows, err := db.Query("select * from user;")
 	if err != nil {
 		logrus.Infof("failed to fetch users: %v", err)
