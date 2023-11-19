@@ -1,7 +1,5 @@
 package controllers
 
 type AppController struct {
-	user UserController
+	User LoginController
 }
-
-func NewAppController()
