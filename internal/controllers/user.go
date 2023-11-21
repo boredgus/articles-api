@@ -34,12 +34,18 @@ func (c Login) Register(ctx Context) error {
 		return err
 	}
 
-	if len(user.Username) == 0 || len(user.Password) == 0 {
-		ctx.JSON(http.StatusBadRequest, ErrorBody{Error: "username and password cannot be empty"})
-		return fmt.Errorf("username or password is empty")
+	if err = user.Validate(); err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorBody{Error: err.Error()})
+		return err
 	}
 
-	user.Password = auth.NewPassword().Hash(user.Password)
+	hashedPswd, err := auth.NewPassword().Hash(user.Password)
+	if err != nil {
+		ctx.NoContent(http.StatusInternalServerError)
+		return err
+	}
+
+	user.Password = hashedPswd
 	err = c.userModel.Create(user)
 	if err == models.UsernameDuplicationErr {
 		ctx.JSON(http.StatusConflict, ErrorBody{Error: "user with such username already exists"})
