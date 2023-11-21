@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/caarlos0/env/v9"
 	"github.com/joho/godotenv"
@@ -25,7 +24,7 @@ func LoadEnvFile(envFilePath string) {
 		return
 	}
 	if err = godotenv.Load(envFilePath); err != nil {
-		log.Infof("failed to load %v file: %v", envFilePath, err)
+		logrus.Fatalf("failed to load %v file: %v", envFilePath, err)
 	}
 }
 
@@ -33,7 +32,7 @@ func GetConfig() config {
 	cfg := config{}
 
 	if err := env.Parse(&cfg); err != nil {
-		log.Error("failed to load env file", err)
+		logrus.Error("failed to load env file", err)
 	}
 	return cfg
 }
