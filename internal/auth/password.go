@@ -10,12 +10,12 @@ func NewPassword() Password {
 
 type Password struct{}
 
-func (p Password) Hash(str string) string {
+func (p Password) Hash(str string) (string, error) {
 	res, err := bcrypt.GenerateFromPassword([]byte(str), bcrypt.DefaultCost)
 	if err != nil {
-		return ""
+		return "", err
 	}
-	return string(res)
+	return string(res), nil
 }
 
 func (p Password) Compare(hash, password string) bool {
