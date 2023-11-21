@@ -11,7 +11,9 @@ import (
 
 func registerRoutes(e *echo.Echo, app controllers.AppController) *echo.Echo {
 	e.GET("/health", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, struct{ message string }{message: "alive"})
+		return c.JSON(http.StatusOK, struct {
+			Message string `json:"message"`
+		}{Message: "alive"})
 	})
 	e.POST("/register", func(c echo.Context) error {
 		return app.User.Register(NewContext(c))
@@ -25,17 +27,17 @@ func registerRoutes(e *echo.Echo, app controllers.AppController) *echo.Echo {
 
 func GetRouter(cntrs controllers.AppController) *echo.Echo {
 	e := echo.New()
-	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-		Format:           "${time_custom} ${method} ${uri} ${status} error:${error}\n",
-		CustomTimeFormat: "2006-01-02 15:04:05",
-	}))
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogURI:    true,
 		LogStatus: true,
+		LogMethod: true,
+		LogError:  true,
 		LogValuesFunc: func(c echo.Context, values middleware.RequestLoggerValues) error {
 			logrus.WithFields(logrus.Fields{
+				"method": values.Method,
 				"URI":    values.URI,
 				"status": values.Status,
+				"error":  values.Error,
 			}).Info("request")
 
 			return nil

@@ -6,8 +6,6 @@ import (
 	"user-management/internal/auth"
 	"user-management/internal/domain"
 	"user-management/internal/models"
-
-	"github.com/sirupsen/logrus"
 )
 
 type LoginController interface {
@@ -24,7 +22,8 @@ type Login struct {
 }
 
 type AuthBody struct {
-	Token string `json:"token"`
+	Token  string `json:"token"`
+	UserId string `json:"user_id"`
 }
 
 func (c Login) Register(ctx Context) error {
@@ -41,9 +40,13 @@ func (c Login) Register(ctx Context) error {
 	}
 
 	user.Password = auth.NewPassword().Hash(user.Password)
-	if err = c.userModel.Create(user); err != nil {
-		logrus.Infof("failed to register user %+v: %v", user, err)
+	err = c.userModel.Create(user)
+	if err == models.UsernameDuplicationErr {
 		ctx.JSON(http.StatusConflict, ErrorBody{Error: "user with such username already exists"})
+		return err
+	}
+	if err != nil {
+		ctx.NoContent(http.StatusInternalServerError)
 		return err
 	}
 
@@ -64,12 +67,16 @@ func (c Login) Authorize(ctx Context) error {
 		return fmt.Errorf("username or password is empty")
 	}
 
-	token, err := c.userModel.Authorize(user)
-	if err != nil {
+	userId, token, err := c.userModel.Authorize(user)
+	if err == models.InvalidAuthParameterErr {
 		ctx.JSON(http.StatusUnauthorized, ErrorBody{Error: err.Error()})
 		return err
 	}
+	if err != nil {
+		ctx.NoContent(http.StatusInternalServerError)
+		return err
+	}
 
-	ctx.JSON(http.StatusOK, AuthBody{Token: token})
+	ctx.JSON(http.StatusOK, AuthBody{Token: token, UserId: userId})
 	return nil
 }

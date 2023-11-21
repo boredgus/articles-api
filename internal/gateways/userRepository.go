@@ -1,10 +1,8 @@
 package gateways
 
 import (
-	"user-management/internal/domain"
+	"strings"
 	"user-management/internal/models"
-
-	"github.com/google/uuid"
 )
 
 func NewUserRepository(store Store) models.UserRepository {
@@ -15,19 +13,22 @@ type UserRepository struct {
 	store Store
 }
 
-func (r UserRepository) Create(user domain.User) error {
+func (r UserRepository) Create(user models.User) error {
 	_, err := r.store.Query(`
 		insert into user (o_id, username, pswd)
 		values (?, ?, ?);`,
-		uuid.New().String(), user.Username, user.Password)
+		user.Id, user.Username, user.Password)
+	if err != nil && strings.Contains(err.Error(), "Error 1062") {
+		return models.UsernameDuplicationErr
+	}
 
 	return err
 }
 
-func (r UserRepository) Get(username string) (domain.User, error) {
-	var user domain.User
+func (r UserRepository) Get(username string) (models.User, error) {
+	var user models.User
 	rows, err := r.store.Query(`
-		select username, pswd
+		select o_id, username, pswd
 		from user
 		where user.username=?;`, username)
 	if err != nil {
@@ -36,9 +37,9 @@ func (r UserRepository) Get(username string) (domain.User, error) {
 
 	exists := rows.Next()
 	if !exists {
-		return user, models.InvalidAuthParameter
+		return user, models.InvalidAuthParameterErr
 	}
-	err = rows.Scan(&user.Username, &user.Password)
+	err = rows.Scan(&user.Id, &user.Username, &user.Password)
 	if err != nil {
 		return user, err
 	}
