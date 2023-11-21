@@ -9,7 +9,7 @@ import (
 )
 
 type User struct {
-	Id       string `sql:"o_id"`
+	OId      string `sql:"o_id"`
 	Username string `sql:"username"`
 	Password string `sql:"pswd"`
 }
@@ -37,7 +37,7 @@ type user struct {
 }
 
 func (u user) Create(user domain.User) error {
-	return u.repo.Create(User{Id: uuid.New().String(), Username: user.Username, Password: user.Password})
+	return u.repo.Create(User{OId: uuid.New().String(), Username: user.Username, Password: user.Password})
 }
 
 func (u user) Authorize(user domain.User) (userId string, token string, err error) {
@@ -51,5 +51,5 @@ func (u user) Authorize(user domain.User) (userId string, token string, err erro
 	}
 
 	token, err = u.token.Generate(user)
-	return userFromDB.Id, token, err
+	return userFromDB.OId, token, err
 }

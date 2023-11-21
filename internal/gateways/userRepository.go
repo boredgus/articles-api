@@ -17,7 +17,7 @@ func (r UserRepository) Create(user models.User) error {
 	_, err := r.store.Query(`
 		insert into user (o_id, username, pswd)
 		values (?, ?, ?);`,
-		user.Id, user.Username, user.Password)
+		user.OId, user.Username, user.Password)
 	if err != nil && strings.Contains(err.Error(), "Error 1062") {
 		return models.UsernameDuplicationErr
 	}
@@ -39,7 +39,7 @@ func (r UserRepository) Get(username string) (models.User, error) {
 	if !exists {
 		return user, models.InvalidAuthParameterErr
 	}
-	err = rows.Scan(&user.Id, &user.Username, &user.Password)
+	err = rows.Scan(&user.OId, &user.Username, &user.Password)
 	if err != nil {
 		return user, err
 	}
