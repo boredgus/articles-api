@@ -9,6 +9,9 @@ clean:
 	docker rmi $(composeName)-database
 	docker rmi $(composeName)-server
 
+remove-data:
+	docker volume rm $(composeName)_db
+
 restart:
 	make clean
 	make start
