@@ -2,11 +2,13 @@ package internal
 
 import (
 	"database/sql"
-	"fmt"
+	"sync"
+	"time"
 	"user-management/config"
 	"user-management/internal/gateways"
 
 	mysql "github.com/go-sql-driver/mysql"
+	"github.com/sirupsen/logrus"
 )
 
 func getConfig() *mysql.Config {
@@ -22,17 +24,32 @@ func getConfig() *mysql.Config {
 	return config
 }
 
-func NewMySQLStore() (gateways.Store, error) {
-	db, err := sql.Open("mysql", getConfig().FormatDSN())
+var once sync.Once
+var database *sql.DB
 
-	if err != nil {
-		return MySQLStore{}, fmt.Errorf("failed to connect db: %v", err)
-	}
+const DBConnectionAttempts = 5
 
-	db.SetMaxOpenConns(5)
-	db.SetMaxIdleConns(5)
+func NewMySQLStore() gateways.Store {
+	once.Do(func() {
+		var db *sql.DB
+		var err error
+		for i := 0; i < DBConnectionAttempts; i++ {
+			db, err = sql.Open("mysql", getConfig().FormatDSN())
+			if err != nil {
+				logrus.Warnf("db connection (attempt #%v) failed: %v", i+1, err)
+				time.Sleep(10 * time.Second)
+			}
+		}
+		if err != nil {
+			logrus.Fatalf("failed to connect to DB: %v", err)
+		}
 
-	return MySQLStore{db: db}, nil
+		db.SetMaxOpenConns(5)
+		db.SetMaxIdleConns(5)
+		database = db
+	})
+
+	return MySQLStore{db: database}
 }
 
 type MySQLStore struct {
