@@ -14,8 +14,7 @@ func init() {
 func main() {
 	db, err := infrastructure.NewMySQLStore()
 	if err != nil {
-		logrus.Warnf("failed to init db: %v", err)
-		return
+		logrus.Fatalf("failed to init db: %v", err)
 	}
 
 	router := infrastructure.GetRouter(infrastructure.NewAppController(db))
