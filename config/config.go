@@ -1,6 +1,10 @@
 package config
 
 import (
+	"errors"
+	"os"
+
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/caarlos0/env/v9"
@@ -15,8 +19,13 @@ type config struct {
 }
 
 func LoadEnvFile(envFilePath string) {
-	if err := godotenv.Load(envFilePath); err != nil {
-		log.Info("failed to load env file", err)
+	_, err := os.Stat(envFilePath)
+	if errors.Is(err, os.ErrNotExist) {
+		logrus.Infof("%v file is not provided, skipping loading", envFilePath)
+		return
+	}
+	if err = godotenv.Load(envFilePath); err != nil {
+		log.Infof("failed to load %v file: %v", envFilePath, err)
 	}
 }
 
@@ -31,5 +40,4 @@ func GetConfig() config {
 
 func InitConfig() {
 	LoadEnvFile(".env")
-	log.Infof("env config: %+v\n", GetConfig())
 }
