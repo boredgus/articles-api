@@ -1,4 +1,4 @@
-package infrastructure
+package internal
 
 import (
 	"user-management/internal/controllers"

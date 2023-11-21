@@ -1,4 +1,4 @@
-package infrastructure
+package internal
 
 import (
 	"database/sql"
@@ -8,14 +8,6 @@ import (
 
 	mysql "github.com/go-sql-driver/mysql"
 )
-
-type MySQLStore struct {
-	db *sql.DB
-}
-
-func (s MySQLStore) Query(q string, args ...any) (*sql.Rows, error) {
-	return s.db.Query(q, args...)
-}
 
 func getConfig() *mysql.Config {
 	env := config.GetConfig()
@@ -41,4 +33,12 @@ func NewMySQLStore() (gateways.Store, error) {
 	db.SetMaxIdleConns(5)
 
 	return MySQLStore{db: db}, nil
+}
+
+type MySQLStore struct {
+	db *sql.DB
+}
+
+func (s MySQLStore) Query(q string, args ...any) (*sql.Rows, error) {
+	return s.db.Query(q, args...)
 }

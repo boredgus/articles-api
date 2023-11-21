@@ -1,8 +1,8 @@
 package main
 
 import (
+	infrastructure "user-management/cmd/user-management/internal"
 	"user-management/config"
-	"user-management/internal/infrastructure"
 
 	"github.com/sirupsen/logrus"
 )
