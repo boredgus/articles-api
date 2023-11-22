@@ -1,9 +1,9 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
-	"user-management/internal/auth"
 	"user-management/internal/domain"
 	"user-management/internal/models"
 )
@@ -34,30 +34,34 @@ func (c Login) Register(ctx Context) error {
 		return err
 	}
 
-	if err = user.Validate(); err != nil {
+	// if err = user.Validate(); err != nil {
+	// 	ctx.JSON(http.StatusBadRequest, ErrorBody{Error: err.Error()})
+	// 	return err
+	// }
+
+	// hashedPswd, err := auth.NewPassword().Hash(user.Password)
+	// if err != nil {
+
+	// 	ctx.NoContent(http.StatusInternalServerError)
+	// 	return err
+	// }
+
+	// user.Password = hashedPswd
+	err = c.userModel.Create(user)
+	if errors.Is(err, models.UsernameDuplicationErr) {
+		ctx.JSON(http.StatusConflict, ErrorBody{Error: err.Error()})
+		return err
+	}
+	if errors.Is(err, models.InvalidAuthParameterErr) {
 		ctx.JSON(http.StatusBadRequest, ErrorBody{Error: err.Error()})
 		return err
 	}
-
-	hashedPswd, err := auth.NewPassword().Hash(user.Password)
 	if err != nil {
 		ctx.NoContent(http.StatusInternalServerError)
 		return err
 	}
 
-	user.Password = hashedPswd
-	err = c.userModel.Create(user)
-	if err == models.UsernameDuplicationErr {
-		ctx.JSON(http.StatusConflict, ErrorBody{Error: "user with such username already exists"})
-		return err
-	}
-	if err != nil {
-		ctx.NoContent(http.StatusInternalServerError)
-		return err
-	}
-
-	ctx.NoContent(http.StatusCreated)
-	return nil
+	return ctx.NoContent(http.StatusCreated)
 }
 
 func (c Login) Authorize(ctx Context) error {
@@ -74,7 +78,7 @@ func (c Login) Authorize(ctx Context) error {
 	}
 
 	userId, token, err := c.userModel.Authorize(user)
-	if err == models.InvalidAuthParameterErr {
+	if errors.Is(err, models.InvalidAuthParameterErr) {
 		ctx.JSON(http.StatusUnauthorized, ErrorBody{Error: err.Error()})
 		return err
 	}
@@ -83,6 +87,5 @@ func (c Login) Authorize(ctx Context) error {
 		return err
 	}
 
-	ctx.JSON(http.StatusOK, AuthBody{Token: token, UserId: userId})
-	return nil
+	return ctx.JSON(http.StatusOK, AuthBody{Token: token, UserId: userId})
 }
