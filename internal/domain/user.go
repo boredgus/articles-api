@@ -40,12 +40,14 @@ var fieldRequirements = map[string]string{
 	"Username": "username should have length between 4 and 20",
 }
 
-func parseError(err error) (e error) {
+func parseError(err error) error {
 	if err == nil {
 		return nil
 	}
+
+	msg := ""
 	for _, err := range err.(validator.ValidationErrors) {
-		e = fmt.Errorf("%v;", fieldRequirements[err.Field()])
+		msg += fieldRequirements[err.Field()] + "; "
 	}
-	return
+	return fmt.Errorf(msg)
 }
