@@ -17,7 +17,7 @@ type User struct {
 	Password string `json:"password" sql:"pswd" form:"password" validate:"min=8,max=20,password"`
 }
 
-var passwordRules = []string{"[a-z]", "[A-Z]", "[0-9]", "[./_*]"}
+var passwordRules = []string{"[a-z]", "[A-Z]", "[0-9]", "[./_*;]"}
 
 func (u User) Validate() error {
 	logrus.Infoln(u)
@@ -36,7 +36,7 @@ func (u User) Validate() error {
 }
 
 var fieldRequirements = map[string]string{
-	"Password": "password should have lenth between 8 and 20, at least one lowercase letter, at least one uppercase letter, at least one number, at least one of special symbols /._*",
+	"Password": "password should have lenth between 8 and 20, at least one lowercase letter, at least one uppercase letter, at least one number, at least one of special symbols .;_*/",
 	"Username": "username should have length between 4 and 20",
 }
 
@@ -47,7 +47,7 @@ func parseError(err error) error {
 
 	msg := ""
 	for _, err := range err.(validator.ValidationErrors) {
-		msg += fieldRequirements[err.Field()] + "; "
+		msg += fieldRequirements[err.Field()] + " ; "
 	}
 	return fmt.Errorf(msg)
 }
