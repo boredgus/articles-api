@@ -15,3 +15,7 @@ remove-data:
 restart:
 	make clean
 	make start
+
+tests:
+	go test ./... -coverprofile="coverage.txt" -covermode count
+	go tool cover --func="coverage.txt"

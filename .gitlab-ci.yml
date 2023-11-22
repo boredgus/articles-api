@@ -1,0 +1,18 @@
+default:
+  image: golang:1.21-bullseye
+
+stages:
+  - linter
+  - test
+
+lint-via-tool:
+  stage: linter
+  script:
+    - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.55.2
+    - ./bin/golangci-lint run --enable promlinter --enable tparallel  ./...
+
+unit-tests:
+  stage: test
+  coverage: '/\d+.\d+%/'
+  script:
+    - make tests
