@@ -22,7 +22,7 @@ var passwordRules = []string{"[a-z]", "[A-Z]", "[0-9]", "[./_*;]"}
 func (u User) Validate() error {
 	logrus.Infoln(u)
 	validate := validator.New()
-	validate.RegisterValidation("password", func(fl validator.FieldLevel) bool {
+	err := validate.RegisterValidation("password", func(fl validator.FieldLevel) bool {
 		for _, rule := range passwordRules {
 			if !regexp.MustCompile(rule).Match([]byte(fl.Field().String())) {
 				return false
@@ -30,7 +30,10 @@ func (u User) Validate() error {
 		}
 		return true
 	})
-	err := validate.Struct(u)
+	if err != nil {
+		logrus.Warnf("failed to register custom password validation")
+	}
+	err = validate.Struct(u)
 
 	return parseError(err)
 }
