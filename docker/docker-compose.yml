@@ -1,0 +1,36 @@
+version: "2.23"
+
+services:
+  server:
+    container_name: ${API_CONTAINER}
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile.server
+    ports:
+      - 8080:8080
+    depends_on:
+      database:
+        condition: service_healthy
+
+  database:
+    container_name: ${DB_CONTAINER}
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile.db
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_HOST=${API_CONTAINER}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+    volumes:
+      - db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+volumes:
+  db:
