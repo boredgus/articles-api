@@ -18,4 +18,7 @@ restart:
 
 tests:
 	go test ./... -coverprofile="coverage.txt" -covermode count
-	go tool cover --func="coverage.txt"
+	go tool cover -func="coverage.txt"
+
+show coverage:
+	go tool cover -html="coverage.txt"
