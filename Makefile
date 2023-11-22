@@ -17,7 +17,7 @@ restart:
 	make start
 
 tests:
-	go test ./... -coverprofile="coverage.txt" -covermode count
+	go test ./... -v -coverpkg=./... -coverprofile="coverage.txt" -covermode count
 	go tool cover -func="coverage.txt"
 
 show coverage:

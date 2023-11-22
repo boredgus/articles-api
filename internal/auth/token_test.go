@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"testing"
 	"user-management/internal/domain"
 
@@ -61,7 +60,6 @@ func TestTokenDecoding(t *testing.T) {
 	tokenSvc := NewToken()
 	for token, expected := range tokenDecodingTestCases {
 		user, err := tokenSvc.Decode(token)
-		fmt.Println(user, err)
 		assert.Equal(t, expected.user, user)
 		if expected.err != nil {
 			assert.ErrorIs(t, err, expected.err)
