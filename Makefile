@@ -16,8 +16,11 @@ restart:
 	make clean
 	make start
 
+generate mocks:
+	mockery --config=./config/.mockery.yaml
+
 tests:
-	go test ./... -v -coverpkg=./... -coverprofile="coverage.txt" -covermode count
+	go test ./... -v -coverprofile="coverage.txt" -covermode count
 	go tool cover -func="coverage.txt"
 
 show coverage:

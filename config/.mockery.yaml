@@ -1,0 +1,14 @@
+with-expecter: true
+outpkg: mocks
+dir: internal/mocks
+mockname: "{{.InterfaceName}}"
+packages:
+  user-management/internal/controllers:
+    config:
+    interfaces:
+      Context:
+        config:
+  user-management/internal/models:
+    interfaces:
+      UserModel:
+      UserRepository:

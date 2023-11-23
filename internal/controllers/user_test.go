@@ -4,37 +4,16 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
-	"user-management/internal/domain"
+	"user-management/internal/mocks"
 	"user-management/internal/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-type loginModelMock struct {
-	mock.Mock
-}
-
-func (l *loginModelMock) Create(user domain.User) error {
-	args := l.Called(user)
-	res := args.Get(0)
-	if res != nil {
-		return res.(error)
-	}
-	return nil
-}
-func (l *loginModelMock) Authorize(user domain.User) (string, string, error) {
-	args := l.Called(user)
-	userId, token, err := args.Get(0).(string), args.Get(1).(string), args.Get(2)
-	if err != nil {
-		return userId, token, err.(error)
-	}
-	return userId, token, nil
-}
-
 func TestUserController(t *testing.T) {
-	model := new(loginModelMock)
-	context := new(contextMock)
+	model := mocks.NewUserModel(t)
+	context := mocks.NewContext(t)
 	serverError := fmt.Errorf("server err")
 	bindErr := fmt.Errorf("bind err")
 
