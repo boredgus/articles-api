@@ -17,14 +17,18 @@ type User struct {
 	Password string `json:"password" sql:"pswd" form:"password" validate:"min=8,max=20,password"`
 }
 
-var passwordRules = []string{"[a-z]", "[A-Z]", "[0-9]", "[./_*;]"}
+var passwordRules = []*regexp.Regexp{
+	regexp.MustCompile("[a-z]"),
+	regexp.MustCompile("[A-Z]"),
+	regexp.MustCompile("[0-9]"),
+	regexp.MustCompile("[./_*;]")}
 
 func (u User) Validate() error {
 	logrus.Infoln(u)
 	validate := validator.New()
 	err := validate.RegisterValidation("password", func(fl validator.FieldLevel) bool {
 		for _, rule := range passwordRules {
-			if !regexp.MustCompile(rule).Match([]byte(fl.Field().String())) {
+			if !rule.Match([]byte(fl.Field().String())) {
 				return false
 			}
 		}
