@@ -31,8 +31,7 @@ func (r *userRepoMock) Get(username string) (User, error) {
 }
 
 func TestUserModel(t *testing.T) {
-	r := NewUserRepoMock()
-	repo := &r
+	repo := new(userRepoMock)
 	validUser := domain.NewUser("username", "PASsword/123")
 	validUserToken := "dXNlcm5hbWU6UEFTc3dvcmQvMTIz"
 	validUserFromDB := User{

@@ -31,21 +31,21 @@ func (c Login) Register(ctx Context) error {
 	err := ctx.Bind(&user)
 	if err != nil {
 		e := ctx.JSON(http.StatusBadRequest, ErrorBody{Error: "username and password are required"})
-		return fmt.Errorf("%w: %w", e, err)
+		return fmt.Errorf("%v: %w", e, err)
 	}
 
 	err = c.userModel.Create(user)
 	if errors.Is(err, models.UsernameDuplicationErr) {
 		e := ctx.JSON(http.StatusConflict, ErrorBody{Error: err.Error()})
-		return fmt.Errorf("%w: %w", e, err)
+		return fmt.Errorf("%v: %w", e, err)
 	}
 	if errors.Is(err, models.InvalidAuthParameterErr) {
 		e := ctx.JSON(http.StatusBadRequest, ErrorBody{Error: err.Error()})
-		return fmt.Errorf("%w: %w", e, err)
+		return fmt.Errorf("%v: %w", e, err)
 	}
 	if err != nil {
 		e := ctx.NoContent(http.StatusInternalServerError)
-		return fmt.Errorf("%w: %w", e, err)
+		return fmt.Errorf("%v: %w", e, err)
 	}
 
 	return ctx.NoContent(http.StatusCreated)
@@ -56,22 +56,17 @@ func (c Login) Authorize(ctx Context) error {
 	err := ctx.Bind(&user)
 	if err != nil {
 		e := ctx.JSON(http.StatusUnauthorized, ErrorBody{Error: "username and password are required"})
-		return fmt.Errorf("%w: %w", e, err)
-	}
-
-	if len(user.Username) == 0 || len(user.Password) == 0 {
-		e := ctx.JSON(http.StatusUnauthorized, ErrorBody{Error: "username and password cannot be empty"})
-		return fmt.Errorf("%w: %w", e, fmt.Errorf("username or password is empty"))
+		return fmt.Errorf("%v: %w", e, err)
 	}
 
 	userId, token, err := c.userModel.Authorize(user)
 	if errors.Is(err, models.InvalidAuthParameterErr) {
 		e := ctx.JSON(http.StatusUnauthorized, ErrorBody{Error: err.Error()})
-		return fmt.Errorf("%w: %w", e, err)
+		return fmt.Errorf("%v: %w", e, err)
 	}
 	if err != nil {
 		e := ctx.NoContent(http.StatusInternalServerError)
-		return fmt.Errorf("%w: %w", e, err)
+		return fmt.Errorf("%v: %w", e, err)
 	}
 
 	return ctx.JSON(http.StatusOK, AuthBody{Token: token, UserId: userId})
