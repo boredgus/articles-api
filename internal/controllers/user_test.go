@@ -1,9 +1,10 @@
-package controllers
+package controllers_test
 
 import (
 	"fmt"
 	"net/http"
 	"testing"
+	ctrlr "user-management/internal/controllers"
 	cntrlMocks "user-management/internal/mocks/controllers"
 	mdlMocks "user-management/internal/mocks/models"
 	"user-management/internal/models"
@@ -12,59 +13,15 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// 	t.Run("authorization fails: user binding failed", func(t *testing.T) {
-// 		bindMock := context.On("Bind", mock.Anything).Return(bindErr)
-// 		jsonMock := context.On("JSON", http.StatusUnauthorized, mock.Anything).Return(nil)
-// 		err := NewLoginController(model).Authorize(context)
-// 		assert.ErrorIs(t, err, bindErr)
-// 		bindMock.Unset()
-// 		jsonMock.Unset()
-// 	})
-
-// 	t.Run("authorization fails if user credentials are invalid", func(t *testing.T) {
-// 		bindMock := context.On("Bind", mock.Anything).Return(nil)
-// 		modelMock := model.On("Authorize", mock.Anything).Return("", "", models.InvalidAuthParameterErr)
-// 		jsonMock := context.On("JSON", http.StatusUnauthorized, mock.Anything).Return(nil)
-// 		err := NewLoginController(model).Authorize(context)
-// 		assert.ErrorIs(t, err, models.InvalidAuthParameterErr)
-// 		bindMock.Unset()
-// 		modelMock.Unset()
-// 		jsonMock.Unset()
-// 	})
-
-// 	t.Run("authorization fails because of internal error", func(t *testing.T) {
-// 		bindMock := context.On("Bind", mock.Anything).Return(nil)
-// 		modelMock := model.On("Authorize", mock.Anything).Return("", "", serverError)
-// 		jsonMock := context.On("NoContent", http.StatusInternalServerError, mock.Anything).Return(nil)
-// 		err := NewLoginController(model).Authorize(context)
-// 		assert.ErrorIs(t, err, serverError)
-// 		bindMock.Unset()
-// 		modelMock.Unset()
-// 		jsonMock.Unset()
-// 	})
-
-// 	t.Run("successful authorization", func(t *testing.T) {
-// 		bindMock := context.On("Bind", mock.Anything).Return(nil)
-// 		userId, token := "user-id", "token"
-// 		modelMock := model.On("Authorize", mock.Anything).Return(userId, token, nil)
-// 		jsonMock := context.On("JSON", http.StatusOK, AuthBody{Token: token, UserId: userId}).Return(nil)
-// 		err := NewLoginController(model).Authorize(context)
-// 		assert.Nil(t, err)
-// 		bindMock.Unset()
-// 		modelMock.Unset()
-// 		jsonMock.Unset()
-// 	})
-// }
-
 type loginFields struct {
 	userModel models.UserModel
 }
 type loginArgs struct {
-	ctx Context
+	ctx ctrlr.Context
 }
 type loginMocks struct {
 	userModel models.UserModel
-	ctx       Context
+	ctx       ctrlr.Context
 }
 
 func TestLoginController_Register(t *testing.T) {
@@ -140,7 +97,7 @@ func TestLoginController_Register(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(&loginMocks{ctx: tt.args.ctx, userModel: tt.fields.userModel}, tt.mockedRes)
 			defer cleanSetup()
-			err := NewLoginController(tt.fields.userModel).Register(tt.args.ctx)
+			err := ctrlr.NewLoginController(tt.fields.userModel).Register(tt.args.ctx)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
@@ -217,7 +174,7 @@ func TestLoginController_Authorize(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(&loginMocks{ctx: tt.args.ctx, userModel: tt.fields.userModel}, tt.mockedRes)
 			defer cleanSetup()
-			err := NewLoginController(tt.fields.userModel).Authorize(tt.args.ctx)
+			err := ctrlr.NewLoginController(tt.fields.userModel).Authorize(tt.args.ctx)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
