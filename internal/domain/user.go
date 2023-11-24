@@ -24,7 +24,6 @@ var passwordRules = []*regexp.Regexp{
 	regexp.MustCompile("[./_*;]")}
 
 func (u User) Validate() error {
-	logrus.Infoln(u)
 	validate := validator.New()
 	err := validate.RegisterValidation("password", func(fl validator.FieldLevel) bool {
 		for _, rule := range passwordRules {
