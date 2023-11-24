@@ -1,8 +1,12 @@
 with-expecter: true
 outpkg: mocks
-dir: internal/mocks
+dir: "internal/mocks/{{.PackageName}}"
 mockname: "{{.InterfaceName}}"
 packages:
+  user-management/internal/auth:
+    interfaces:
+      Token:
+      Password:
   user-management/internal/controllers:
     config:
     interfaces:
@@ -11,4 +15,6 @@ packages:
   user-management/internal/models:
     interfaces:
       UserModel:
+  user-management/internal/models/repo:
+    interfaces:
       UserRepository:
