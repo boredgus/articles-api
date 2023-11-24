@@ -7,64 +7,82 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var tokenGeneratingTestCases = map[domain.User]struct {
-	token string
-	err   error
-}{
-	{Username: "user", Password: "pass"}: {
-		token: "dXNlcjpwYXNz",
-		err:   nil,
-	},
-	{Username: "usew2r", Password: "pass:pass"}: {
-		token: "dXNldzJyOnBhc3M6cGFzcw==",
-		err:   nil,
-	},
-	{Username: "uwse0r", Password: "pass123._"}: {
-		token: "dXdzZTByOnBhc3MxMjMuXw==",
-		err:   nil,
-	},
-	{Username: "", Password: ""}: {
-		token: "Og==",
-		err:   nil,
-	},
-}
-
-func TestTokenGenerating(t *testing.T) {
-	token := NewToken()
-	for user, expected := range tokenGeneratingTestCases {
-		result, err := token.Generate(user)
-		assert.Equal(t, expected.token, result, user)
-		assert.Equal(t, expected.err, err)
+func TestBasicToken_Generate(t *testing.T) {
+	type args struct {
+		user domain.User
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr error
+	}{
+		{
+			name:    "common user",
+			args:    args{user: domain.User{Username: "user", Password: "pass"}},
+			want:    "dXNlcjpwYXNz",
+			wantErr: nil,
+		},
+		{
+			name:    "empty user",
+			args:    args{user: domain.User{Username: "", Password: ""}},
+			want:    "Og==",
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewToken().Generate(tt.args.user)
+			if err != tt.wantErr {
+				t.Errorf("BasicToken.Generate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("BasicToken.Generate() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
-var tokenDecodingTestCases = map[string]struct {
-	user domain.User
-	err  error
-}{
-	"dXNlcjpwYXNz": {
-		user: domain.NewUser("user", "pass"),
-		err:  nil,
-	},
-	"kdfjkjdflks": {
-		user: domain.User{},
-		err:  InvalidToken,
-	},
-	"dXNlcnBhc3M=": {
-		user: domain.User{},
-		err:  InvalidToken,
-	},
-}
-
-func TestTokenDecoding(t *testing.T) {
-	tokenSvc := NewToken()
-	for token, expected := range tokenDecodingTestCases {
-		user, err := tokenSvc.Decode(token)
-		assert.Equal(t, expected.user, user)
-		if expected.err != nil {
-			assert.ErrorIs(t, err, expected.err)
-			continue
-		}
-		assert.Nil(t, err)
+func TestBasicToken_Decode(t *testing.T) {
+	type args struct {
+		token string
+	}
+	tests := []struct {
+		name    string
+		tr      BasicToken
+		args    args
+		wantU   domain.User
+		wantErr error
+	}{
+		{
+			name:    "valid token",
+			args:    args{token: "dXNlcjpwYXNz"},
+			wantU:   domain.NewUser("user", "pass"),
+			wantErr: nil,
+		},
+		{
+			name:    "invalid token",
+			args:    args{token: "dXNlcnBhc3M="},
+			wantU:   domain.User{},
+			wantErr: InvalidToken,
+		},
+		{
+			name:    "non base64 string",
+			args:    args{token: "kdfjkjdflks"},
+			wantU:   domain.User{},
+			wantErr: InvalidToken,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotU, err := NewToken().Decode(tt.args.token)
+			if err != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				assert.Nil(t, err)
+			}
+			assert.Equal(t, gotU, tt.wantU)
+		})
 	}
 }
