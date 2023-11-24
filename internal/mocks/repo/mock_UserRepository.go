@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	models "user-management/internal/models"
+	repo "user-management/internal/models/repo"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -22,7 +22,7 @@ func (_m *UserRepository) EXPECT() *UserRepository_Expecter {
 }
 
 // Create provides a mock function with given fields: user
-func (_m *UserRepository) Create(user models.User) error {
+func (_m *UserRepository) Create(user repo.User) error {
 	ret := _m.Called(user)
 
 	if len(ret) == 0 {
@@ -30,7 +30,7 @@ func (_m *UserRepository) Create(user models.User) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(models.User) error); ok {
+	if rf, ok := ret.Get(0).(func(repo.User) error); ok {
 		r0 = rf(user)
 	} else {
 		r0 = ret.Error(0)
@@ -45,14 +45,14 @@ type UserRepository_Create_Call struct {
 }
 
 // Create is a helper method to define mock.On call
-//   - user models.User
+//   - user repo.User
 func (_e *UserRepository_Expecter) Create(user interface{}) *UserRepository_Create_Call {
 	return &UserRepository_Create_Call{Call: _e.mock.On("Create", user)}
 }
 
-func (_c *UserRepository_Create_Call) Run(run func(user models.User)) *UserRepository_Create_Call {
+func (_c *UserRepository_Create_Call) Run(run func(user repo.User)) *UserRepository_Create_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(models.User))
+		run(args[0].(repo.User))
 	})
 	return _c
 }
@@ -62,28 +62,28 @@ func (_c *UserRepository_Create_Call) Return(_a0 error) *UserRepository_Create_C
 	return _c
 }
 
-func (_c *UserRepository_Create_Call) RunAndReturn(run func(models.User) error) *UserRepository_Create_Call {
+func (_c *UserRepository_Create_Call) RunAndReturn(run func(repo.User) error) *UserRepository_Create_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Get provides a mock function with given fields: username
-func (_m *UserRepository) Get(username string) (models.User, error) {
+func (_m *UserRepository) Get(username string) (repo.User, error) {
 	ret := _m.Called(username)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Get")
 	}
 
-	var r0 models.User
+	var r0 repo.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (models.User, error)); ok {
+	if rf, ok := ret.Get(0).(func(string) (repo.User, error)); ok {
 		return rf(username)
 	}
-	if rf, ok := ret.Get(0).(func(string) models.User); ok {
+	if rf, ok := ret.Get(0).(func(string) repo.User); ok {
 		r0 = rf(username)
 	} else {
-		r0 = ret.Get(0).(models.User)
+		r0 = ret.Get(0).(repo.User)
 	}
 
 	if rf, ok := ret.Get(1).(func(string) error); ok {
@@ -113,12 +113,12 @@ func (_c *UserRepository_Get_Call) Run(run func(username string)) *UserRepositor
 	return _c
 }
 
-func (_c *UserRepository_Get_Call) Return(_a0 models.User, _a1 error) *UserRepository_Get_Call {
+func (_c *UserRepository_Get_Call) Return(_a0 repo.User, _a1 error) *UserRepository_Get_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *UserRepository_Get_Call) RunAndReturn(run func(string) (models.User, error)) *UserRepository_Get_Call {
+func (_c *UserRepository_Get_Call) RunAndReturn(run func(string) (repo.User, error)) *UserRepository_Get_Call {
 	_c.Call.Return(run)
 	return _c
 }
