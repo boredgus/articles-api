@@ -3,9 +3,10 @@ package gateways
 import (
 	"strings"
 	"user-management/internal/models"
+	"user-management/internal/models/repo"
 )
 
-func NewUserRepository(store Store) models.UserRepository {
+func NewUserRepository(store Store) repo.UserRepository {
 	return UserRepository{store: store}
 }
 
@@ -13,7 +14,7 @@ type UserRepository struct {
 	store Store
 }
 
-func (r UserRepository) Create(user models.User) error {
+func (r UserRepository) Create(user repo.User) error {
 	_, err := r.store.Query(`
 		insert into user (o_id, username, pswd)
 		values (?, ?, ?);`,
@@ -25,8 +26,8 @@ func (r UserRepository) Create(user models.User) error {
 	return err
 }
 
-func (r UserRepository) Get(username string) (models.User, error) {
-	var user models.User
+func (r UserRepository) Get(username string) (repo.User, error) {
+	var user repo.User
 	rows, err := r.store.Query(`
 		select o_id, username, pswd
 		from user

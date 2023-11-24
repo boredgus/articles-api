@@ -17,35 +17,43 @@ type User struct {
 	Password string `json:"password" sql:"pswd" form:"password" validate:"min=8,max=20,password"`
 }
 
-var passwordRules = []string{"[a-z]", "[A-Z]", "[0-9]", "[./_*]"}
+var passwordRules = []*regexp.Regexp{
+	regexp.MustCompile("[a-z]"),
+	regexp.MustCompile("[A-Z]"),
+	regexp.MustCompile("[0-9]"),
+	regexp.MustCompile("[./_*;]")}
 
 func (u User) Validate() error {
-	logrus.Infoln(u)
 	validate := validator.New()
-	validate.RegisterValidation("password", func(fl validator.FieldLevel) bool {
+	err := validate.RegisterValidation("password", func(fl validator.FieldLevel) bool {
 		for _, rule := range passwordRules {
-			if !regexp.MustCompile(rule).Match([]byte(fl.Field().String())) {
+			if !rule.Match([]byte(fl.Field().String())) {
 				return false
 			}
 		}
 		return true
 	})
-	err := validate.Struct(u)
+	if err != nil {
+		logrus.Warnf("failed to register custom password validation")
+	}
+	err = validate.Struct(u)
 
 	return parseError(err)
 }
 
 var fieldRequirements = map[string]string{
-	"Password": "password should have lenth between 8 and 20, at least one lowercase letter, at least one uppercase letter, at least one number, at least one of special symbols /._*",
+	"Password": "password should have lenth between 8 and 20, at least one lowercase letter, at least one uppercase letter, at least one number, at least one of special symbols .;_*/",
 	"Username": "username should have length between 4 and 20",
 }
 
-func parseError(err error) (e error) {
+func parseError(err error) error {
 	if err == nil {
 		return nil
 	}
+
+	msg := ""
 	for _, err := range err.(validator.ValidationErrors) {
-		e = fmt.Errorf("%v;", fieldRequirements[err.Field()])
+		msg += fieldRequirements[err.Field()] + " ; "
 	}
-	return
+	return fmt.Errorf(msg)
 }

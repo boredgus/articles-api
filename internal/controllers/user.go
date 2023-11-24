@@ -1,9 +1,9 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
-	"user-management/internal/auth"
 	"user-management/internal/domain"
 	"user-management/internal/models"
 )
@@ -30,59 +30,44 @@ func (c Login) Register(ctx Context) error {
 	var user domain.User
 	err := ctx.Bind(&user)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorBody{Error: "username and password are required"})
-		return err
+		e := ctx.JSON(http.StatusBadRequest, ErrorBody{Error: "username and password are required"})
+		return fmt.Errorf("%v: %w", e, err)
 	}
 
-	if err = user.Validate(); err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorBody{Error: err.Error()})
-		return err
-	}
-
-	hashedPswd, err := auth.NewPassword().Hash(user.Password)
-	if err != nil {
-		ctx.NoContent(http.StatusInternalServerError)
-		return err
-	}
-
-	user.Password = hashedPswd
 	err = c.userModel.Create(user)
-	if err == models.UsernameDuplicationErr {
-		ctx.JSON(http.StatusConflict, ErrorBody{Error: "user with such username already exists"})
-		return err
+	if errors.Is(err, models.UsernameDuplicationErr) {
+		e := ctx.JSON(http.StatusConflict, ErrorBody{Error: err.Error()})
+		return fmt.Errorf("%v: %w", e, err)
+	}
+	if errors.Is(err, models.InvalidAuthParameterErr) {
+		e := ctx.JSON(http.StatusBadRequest, ErrorBody{Error: err.Error()})
+		return fmt.Errorf("%v: %w", e, err)
 	}
 	if err != nil {
-		ctx.NoContent(http.StatusInternalServerError)
-		return err
+		e := ctx.NoContent(http.StatusInternalServerError)
+		return fmt.Errorf("%v: %w", e, err)
 	}
 
-	ctx.NoContent(http.StatusCreated)
-	return nil
+	return ctx.NoContent(http.StatusCreated)
 }
 
 func (c Login) Authorize(ctx Context) error {
 	var user domain.User
 	err := ctx.Bind(&user)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, ErrorBody{Error: "username and password are required"})
-		return err
-	}
-
-	if len(user.Username) == 0 || len(user.Password) == 0 {
-		ctx.JSON(http.StatusUnauthorized, ErrorBody{Error: "username and password cannot be empty"})
-		return fmt.Errorf("username or password is empty")
+		e := ctx.JSON(http.StatusUnauthorized, ErrorBody{Error: "username and password are required"})
+		return fmt.Errorf("%v: %w", e, err)
 	}
 
 	userId, token, err := c.userModel.Authorize(user)
-	if err == models.InvalidAuthParameterErr {
-		ctx.JSON(http.StatusUnauthorized, ErrorBody{Error: err.Error()})
-		return err
+	if errors.Is(err, models.InvalidAuthParameterErr) {
+		e := ctx.JSON(http.StatusUnauthorized, ErrorBody{Error: err.Error()})
+		return fmt.Errorf("%v: %w", e, err)
 	}
 	if err != nil {
-		ctx.NoContent(http.StatusInternalServerError)
-		return err
+		e := ctx.NoContent(http.StatusInternalServerError)
+		return fmt.Errorf("%v: %w", e, err)
 	}
 
-	ctx.JSON(http.StatusOK, AuthBody{Token: token, UserId: userId})
-	return nil
+	return ctx.JSON(http.StatusOK, AuthBody{Token: token, UserId: userId})
 }

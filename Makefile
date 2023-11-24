@@ -15,3 +15,13 @@ remove-data:
 restart:
 	make clean
 	make start
+
+generate mocks:
+	mockery --config=./config/.mockery.yaml
+
+tests:
+	go test ./... -v -coverprofile="coverage.txt" -covermode count
+	go tool cover -func="coverage.txt"
+
+show coverage:
+	go tool cover -html="coverage.txt"
