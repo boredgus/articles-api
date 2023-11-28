@@ -11,6 +11,7 @@ import (
 
 // user qqq
 // swagger:parameters authorization
+// nolint:deadcode
 type authParams struct {
 	// in: body
 	// required: true
@@ -30,6 +31,7 @@ type authResult struct {
 
 // successfully authorized
 // swagger:response authResp200
+// nolint:deadcode
 type auth200 struct {
 	// in: body
 	body authResult
@@ -37,6 +39,7 @@ type auth200 struct {
 
 // username or password is invalid
 // swagger:response authResp401
+// nolint:deadcode
 type auth401 struct {
 	// in: body
 	body cntrl.ErrorBody

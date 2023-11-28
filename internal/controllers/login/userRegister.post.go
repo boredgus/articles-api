@@ -10,6 +10,7 @@ import (
 )
 
 // swagger:parameters registration
+// nolint:deadcode
 type registerParams struct {
 	// in: body
 	// required: true
@@ -18,10 +19,12 @@ type registerParams struct {
 
 // user created
 // swagger:response registerResp201
+// nolint:deadcode
 type registerResp201 struct{}
 
 // user with such username already exists
 // swagger:response registerResp409
+// nolint:deadcode
 type registerResp409 struct {
 	// in: body
 	body cntrl.ErrorBody
