@@ -1,0 +1,177 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "Spec Documentation for article service.",
+    "title": "Articles API",
+    "version": "1.0.0"
+  },
+  "host": "localhost:8080",
+  "basePath": "/",
+  "paths": {
+    "/authorize": {
+      "get": {
+        "description": "Checks whether user with such username exists and compares his password with given one.",
+        "tags": [
+          "login"
+        ],
+        "summary": "authorizes user",
+        "operationId": "authorization",
+        "parameters": [
+          {
+            "x-go-name": "Body",
+            "name": "user",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/authResp200"
+          },
+          "401": {
+            "$ref": "#/responses/authResp401"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
+          }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "description": "Checks whether user with provided username exists and validates provided password",
+        "tags": [
+          "login"
+        ],
+        "summary": "creates new user",
+        "operationId": "registration",
+        "parameters": [
+          {
+            "x-go-name": "Body",
+            "name": "user",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "$ref": "#/responses/registerResp201"
+          },
+          "409": {
+            "$ref": "#/responses/commonError"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ErrorBody": {
+      "description": "error entity",
+      "type": "object",
+      "required": [
+        "error"
+      ],
+      "properties": {
+        "error": {
+          "description": "error details",
+          "type": "string",
+          "x-go-name": "Error"
+        }
+      },
+      "x-go-package": "user-management/internal/controllers"
+    },
+    "User": {
+      "description": "user credentials",
+      "type": "object",
+      "required": [
+        "username",
+        "password"
+      ],
+      "properties": {
+        "password": {
+          "description": "secret password",
+          "type": "string",
+          "x-go-name": "Password",
+          "example": "qweQWE123."
+        },
+        "username": {
+          "description": "unique username",
+          "type": "string",
+          "x-go-name": "Username",
+          "example": "username"
+        }
+      },
+      "x-go-package": "user-management/internal/domain"
+    },
+    "authResult": {
+      "description": "access token and user id",
+      "type": "object",
+      "required": [
+        "token",
+        "user_id"
+      ],
+      "properties": {
+        "token": {
+          "description": "access token",
+          "type": "string",
+          "x-go-name": "Token"
+        },
+        "user_id": {
+          "description": "user identificator",
+          "type": "string",
+          "x-go-name": "UserId"
+        }
+      },
+      "x-go-package": "user-management/internal/controllers"
+    }
+  },
+  "responses": {
+    "authResp200": {
+      "description": "successfully authorized",
+      "schema": {
+        "$ref": "#/definitions/authResult"
+      }
+    },
+    "authResp401": {
+      "description": "username or password is invalid",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
+    "commonError": {
+      "description": "internal server error",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
+    "registerResp201": {
+      "description": "user created"
+    },
+    "registerResp409": {
+      "description": "user with such username already exists",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    }
+  },
+  "securityDefinitions": {
+    "basicAuth": {
+      "type": "basic"
+    }
+  }
+}
