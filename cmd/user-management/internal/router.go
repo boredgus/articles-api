@@ -2,14 +2,13 @@ package internal
 
 import (
 	"net/http"
-	"user-management/internal/controllers"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 )
 
-func registerRoutes(e *echo.Echo, app controllers.AppController) *echo.Echo {
+func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, struct {
 			Message string `json:"message"`
@@ -25,7 +24,7 @@ func registerRoutes(e *echo.Echo, app controllers.AppController) *echo.Echo {
 	return e
 }
 
-func GetRouter(cntrs controllers.AppController) *echo.Echo {
+func GetRouter(cntrs AppController) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogURI:    true,

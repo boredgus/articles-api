@@ -12,8 +12,16 @@ func NewUser(name, pswd string) User {
 	return User{Username: name, Password: pswd}
 }
 
+// user credentials
+// swagger:model
 type User struct {
+	// unique username
+	// required: true
+	// example: username
 	Username string `json:"username" sql:"username" form:"username" validate:"required,min=4,max=20"`
+	// secret password
+	// required: true
+	// example: qweQWE123.
 	Password string `json:"password" sql:"pswd" form:"password" validate:"min=8,max=20,password"`
 }
 

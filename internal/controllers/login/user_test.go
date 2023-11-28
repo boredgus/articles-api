@@ -1,10 +1,11 @@
-package controllers_test
+package user_test
 
 import (
 	"fmt"
 	"net/http"
 	"testing"
-	ctrlr "user-management/internal/controllers"
+	cntrl "user-management/internal/controllers"
+	user "user-management/internal/controllers/login"
 	cntrlMocks "user-management/internal/mocks/controllers"
 	mdlMocks "user-management/internal/mocks/models"
 	"user-management/internal/models"
@@ -13,15 +14,9 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type loginFields struct {
-	userModel models.UserModel
-}
-type loginArgs struct {
-	ctx ctrlr.Context
-}
 type loginMocks struct {
 	userModel models.UserModel
-	ctx       ctrlr.Context
+	ctx       cntrl.Context
 }
 
 func TestLoginController_Register(t *testing.T) {
@@ -47,57 +42,45 @@ func TestLoginController_Register(t *testing.T) {
 			}
 		}
 	}
-	valueOfFields := loginFields{userModel: mdlMocks.NewUserModel(t)}
-	valueOfArgs := loginArgs{ctx: cntrlMocks.NewContext(t)}
+	ctx := cntrlMocks.NewContext(t)
+	userModel := mdlMocks.NewUserModel(t)
 	err := fmt.Errorf("invoked error")
 	tests := []struct {
 		name      string
-		fields    loginFields
 		mockedRes mockedRes
-		args      loginArgs
 		wantErr   error
 	}{
 		{
 			name:      "binding failed",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{bindingErr: err, jsonCode: http.StatusBadRequest},
-			args:      valueOfArgs,
 			wantErr:   err,
 		},
 		{
 			name:      "username duplication",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{createErr: models.UsernameDuplicationErr, jsonCode: http.StatusConflict},
-			args:      valueOfArgs,
 			wantErr:   models.UsernameDuplicationErr,
 		},
 		{
 			name:      "invalid user credentials",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{createErr: models.InvalidAuthParameterErr, jsonCode: http.StatusBadRequest},
-			args:      valueOfArgs,
 			wantErr:   models.InvalidAuthParameterErr,
 		},
 		{
 			name:      "internal server error",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{createErr: err, noContentCode: http.StatusInternalServerError},
-			args:      valueOfArgs,
 			wantErr:   err,
 		},
 		{
 			name:      "success",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{noContentCode: http.StatusCreated},
-			args:      valueOfArgs,
 			wantErr:   nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cleanSetup := setup(&loginMocks{ctx: tt.args.ctx, userModel: tt.fields.userModel}, tt.mockedRes)
+			cleanSetup := setup(&loginMocks{ctx: ctx, userModel: userModel}, tt.mockedRes)
 			defer cleanSetup()
-			err := ctrlr.NewLoginController(tt.fields.userModel).Register(tt.args.ctx)
+			err := user.NewLoginController(userModel).Register(ctx)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
@@ -131,50 +114,40 @@ func TestLoginController_Authorize(t *testing.T) {
 			}
 		}
 	}
-	valueOfFields := loginFields{userModel: mdlMocks.NewUserModel(t)}
-	valueOfArgs := loginArgs{ctx: cntrlMocks.NewContext(t)}
+	ctx := cntrlMocks.NewContext(t)
+	userModel := mdlMocks.NewUserModel(t)
 	err := fmt.Errorf("invoked error")
 	tests := []struct {
 		name      string
-		fields    loginFields
 		mockedRes mockedRes
-		args      loginArgs
 		wantErr   error
 	}{
 		{
 			name:      "binding failed",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{bindingErr: err, jsonCode: http.StatusUnauthorized},
-			args:      valueOfArgs,
 			wantErr:   err,
 		},
 		{
 			name:      "invalid credentials",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{authErr: models.InvalidAuthParameterErr, jsonCode: http.StatusUnauthorized},
-			args:      valueOfArgs,
 			wantErr:   models.InvalidAuthParameterErr,
 		},
 		{
 			name:      "internal server error",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{authErr: err, noContentCode: http.StatusInternalServerError},
-			args:      valueOfArgs,
 			wantErr:   err,
 		},
 		{
 			name:      "success",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{jsonCode: http.StatusOK},
-			args:      valueOfArgs,
 			wantErr:   nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cleanSetup := setup(&loginMocks{ctx: tt.args.ctx, userModel: tt.fields.userModel}, tt.mockedRes)
+			cleanSetup := setup(&loginMocks{ctx: ctx, userModel: userModel}, tt.mockedRes)
 			defer cleanSetup()
-			err := ctrlr.NewLoginController(tt.fields.userModel).Authorize(tt.args.ctx)
+			err := user.NewLoginController(userModel).Authorize(ctx)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
