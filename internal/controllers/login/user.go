@@ -1,12 +1,13 @@
-package controllers
+package user
 
 import (
+	"user-management/internal/controllers"
 	"user-management/internal/models"
 )
 
 type LoginController interface {
-	Register(ctx Context) error
-	Authorize(ctx Context) error
+	Register(ctx controllers.Context) error
+	Authorize(ctx controllers.Context) error
 }
 
 func NewLoginController(userModel models.UserModel) LoginController {

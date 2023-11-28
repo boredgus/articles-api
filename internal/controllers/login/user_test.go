@@ -1,10 +1,11 @@
-package controllers_test
+package user_test
 
 import (
 	"fmt"
 	"net/http"
 	"testing"
-	ctrlr "user-management/internal/controllers"
+	cntrl "user-management/internal/controllers"
+	user "user-management/internal/controllers/login"
 	cntrlMocks "user-management/internal/mocks/controllers"
 	mdlMocks "user-management/internal/mocks/models"
 	"user-management/internal/models"
@@ -17,11 +18,11 @@ type loginFields struct {
 	userModel models.UserModel
 }
 type loginArgs struct {
-	ctx ctrlr.Context
+	ctx cntrl.Context
 }
 type loginMocks struct {
 	userModel models.UserModel
-	ctx       ctrlr.Context
+	ctx       cntrl.Context
 }
 
 func TestLoginController_Register(t *testing.T) {
@@ -97,7 +98,7 @@ func TestLoginController_Register(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(&loginMocks{ctx: tt.args.ctx, userModel: tt.fields.userModel}, tt.mockedRes)
 			defer cleanSetup()
-			err := ctrlr.NewLoginController(tt.fields.userModel).Register(tt.args.ctx)
+			err := user.NewLoginController(tt.fields.userModel).Register(tt.args.ctx)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
@@ -174,7 +175,7 @@ func TestLoginController_Authorize(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(&loginMocks{ctx: tt.args.ctx, userModel: tt.fields.userModel}, tt.mockedRes)
 			defer cleanSetup()
-			err := ctrlr.NewLoginController(tt.fields.userModel).Authorize(tt.args.ctx)
+			err := user.NewLoginController(tt.fields.userModel).Authorize(tt.args.ctx)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return

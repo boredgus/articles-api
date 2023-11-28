@@ -1,9 +1,10 @@
-package controllers
+package user
 
 import (
 	"errors"
 	"fmt"
 	"net/http"
+	cntrl "user-management/internal/controllers"
 	"user-management/internal/domain"
 	"user-management/internal/models"
 )
@@ -38,7 +39,7 @@ type auth200 struct {
 // swagger:response authResp401
 type auth401 struct {
 	// in: body
-	body ErrorBody
+	body cntrl.ErrorBody
 }
 
 // swagger:route GET /authorize login authorization
@@ -51,17 +52,17 @@ type auth401 struct {
 //	 	200: authResp200
 //		401: authResp401
 //		500: commonError
-func (c Login) Authorize(ctx Context) error {
+func (c Login) Authorize(ctx cntrl.Context) error {
 	var user domain.User
 	err := ctx.Bind(&user)
 	if err != nil {
-		e := ctx.JSON(http.StatusUnauthorized, ErrorBody{Error: "username and password are required"})
+		e := ctx.JSON(http.StatusUnauthorized, cntrl.ErrorBody{Error: "username and password are required"})
 		return fmt.Errorf("%v: %w", e, err)
 	}
 
 	userId, token, err := c.userModel.Authorize(user)
 	if errors.Is(err, models.InvalidAuthParameterErr) {
-		e := ctx.JSON(http.StatusUnauthorized, ErrorBody{Error: err.Error()})
+		e := ctx.JSON(http.StatusUnauthorized, cntrl.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}
 	if err != nil {
