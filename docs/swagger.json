@@ -137,7 +137,7 @@
           "x-go-name": "UserId"
         }
       },
-      "x-go-package": "user-management/internal/controllers"
+      "x-go-package": "user-management/internal/controllers/login"
     }
   },
   "responses": {
