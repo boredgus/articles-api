@@ -32,7 +32,7 @@ type authResult struct {
 // successfully authorized
 // swagger:response authResp200
 // nolint:deadcode
-type auth200 struct {
+type authResp200 struct {
 	// in: body
 	body authResult
 }
@@ -40,7 +40,7 @@ type auth200 struct {
 // username or password is invalid
 // swagger:response authResp401
 // nolint:deadcode
-type auth401 struct {
+type authResp401 struct {
 	// in: body
 	body cntrl.ErrorBody
 }
