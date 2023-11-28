@@ -10,7 +10,7 @@ import (
 )
 
 // swagger:parameters registration
-// lint:ignore
+// nolint:unused
 type registerParams struct {
 	// in: body
 	// required: true
@@ -19,12 +19,12 @@ type registerParams struct {
 
 // user created
 // swagger:response registerResp201
-// lint:ignore
+// nolint:unused
 type registerResp201 struct{}
 
 // user with such username already exists
 // swagger:response registerResp409
-// lint:ignore
+// nolint:unused
 type registerResp409 struct {
 	// in: body
 	body cntrl.ErrorBody
