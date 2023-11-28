@@ -14,12 +14,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type loginFields struct {
-	userModel models.UserModel
-}
-type loginArgs struct {
-	ctx cntrl.Context
-}
 type loginMocks struct {
 	userModel models.UserModel
 	ctx       cntrl.Context

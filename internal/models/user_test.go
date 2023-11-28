@@ -91,9 +91,6 @@ func TestUserService_Authorize(t *testing.T) {
 		token auth.Token
 		pswd  auth.Password
 	}
-	type args struct {
-		user domain.User
-	}
 	type mockedRes struct {
 		user        repo.User
 		repoErr     error
