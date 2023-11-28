@@ -36,43 +36,36 @@ func TestUserService_Create(t *testing.T) {
 			pswdCall.Unset()
 		}
 	}
-	valueOfFields := fields{
-		repo: repoMocks.NewUserRepository(t),
-		pswd: authMocks.NewPassword(t),
-	}
+	repoMock := repoMocks.NewUserRepository(t)
+	pswdMock := authMocks.NewPassword(t)
 	validUser := domain.NewUser("username", "PASsword/123")
 	hashErr := fmt.Errorf("hash error")
 	tests := []struct {
 		name      string
-		fields    fields
 		mockedRes mockedRes
 		args      args
 		wantErr   error
 	}{
 		{
 			name:      "invalid credentials",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{},
 			args:      args{user: domain.NewUser("qw", "er")},
 			wantErr:   InvalidAuthParameterErr,
 		},
 		{
 			name:      "password hashing failed",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{hashErr: hashErr},
 			args:      args{user: validUser},
 			wantErr:   hashErr,
 		},
 		{
 			name:      "username is duplicated",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{createErr: UsernameDuplicationErr},
 			args:      args{user: validUser},
 			wantErr:   UsernameDuplicationErr,
 		},
 		{
 			name:      "success",
-			fields:    valueOfFields,
 			mockedRes: mockedRes{},
 			args:      args{user: validUser},
 			wantErr:   nil,
@@ -80,12 +73,9 @@ func TestUserService_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cleanSetup := setup(&tt.fields, tt.mockedRes)
+			cleanSetup := setup(&fields{repo: repoMock, pswd: pswdMock}, tt.mockedRes)
 			defer cleanSetup()
-			err := user{
-				repo: tt.fields.repo,
-				pswd: tt.fields.pswd,
-			}.Create(tt.args.user)
+			err := user{repo: repoMock, pswd: pswdMock}.Create(tt.args.user)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
@@ -124,11 +114,9 @@ func TestUserService_Authorize(t *testing.T) {
 			tokenCall.Unset()
 		}
 	}
-	valueOfFields := fields{
-		repo:  repoMocks.NewUserRepository(t),
-		pswd:  authMocks.NewPassword(t),
-		token: authMocks.NewToken(t),
-	}
+	repoMock := repoMocks.NewUserRepository(t)
+	pswdMock := authMocks.NewPassword(t)
+	tokenMock := authMocks.NewToken(t)
 	validUser := domain.NewUser("username", "PASsword/123")
 	userToken := "dXNlcm5hbWU6UEFTc3dvcmQvMTIz"
 	userFromRepo := repo.User{
@@ -139,45 +127,35 @@ func TestUserService_Authorize(t *testing.T) {
 	tokenErr := fmt.Errorf("token error")
 	tests := []struct {
 		name       string
-		fields     fields
 		mockedRes  mockedRes
-		args       args
 		wantUserId string
 		wantToken  string
 		wantErr    error
 	}{
 		{
 			name:       "no user with such username",
-			fields:     valueOfFields,
 			mockedRes:  mockedRes{user: repo.User{}, repoErr: InvalidAuthParameterErr},
-			args:       args{user: validUser},
 			wantUserId: "",
 			wantToken:  "",
 			wantErr:    InvalidAuthParameterErr,
 		},
 		{
 			name:       "invalid password",
-			fields:     valueOfFields,
 			mockedRes:  mockedRes{user: userFromRepo, repoErr: nil, isPswdValid: false},
-			args:       args{user: validUser},
 			wantUserId: "",
 			wantToken:  "",
 			wantErr:    InvalidAuthParameterErr,
 		},
 		{
 			name:       "failed to generate token",
-			fields:     valueOfFields,
 			mockedRes:  mockedRes{user: userFromRepo, repoErr: nil, isPswdValid: true, token: "", tokenErr: tokenErr},
-			args:       args{user: validUser},
 			wantUserId: userFromRepo.OId,
 			wantToken:  "",
 			wantErr:    tokenErr,
 		},
 		{
 			name:       "success",
-			fields:     valueOfFields,
 			mockedRes:  mockedRes{user: userFromRepo, repoErr: nil, isPswdValid: true, token: userToken, tokenErr: nil},
-			args:       args{user: validUser},
 			wantUserId: userFromRepo.OId,
 			wantToken:  userToken,
 			wantErr:    nil,
@@ -185,14 +163,13 @@ func TestUserService_Authorize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cleanSetup := setup(&tt.fields, tt.mockedRes)
+			cleanSetup := setup(&fields{repo: repoMock, pswd: pswdMock, token: tokenMock}, tt.mockedRes)
 			defer cleanSetup()
-			u := user{
-				repo:  tt.fields.repo,
-				token: tt.fields.token,
-				pswd:  tt.fields.pswd,
-			}
-			gotUserId, gotToken, err := u.Authorize(tt.args.user)
+			gotUserId, gotToken, err := user{
+				repo:  repoMock,
+				token: tokenMock,
+				pswd:  pswdMock,
+			}.Authorize(validUser)
 			assert.Equal(t, gotUserId, tt.wantUserId)
 			assert.Equal(t, gotToken, tt.wantToken)
 			if err != nil {
