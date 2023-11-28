@@ -1,13 +1,17 @@
 package internal
 
 import (
-	"user-management/internal/controllers"
+	user "user-management/internal/controllers/login"
 	"user-management/internal/gateways"
 	"user-management/internal/models"
 )
 
-func NewAppController(store gateways.Store) controllers.AppController {
-	return controllers.AppController{
-		User: controllers.NewLoginController(models.NewUserModel(gateways.NewUserRepository(store))),
+type AppController struct {
+	User user.LoginController
+}
+
+func NewAppController(store gateways.Store) AppController {
+	return AppController{
+		User: user.NewLoginController(models.NewUserModel(gateways.NewUserRepository(store))),
 	}
 }

@@ -1,6 +1,6 @@
+# running
 composeName:=user-articles-api
 composeFile:=docker/docker-compose.yml
-
 start:
 	docker compose -p $(composeName) -f $(composeFile) --env-file .env up
 
@@ -16,7 +16,8 @@ restart:
 	make clean
 	make start
 
-generate mocks:
+# tests
+generate-mocks:
 	mockery --config=./config/.mockery.yaml
 
 tests:
@@ -25,3 +26,12 @@ tests:
 
 show coverage:
 	go tool cover -html="coverage.txt"
+
+# docs
+specFile:=docs/swagger.json
+validate-docs:
+	swagger validate $(specFile)
+
+serve-docs:
+	make validate-docs
+	swagger serve --flavor=swagger --port=3033 $(specFile)
