@@ -25,6 +25,13 @@ type User struct {
 	Password string `json:"password" sql:"pswd" form:"password" validate:"min=8,max=20,password"`
 }
 
+type Requirements map[string]string
+
+var userRequirements = Requirements{
+	"Password": "password should have lenth between 8 and 20, at least one lowercase letter, at least one uppercase letter, at least one number, at least one of special symbols .;_*/",
+	"Username": "username should have length between 4 and 20",
+}
+
 var passwordRules = []*regexp.Regexp{
 	regexp.MustCompile("[a-z]"),
 	regexp.MustCompile("[A-Z]"),
@@ -44,24 +51,17 @@ func (u User) Validate() error {
 	if err != nil {
 		logrus.Warnf("failed to register custom password validation")
 	}
-	err = validate.Struct(u)
-
-	return parseError(err)
+	return parseError(validate.Struct(u), userRequirements)
 }
 
-var fieldRequirements = map[string]string{
-	"Password": "password should have lenth between 8 and 20, at least one lowercase letter, at least one uppercase letter, at least one number, at least one of special symbols .;_*/",
-	"Username": "username should have length between 4 and 20",
-}
-
-func parseError(err error) error {
+func parseError(err error, requirements Requirements) error {
 	if err == nil {
 		return nil
 	}
 
 	msg := ""
 	for _, err := range err.(validator.ValidationErrors) {
-		msg += fieldRequirements[err.Field()] + " ; "
+		msg += requirements[err.Field()] + " ; "
 	}
 	return fmt.Errorf(msg)
 }
