@@ -20,6 +20,8 @@ func getConfig() *mysql.Config {
 	config.Net = "tcp"
 	config.Addr = env.DBContainer
 	config.DBName = env.MySQLDatabase
+	config.ParseTime = true
+	config.MultiStatements = true
 
 	return config
 }

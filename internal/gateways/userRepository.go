@@ -46,3 +46,23 @@ func (r UserRepository) Get(username string) (repo.User, error) {
 	}
 	return user, nil
 }
+
+func (r UserRepository) GetByOId(oid string) (repo.User, error) {
+	var user repo.User
+	rows, err := r.store.Query(`
+		select o_id, username, pswd
+		from user
+		where user.o_id=?;`, oid)
+	if err != nil {
+		return user, err
+	}
+	exists := rows.Next()
+	if !exists {
+		return user, models.UserNotFoundErr
+	}
+	err = rows.Scan(&user.OId, &user.Username, &user.Password)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
+}

@@ -20,6 +20,12 @@ func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 	e.GET("/authorize", func(c echo.Context) error {
 		return app.User.Authorize(NewContext(c))
 	})
+	e.POST("/articles", func(c echo.Context) error {
+		return app.Article.Create(NewContext(c))
+	})
+	e.GET("/articles", func(c echo.Context) error {
+		return app.Article.GetForUser(NewContext((c)))
+	})
 
 	return e
 }

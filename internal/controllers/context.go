@@ -1,5 +1,10 @@
 package controllers
 
+import (
+	"net/http"
+	"net/url"
+)
+
 // error entity
 // swagger:model
 type ErrorBody struct {
@@ -16,6 +21,9 @@ type Error struct {
 }
 
 type Context interface {
+	QueryParams() url.Values
+	FormParams() (url.Values, error)
+	Request() *http.Request
 	PathParam(name string) string
 	Bind(i interface{}) error
 
