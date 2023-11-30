@@ -130,6 +130,53 @@ func (_c *UserModel_Create_Call) RunAndReturn(run func(domain.User) error) *User
 	return _c
 }
 
+// Exists provides a mock function with given fields: oid, password
+func (_m *UserModel) Exists(oid string, password string) error {
+	ret := _m.Called(oid, password)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Exists")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(oid, password)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UserModel_Exists_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Exists'
+type UserModel_Exists_Call struct {
+	*mock.Call
+}
+
+// Exists is a helper method to define mock.On call
+//   - oid string
+//   - password string
+func (_e *UserModel_Expecter) Exists(oid interface{}, password interface{}) *UserModel_Exists_Call {
+	return &UserModel_Exists_Call{Call: _e.mock.On("Exists", oid, password)}
+}
+
+func (_c *UserModel_Exists_Call) Run(run func(oid string, password string)) *UserModel_Exists_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *UserModel_Exists_Call) Return(_a0 error) *UserModel_Exists_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *UserModel_Exists_Call) RunAndReturn(run func(string, string) error) *UserModel_Exists_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewUserModel creates a new instance of UserModel. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewUserModel(t interface {
