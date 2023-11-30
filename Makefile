@@ -13,7 +13,9 @@ remove-data:
 	docker volume rm $(composeName)_db
 
 restart:
-	make clean
+	docker stop articles-api
+	docker rm articles-api
+	docker rmi $(composeName)-server
 	make start
 
 # tests
