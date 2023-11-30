@@ -24,7 +24,7 @@ type Article struct {
 	// theme/topic of article
 	Theme string `json:"theme" form:"theme" validate:"required,min=1,max=200"`
 	// content of article
-	Text string `json:"text" form:"text" form:"theme" validate:"max=500"`
+	Text string `json:"text" form:"text" validate:"max=500"`
 	// tags related for article
 	Tags []string `json:"tags" form:"tags" validate:"tags"`
 	// time of creation
