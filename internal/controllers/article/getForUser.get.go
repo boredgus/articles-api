@@ -3,14 +3,11 @@ package article
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"user-management/internal/controllers"
 	"user-management/internal/domain"
 	"user-management/internal/models"
+	"user-management/internal/tools"
 )
-
-const DefaultPage = 0
-const DefaultLimit = 10
 
 // swagger:model
 type articles struct {
@@ -70,27 +67,17 @@ type articlesForUserResp400 struct {
 //	400: articlesForUserResp400
 //	500: commonError
 func (a Article) GetForUser(ctx controllers.Context) error {
-	username, pageStr, limitStr := ctx.QueryParams().Get("username"), ctx.QueryParams().Get("page"), ctx.QueryParams().Get("limit")
-	if len(pageStr) == 0 {
-		pageStr = "0"
-	}
-	page, err := strconv.Atoi(pageStr)
+	query := ctx.QueryParams()
+	username, pageStr, limitStr := query.Get("username"), query.Get("page"), query.Get("limit")
+	page, limit, err := tools.NewPagination().Parse(pageStr, limitStr)
 	if err != nil {
-		e := ctx.JSON(http.StatusBadRequest, controllers.ErrorBody{Error: "page should be number"})
-		return fmt.Errorf("%w: %w", e, err)
-	}
-	if len(limitStr) == 0 {
-		limitStr = "10"
-	}
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil {
-		e := ctx.JSON(http.StatusBadRequest, controllers.ErrorBody{Error: "limit should be number"})
+		e := ctx.JSON(http.StatusBadRequest, controllers.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%w: %w", e, err)
 	}
 
 	articlesData, paginationData, err := a.articleModel.GetForUser(username, page, limit)
 	if err != nil {
-		e := ctx.JSON(http.StatusInternalServerError, controllers.ErrorBody{Error: "failed to get list of articles for user"})
+		e := ctx.NoContent(http.StatusInternalServerError)
 		return fmt.Errorf("%w: %w", e, err)
 	}
 
