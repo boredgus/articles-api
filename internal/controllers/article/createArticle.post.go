@@ -80,9 +80,7 @@ func (a Article) Create(ctx controllers.Context) error {
 		return fmt.Errorf("%v: %w", e, err)
 	}
 	userOId := ctx.Request().Header.Get("user_oid")
-	fmt.Println("> before exists")
 	err = a.userModel.Exists(userOId, formParams.Get("password"))
-	fmt.Print("> arter exists")
 	if errors.Is(err, models.UserNotFoundErr) || errors.Is(err, models.InvalidAuthParameterErr) {
 		e := ctx.JSON(http.StatusUnauthorized, controllers.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)

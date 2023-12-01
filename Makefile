@@ -23,7 +23,7 @@ generate-mocks:
 	mockery --config=./config/.mockery.yaml
 
 tests:
-	go test ./... -v -coverprofile="coverage.txt" -covermode count
+	go test ./... -coverprofile="coverage.txt" -covermode count
 	go tool cover -func="coverage.txt"
 
 show coverage:
