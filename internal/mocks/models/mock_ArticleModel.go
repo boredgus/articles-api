@@ -137,6 +137,53 @@ func (_c *ArticleModel_GetForUser_Call) RunAndReturn(run func(string, int, int) 
 	return _c
 }
 
+// Update provides a mock function with given fields: userID, article
+func (_m *ArticleModel) Update(userID string, article *domain.Article) error {
+	ret := _m.Called(userID, article)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Update")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, *domain.Article) error); ok {
+		r0 = rf(userID, article)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ArticleModel_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type ArticleModel_Update_Call struct {
+	*mock.Call
+}
+
+// Update is a helper method to define mock.On call
+//   - userID string
+//   - article *domain.Article
+func (_e *ArticleModel_Expecter) Update(userID interface{}, article interface{}) *ArticleModel_Update_Call {
+	return &ArticleModel_Update_Call{Call: _e.mock.On("Update", userID, article)}
+}
+
+func (_c *ArticleModel_Update_Call) Run(run func(userID string, article *domain.Article)) *ArticleModel_Update_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(*domain.Article))
+	})
+	return _c
+}
+
+func (_c *ArticleModel_Update_Call) Return(_a0 error) *ArticleModel_Update_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ArticleModel_Update_Call) RunAndReturn(run func(string, *domain.Article) error) *ArticleModel_Update_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewArticleModel creates a new instance of ArticleModel. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewArticleModel(t interface {

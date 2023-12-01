@@ -19,9 +19,11 @@ type PaginationData struct {
 type ArticleModel interface {
 	Create(userOId string, article *domain.Article) error
 	GetForUser(username string, page, limit int) ([]domain.Article, PaginationData, error)
+	Update(userID string, article *domain.Article) error
 }
 
 var InvalidArticleErr = errors.New("invalid article")
+var UserIsNotAnOwnerErr = errors.New("user does not have such article")
 
 func NewArticleModel(repo repo.ArticleRepository) ArticleModel {
 	return ArticleService{repo}
@@ -55,4 +57,23 @@ func (a ArticleService) GetForUser(username string, page, limit int) ([]domain.A
 		return nil, PaginationData{}, err
 	}
 	return articles, PaginationData{Page: page, Limit: limit, Count: len(articles)}, nil
+}
+
+func (a ArticleService) Update(username string, article *domain.Article) error {
+	err := a.repo.IsOwner(article.OId, username)
+	if errors.Is(err, UserIsNotAnOwnerErr) {
+		return err
+	}
+	if err := article.Validate(); err != nil {
+		return fmt.Errorf("%w: %w", InvalidArticleErr, err)
+	}
+	err = a.repo.Update(repo.ArticleData{
+		OId:   article.OId,
+		Theme: article.Theme,
+		Text:  article.Text,
+		Tags:  article.Tags,
+	})
+	t := time.Now()
+	article.UpdatedAt = &t
+	return err
 }

@@ -65,6 +65,14 @@
         }
       },
       "post": {
+        "security": [
+          {
+            "userOId": []
+          },
+          {
+            "password": []
+          }
+        ],
         "description": "Checks user with provided `user_oid` and `password` exists and validates article data.\nThen saves and returns created item.",
         "tags": [
           "articles"
@@ -73,50 +81,13 @@
         "operationId": "create_article",
         "parameters": [
           {
-            "type": "string",
-            "x-go-name": "UserOId",
+            "x-go-name": "Article",
             "description": "unique user identifier",
-            "name": "user_oid",
-            "in": "header",
-            "required": true
-          },
-          {
-            "x-go-name": "Body",
-            "description": "user password and article payload",
-            "name": "payload",
+            "name": "article",
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "required": [
-                "theme",
-                "password"
-              ],
-              "properties": {
-                "password": {
-                  "description": "user password",
-                  "type": "string",
-                  "x-go-name": "Password"
-                },
-                "tags": {
-                  "description": "topics of article",
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  },
-                  "x-go-name": "Tags"
-                },
-                "text": {
-                  "description": "content of article",
-                  "type": "string",
-                  "x-go-name": "Text"
-                },
-                "theme": {
-                  "description": "theme of article",
-                  "type": "string",
-                  "x-go-name": "Theme"
-                }
-              }
+              "$ref": "#/definitions/ArticleData"
             }
           }
         ],
@@ -132,6 +103,46 @@
           },
           "500": {
             "$ref": "#/responses/commonError"
+          }
+        }
+      }
+    },
+    "/articles/{article_id}": {
+      "put": {
+        "security": [
+          {
+            "BasicAuth": []
+          }
+        ],
+        "description": "Checks whether article is owned by authorized user, validates provided article data, updates article and returns updates item.",
+        "tags": [
+          "articles"
+        ],
+        "summary": "updates article",
+        "operationId": "update_article",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ArticleId",
+            "description": "article identifier",
+            "name": "article_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "x-go-name": "Article",
+            "description": "article data to update",
+            "name": "article",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ArticleData"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/updateArticleResp200"
           }
         }
       }
@@ -245,6 +256,33 @@
         }
       },
       "x-go-package": "user-management/internal/domain"
+    },
+    "ArticleData": {
+      "type": "object",
+      "required": [
+        "theme"
+      ],
+      "properties": {
+        "tags": {
+          "description": "topics of article",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Tags"
+        },
+        "text": {
+          "description": "content of article",
+          "type": "string",
+          "x-go-name": "Text"
+        },
+        "theme": {
+          "description": "theme of article",
+          "type": "string",
+          "x-go-name": "Theme"
+        }
+      },
+      "x-go-package": "user-management/internal/controllers/article"
     },
     "ArticleStatus": {
       "type": "integer",
@@ -405,11 +443,29 @@
       "schema": {
         "$ref": "#/definitions/ErrorBody"
       }
+    },
+    "updateArticleResp200": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/Article"
+      }
     }
   },
   "securityDefinitions": {
-    "basicAuth": {
+    "BasicAuth": {
       "type": "basic"
+    },
+    "password": {
+      "description": "secret password",
+      "type": "apiKey",
+      "name": "password",
+      "in": "query"
+    },
+    "userOId": {
+      "description": "user unique identifier",
+      "type": "apiKey",
+      "name": "User-OId",
+      "in": "header"
     }
   }
 }

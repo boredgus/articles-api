@@ -130,6 +130,99 @@ func (_c *ArticleRepository_GetForUser_Call) RunAndReturn(run func(string, int, 
 	return _c
 }
 
+// IsOwner provides a mock function with given fields: articleOId, username
+func (_m *ArticleRepository) IsOwner(articleOId string, username string) error {
+	ret := _m.Called(articleOId, username)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsOwner")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(articleOId, username)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ArticleRepository_IsOwner_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsOwner'
+type ArticleRepository_IsOwner_Call struct {
+	*mock.Call
+}
+
+// IsOwner is a helper method to define mock.On call
+//   - articleOId string
+//   - username string
+func (_e *ArticleRepository_Expecter) IsOwner(articleOId interface{}, username interface{}) *ArticleRepository_IsOwner_Call {
+	return &ArticleRepository_IsOwner_Call{Call: _e.mock.On("IsOwner", articleOId, username)}
+}
+
+func (_c *ArticleRepository_IsOwner_Call) Run(run func(articleOId string, username string)) *ArticleRepository_IsOwner_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *ArticleRepository_IsOwner_Call) Return(_a0 error) *ArticleRepository_IsOwner_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ArticleRepository_IsOwner_Call) RunAndReturn(run func(string, string) error) *ArticleRepository_IsOwner_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Update provides a mock function with given fields: article
+func (_m *ArticleRepository) Update(article repo.ArticleData) error {
+	ret := _m.Called(article)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Update")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(repo.ArticleData) error); ok {
+		r0 = rf(article)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ArticleRepository_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type ArticleRepository_Update_Call struct {
+	*mock.Call
+}
+
+// Update is a helper method to define mock.On call
+//   - article repo.ArticleData
+func (_e *ArticleRepository_Expecter) Update(article interface{}) *ArticleRepository_Update_Call {
+	return &ArticleRepository_Update_Call{Call: _e.mock.On("Update", article)}
+}
+
+func (_c *ArticleRepository_Update_Call) Run(run func(article repo.ArticleData)) *ArticleRepository_Update_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(repo.ArticleData))
+	})
+	return _c
+}
+
+func (_c *ArticleRepository_Update_Call) Return(_a0 error) *ArticleRepository_Update_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ArticleRepository_Update_Call) RunAndReturn(run func(repo.ArticleData) error) *ArticleRepository_Update_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewArticleRepository creates a new instance of ArticleRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewArticleRepository(t interface {

@@ -12,29 +12,20 @@ import (
 type ArticleData struct {
 	// theme of article
 	// required: true
-	Theme string `json:"theme"`
+	Theme string `json:"theme" form:"theme"`
 	// content of article
-	Text string `json:"text"`
+	Text string `json:"text" form:"text"`
 	// topics of article
-	Tags []string `json:"tags"`
+	Tags []string `json:"tags" form:"tags"`
 }
 
 // swagger:parameters create_article
 // nolint:unused
 type createParameters struct {
-	// unique user identifier
-	// in: header
-	// required: true
-	UserOId string `json:"user_oid"`
-	// user password and article payload
+	// article data
 	// in: body
 	// required: true
-	Body struct {
-		// user password
-		// required: true
-		Password string `json:"password"`
-		ArticleData
-	} `json:"payload"`
+	Article ArticleData `json:"article"`
 }
 
 // successfully created
@@ -67,6 +58,11 @@ type authResp401 struct {
 // Checks user with provided `user_oid` and `password` exists and validates article data.
 // Then saves and returns created item.
 //
+// security:
+//
+//   - userOId:
+//     password:
+//
 // responses:
 //
 //	201: createArticleResp201
@@ -74,13 +70,8 @@ type authResp401 struct {
 //	400: createArticleResp400
 //	500: commonError
 func (a Article) Create(ctx controllers.Context) error {
-	formParams, err := ctx.FormParams()
-	if err != nil {
-		e := ctx.JSON(http.StatusBadRequest, controllers.ErrorBody{Error: "failed to parse form params"})
-		return fmt.Errorf("%v: %w", e, err)
-	}
-	userOId := ctx.Request().Header.Get("user_oid")
-	err = a.userModel.Exists(userOId, formParams.Get("password"))
+	userOId := ctx.Request().Header.Get("User-OId")
+	err := a.userModel.Exists(userOId, ctx.QueryParams().Get("password"))
 	if errors.Is(err, models.UserNotFoundErr) || errors.Is(err, models.InvalidAuthParameterErr) {
 		e := ctx.JSON(http.StatusUnauthorized, controllers.ErrorBody{Error: "invalid user_oid or password"})
 		return fmt.Errorf("%v: %w", e, err)
@@ -90,11 +81,16 @@ func (a Article) Create(ctx controllers.Context) error {
 		return fmt.Errorf("%v: %w", e, err)
 	}
 
-	article := domain.Article{
-		Theme: formParams.Get("theme"),
-		Text:  formParams.Get("text"),
-		Tags:  formParams["tags"]}
-
+	var data ArticleData
+	err = ctx.Bind(&data)
+	if err != nil {
+		e := ctx.JSON(http.StatusBadRequest, controllers.ErrorBody{Error: "failed to parse article"})
+		return fmt.Errorf("%v: %w", e, err)
+	}
+	article := domain.Article{Theme: data.Theme, Text: data.Text, Tags: data.Tags}
+	if len(article.Tags) == 0 {
+		article.Tags = []string{}
+	}
 	err = a.articleModel.Create(userOId, &article)
 	if errors.Is(err, models.InvalidArticleErr) {
 		e := ctx.JSON(http.StatusBadRequest, controllers.ErrorBody{Error: err.Error()})

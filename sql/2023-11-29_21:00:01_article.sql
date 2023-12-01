@@ -5,7 +5,7 @@ create table article (
   theme varchar(200) not null check (theme > ''),
   text varchar(500) default "",
   created_at timestamp default current_timestamp,
-  updated_at timestamp,
+  updated_at timestamp on update current_timestamp,
   status int not null default 0,
   foreign key (user_id) references user(id) on delete cascade
 );

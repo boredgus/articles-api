@@ -1,7 +1,35 @@
 {
   "securityDefinitions": {
-    "basicAuth": {
+    "BasicAuth": {
       "type": "basic"
+    },
+    "userOId": {
+      "description": "user unique identifier",
+      "type": "apiKey",
+      "in": "header",
+      "name": "User-OId"
+    },
+    "password": {
+      "description": "secret password",
+      "type": "apiKey",
+      "in": "query",
+      "name": "password"
+    }
+  },
+  "paths": {
+    "/articles": {
+      "post": {
+        "security": [
+          {
+            "userOId": [
+              "[]"
+            ],
+            "password": [
+              "[]"
+            ]
+          }
+        ]
+      }
     }
   }
 }

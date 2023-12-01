@@ -15,16 +15,21 @@ func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 		}{Message: "alive"})
 	})
 	e.POST("/register", func(c echo.Context) error {
-		return app.User.Register(NewContext(c))
+		return app.Login.Register(NewContext(c))
 	})
 	e.GET("/authorize", func(c echo.Context) error {
-		return app.User.Authorize(NewContext(c))
+		return app.Login.Authorize(NewContext(c))
 	})
 	e.POST("/articles", func(c echo.Context) error {
 		return app.Article.Create(NewContext(c))
 	})
 	e.GET("/articles", func(c echo.Context) error {
 		return app.Article.GetForUser(NewContext((c)))
+	})
+
+	protectedArticles := e.Group("/articles", middleware.BasicAuth(authMiddleware(app.User)))
+	protectedArticles.PUT("/:article_id", func(c echo.Context) error {
+		return app.Article.Update(NewContext(c))
 	})
 
 	return e
@@ -51,8 +56,8 @@ func GetRouter(cntrs AppController) *echo.Echo {
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{
-			"http://localhost:8080",
-			"http://localhost:3033",
+			"http://localhost:8080", // local server
+			"http://localhost:3033", // local docs
 		},
 	}))
 
