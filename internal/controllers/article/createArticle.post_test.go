@@ -77,7 +77,7 @@ func TestArticleController_Create(t *testing.T) {
 			mockedRes: mockedRes{
 				userExistErr: mdl.UserNotFoundErr,
 				jsonCode:     http.StatusUnauthorized,
-				jsonBody:     cntrs.ErrorBody{Error: mdl.UserNotFoundErr.Error()},
+				jsonBody:     cntrs.ErrorBody{Error: "invalid user_oid or password"},
 			},
 			wantErr: mdl.UserNotFoundErr,
 		},
@@ -86,7 +86,7 @@ func TestArticleController_Create(t *testing.T) {
 			mockedRes: mockedRes{
 				userExistErr: mdl.InvalidAuthParameterErr,
 				jsonCode:     http.StatusUnauthorized,
-				jsonBody:     cntrs.ErrorBody{Error: mdl.InvalidAuthParameterErr.Error()},
+				jsonBody:     cntrs.ErrorBody{Error: "invalid user_oid or password"},
 			},
 			wantErr: mdl.InvalidAuthParameterErr,
 		},

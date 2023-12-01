@@ -82,7 +82,7 @@ func (a Article) Create(ctx controllers.Context) error {
 	userOId := ctx.Request().Header.Get("user_oid")
 	err = a.userModel.Exists(userOId, formParams.Get("password"))
 	if errors.Is(err, models.UserNotFoundErr) || errors.Is(err, models.InvalidAuthParameterErr) {
-		e := ctx.JSON(http.StatusUnauthorized, controllers.ErrorBody{Error: err.Error()})
+		e := ctx.JSON(http.StatusUnauthorized, controllers.ErrorBody{Error: "invalid user_oid or password"})
 		return fmt.Errorf("%v: %w", e, err)
 	}
 	if err != nil {
