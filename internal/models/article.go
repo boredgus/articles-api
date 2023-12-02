@@ -67,13 +67,18 @@ func (a ArticleService) Update(username string, article *domain.Article) error {
 	if err := article.Validate(); err != nil {
 		return fmt.Errorf("%w: %w", InvalidArticleErr, err)
 	}
-	err = a.repo.Update(repo.ArticleData{
+	timeOfCreation, err := a.repo.Update(repo.ArticleData{
 		OId:   article.OId,
 		Theme: article.Theme,
 		Text:  article.Text,
 		Tags:  article.Tags,
 	})
+	if err != nil {
+		return err
+	}
 	t := time.Now()
+	article.Status = domain.UpdatedStatus
+	article.CreatedAt = timeOfCreation
 	article.UpdatedAt = &t
-	return err
+	return nil
 }

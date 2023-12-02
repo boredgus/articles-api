@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 	"user-management/internal/domain"
 	"user-management/internal/models"
 	"user-management/internal/models/repo"
@@ -19,31 +20,49 @@ type ArticleRepository struct {
 	store Store
 }
 
-func tagsToString(tags []string, leftWrapper, rightWrapper string) (res string) {
+func tagsToString(tags []string, leftWrapper, rightWrapper, separator string) (res string) {
 	for i, t := range tags {
 		res += leftWrapper + t + rightWrapper
 		if i != len(tags)-1 {
-			res += ","
+			res += separator
 		}
 	}
 	return
 }
 
-func addTagsForArticle(OId string, tags []string) string {
+func addTagsForArticle(articleOId string, tags []string) string {
 	return fmt.Sprintf(`
-		insert into tag (label)
-		values %v as new
-		on duplicate key update label=new.label;
-		
-		insert into article_tag (article_id, tag_id)
-		select a.id as article_id, t.id as tag_id
-		from article as a
-		join tag t on a.o_id="%v" and t.label in (%v);`,
-		tagsToString(tags, "('", "')"), OId, tagsToString(tags, "'", "'"))
+	-- create new tags without duplication
+	insert into tag (label)
+	select * 
+	from (%v) as tmp
+	where not exists (
+		select label
+		from tag
+		where label=tmp.label
+	);
+
+	-- bind tags to article without duplication of existed bindings
+	insert into article_tag (article_id, tag_id)
+	select new_.article_id, new_.tag_id
+	from 
+		(select a.id article_id, t.id tag_id, t.label
+		from  article a, tag t
+		where a.o_id="%v" and 
+			t.label in (%v)) as new_
+	where new_.label not in (
+		select t.label
+		from  article a, article_tag ats
+		join tag t
+		on ats.tag_id=t.id
+		where a.o_id="%v" and 
+			ats.article_id=a.id);`,
+		tagsToString(tags, "select '", "' label", " union "), articleOId,
+		tagsToString(tags, "'", "'", ","), articleOId,
+	)
 }
 
 func (r ArticleRepository) Create(userOId string, article repo.ArticleData) error {
-	fmt.Println("> repo: before create article query")
 	query := fmt.Sprintf(`
 		insert into article (o_id, user_id, theme, text)
 		select "%v", id, "%v", "%v"
@@ -52,7 +71,8 @@ func (r ArticleRepository) Create(userOId string, article repo.ArticleData) erro
 	if len(article.Tags) > 0 {
 		query += addTagsForArticle(article.OId, article.Tags)
 	}
-	_, err := r.store.Query(query)
+	rows, err := r.store.Query(query)
+	rows.Close()
 	if err != nil {
 		logrus.Infoln("failed to create article", err)
 		return err
@@ -63,11 +83,13 @@ func (r ArticleRepository) scan(rows *sql.Rows) (domain.Article, error) {
 	var a domain.Article
 	var tags sql.NullString
 	var updatedAt sql.NullTime
-	err := rows.Scan(&a.OId, &a.Theme, &a.Text, &tags, &a.CreatedAt, &updatedAt)
+	err := rows.Scan(&a.OId, &a.Theme, &a.Text, &tags, &a.CreatedAt, &updatedAt, &a.Status)
 	if err != nil {
 		return domain.Article{}, err
 	}
-	a.UpdatedAt = &updatedAt.Time
+	if updatedAt.Valid {
+		a.UpdatedAt = &updatedAt.Time
+	}
 	if tags.Valid {
 		a.Tags = strings.Split(tags.String, ",")
 	} else {
@@ -78,19 +100,19 @@ func (r ArticleRepository) scan(rows *sql.Rows) (domain.Article, error) {
 
 func (r ArticleRepository) GetForUser(username string, page, limit int) ([]domain.Article, error) {
 	rows, err := r.store.Query(`
-	select a.o_id, a.theme, a.text, group_concat(a.tags), a.created_at, a.updated_at
+	select a.o_id, a.theme, a.text, group_concat(a.tags), a.created_at, a.updated_at, a.status
 	from
-		(select a.id, a.o_id, a.user_id, a.theme, a.text, t.label as tags, a.created_at, a.updated_at
+		(select a.id, a.o_id, a.user_id, a.theme, a.text, t.label as tags, a.created_at, a.updated_at, a.status
 		from article a
 		left join (article_tag as ats join tag t)
 		on a.id=ats.article_id and ats.tag_id=t.id) as a,
 		user as u
 	where u.username=? and a.user_id=u.id
-	group by a.id, a.o_id, a.theme, a.text, a.created_at, a.updated_at
+	group by a.id, a.o_id, a.theme, a.text, a.created_at, a.updated_at, a.status
 	order by a.id desc
 	limit ?, ?;`, username, page*limit, limit)
+	defer rows.Close()
 	if err != nil {
-		fmt.Println("> failed to query articles", err)
 		return nil, err
 	}
 	res := make([]domain.Article, 0, limit)
@@ -111,6 +133,7 @@ func (r ArticleRepository) IsOwner(articleOId, username string) error {
 	from article a, user u
 	where u.username=? and
 		u.id=a.user_id and a.o_id=?;`, username, articleOId)
+	defer rows.Close()
 	if err != nil {
 		return err
 	}
@@ -123,50 +146,50 @@ func (r ArticleRepository) IsOwner(articleOId, username string) error {
 	return nil
 }
 
-func (r ArticleRepository) Update(article repo.ArticleData) error {
-	/**
-	update theme, text, status
-	tags length == 0:
-		remove all tags from article_tag
-	tags length > 0:
-		create tags
-		remove tags from article_tag that are not equal to given
-	*/
+func (r ArticleRepository) Update(article repo.ArticleData) (time.Time, error) {
 	query := fmt.Sprintf(`
+		-- update article
 		update article a
-		set a.theme="%v" and a.text="%v" and a.status=1
-		where a.o_id=%v;`, article.Theme, article.Text, article.OId)
+		set a.theme="%v", a.text="%v", a.status=1
+		where a.o_id="%v";`, article.Theme, article.Text, article.OId)
 	if len(article.Tags) == 0 {
 		query += fmt.Sprintf(`
+			-- delete all tags for this article
 			delete ats
 			from article_tag ats, article a
 			where ats.article_id=a.id and a.o_id="%v";`, article.OId)
 	} else {
-		query += fmt.Sprintf(`%v
-			delete ats
-			from
-				article_tag as ats,
-				(select a.id as article_id, t.id as tag_id, t.label as tag
-				from article a
-				left join (article_tag as ats join tag t)
-				on a.id=ats.article_id and ats.tag_id=t.id
-					where a.o_id="%v") as tags
-			where ats.article_id=tags.article_id and
-				tags.tag not in (%v);`,
-			addTagsForArticle(article.OId, article.Tags), article.OId, tagsToString(article.Tags, "'", "'"))
+		query += addTagsForArticle(article.OId, article.Tags) +
+			fmt.Sprintf(`
+				-- delete tags that are not in given data
+				delete ats
+				from
+					article_tag as ats,
+					(select a.id as article_id, t.id as tag_id, t.label as tag
+					from article a
+					left join (article_tag as ats join tag t)
+					on a.id=ats.article_id and ats.tag_id=t.id
+						where a.o_id="%v") as tags
+				where ats.article_id=tags.article_id and
+					tags.tag not in (%v);`,
+				article.OId, tagsToString(article.Tags, "'", "'", ","))
 	}
+	query += fmt.Sprintf(`
+	-- get time of creation
+	select created_at
+	from article
+	where o_id="%v";
+	`, article.OId)
 	rows, err := r.store.Query(query)
-
-	fmt.Println("> repo: update article err", err)
-	cols, err := rows.Columns()
-	fmt.Println("> repo: columns", cols, err)
-
+	defer rows.Close()
+	if err != nil {
+		return time.Time{}, err
+	}
 	rows.Next()
-	var res string
-	fmt.Println("> repo: err invoke", rows.Err())
-	err = rows.Scan(&res)
-
-	fmt.Println("> repo: scan err and res", err, res)
-
-	return nil
+	var timeOfCreation sql.NullTime
+	err = rows.Scan(&timeOfCreation)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return timeOfCreation.Time, nil
 }
