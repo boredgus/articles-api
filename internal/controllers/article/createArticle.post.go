@@ -7,6 +7,7 @@ import (
 	"user-management/internal/controllers"
 	"user-management/internal/domain"
 	"user-management/internal/models"
+	"user-management/internal/views"
 )
 
 type ArticleData struct {
@@ -100,5 +101,5 @@ func (a Article) Create(ctx controllers.Context) error {
 		e := ctx.NoContent(http.StatusInternalServerError)
 		return fmt.Errorf("%v: %w", e, err)
 	}
-	return ctx.JSON(http.StatusCreated, article)
+	return ctx.JSON(http.StatusCreated, views.NewArticleView(article))
 }

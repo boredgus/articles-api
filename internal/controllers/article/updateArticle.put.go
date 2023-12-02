@@ -7,6 +7,7 @@ import (
 	"user-management/internal/controllers"
 	"user-management/internal/domain"
 	"user-management/internal/models"
+	"user-management/internal/views"
 )
 
 // swagger:parameters update_article
@@ -49,7 +50,6 @@ func (a Article) Update(ctx controllers.Context) error {
 		e := ctx.JSON(http.StatusBadRequest, controllers.ErrorBody{Error: "failed to parse article"})
 		return fmt.Errorf("%v: %w", e, err)
 	}
-	fmt.Printf("> data: %+v", data)
 	article := domain.Article{
 		OId:   ctx.PathParam("article_id"),
 		Theme: data.Theme,
@@ -58,7 +58,6 @@ func (a Article) Update(ctx controllers.Context) error {
 	if len(article.Tags) == 0 {
 		article.Tags = []string{}
 	}
-	fmt.Printf("> article data: %+v\n", article)
 
 	err = a.articleModel.Update(ctx.Request().Header.Get("Username"), &article)
 	if errors.Is(err, models.UserIsNotAnOwnerErr) {
@@ -73,5 +72,5 @@ func (a Article) Update(ctx controllers.Context) error {
 		e := ctx.NoContent(http.StatusInternalServerError)
 		return fmt.Errorf("%v: %w", e, err)
 	}
-	return ctx.JSON(http.StatusOK, article)
+	return ctx.JSON(http.StatusOK, views.NewArticleView(article))
 }

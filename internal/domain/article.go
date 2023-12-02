@@ -9,30 +9,32 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type ArticleStatus uint8
+type ArticleStatus int
 
 const (
+	DeletedStatus ArticleStatus = -1
 	InitialStatus ArticleStatus = 0
 	UpdatedStatus ArticleStatus = 1
-	DeletedStatus ArticleStatus = 2
 )
 
-// swagger:model
+var statuses = map[ArticleStatus]string{
+	DeletedStatus: "deleted",
+	InitialStatus: "created",
+	UpdatedStatus: "updated",
+}
+
+func (s ArticleStatus) String() string {
+	return statuses[s]
+}
+
 type Article struct {
-	// identifier of article
-	OId string `json:"id"`
-	// theme/topic of article
-	Theme string `json:"theme" form:"theme" validate:"required,min=1,max=200"`
-	// content of article
-	Text string `json:"text" form:"text" validate:"max=500"`
-	// tags related for article
-	Tags []string `json:"tags" form:"tags" validate:"tags"`
-	// time of creation
-	CreatedAt time.Time `json:"created_at"`
-	// time when was updated
-	UpdatedAt *time.Time `json:"updated_at"`
-	// status of article
-	Status ArticleStatus `json:"status,omitempty"`
+	OId       string        `json:"id"`
+	Theme     string        `json:"theme" form:"theme" validate:"required,min=1,max=200"`
+	Text      string        `json:"text" form:"text" validate:"max=500"`
+	Tags      []string      `json:"tags" form:"tags" validate:"tags"`
+	CreatedAt time.Time     `json:"created_at"`
+	UpdatedAt *time.Time    `json:"updated_at"`
+	Status    ArticleStatus `json:"status,omitempty"`
 }
 
 var articleRequirements = Requirements{

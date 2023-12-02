@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"net/http"
 	"user-management/internal/controllers"
-	"user-management/internal/domain"
 	"user-management/internal/models"
 	"user-management/internal/tools"
+	"user-management/internal/views"
 )
 
 // swagger:model
 type articles struct {
-	Data           []domain.Article      `json:"data"`
+	Data           []views.Article       `json:"data"`
 	PaginationData models.PaginationData `json:"pagination"`
 }
 
@@ -80,6 +80,10 @@ func (a Article) GetForUser(ctx controllers.Context) error {
 		e := ctx.NoContent(http.StatusInternalServerError)
 		return fmt.Errorf("%w: %w", e, err)
 	}
+	articleViews := make([]views.Article, len(articlesData))
+	for i, a := range articlesData {
+		articleViews[i] = views.NewArticleView(a)
+	}
 
-	return ctx.JSON(http.StatusOK, articles{Data: articlesData, PaginationData: paginationData})
+	return ctx.JSON(http.StatusOK, articles{Data: articleViews, PaginationData: paginationData})
 }
