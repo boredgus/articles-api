@@ -15,10 +15,11 @@ type UserRepository struct {
 }
 
 func (r UserRepository) Create(user repo.User) error {
-	_, err := r.store.Query(`
+	rows, err := r.store.Query(`
 		insert into user (o_id, username, pswd)
 		values (?, ?, ?);`,
 		user.OId, user.Username, user.Password)
+	rows.Close()
 	if err != nil && strings.Contains(err.Error(), "Error 1062") {
 		return models.UsernameDuplicationErr
 	}
@@ -32,6 +33,7 @@ func (r UserRepository) Get(username string) (repo.User, error) {
 		select o_id, username, pswd
 		from user
 		where user.username=?;`, username)
+	defer rows.Close()
 	if err != nil {
 		return user, err
 	}
@@ -53,6 +55,7 @@ func (r UserRepository) GetByOId(oid string) (repo.User, error) {
 		select o_id, username, pswd
 		from user
 		where user.o_id=?;`, oid)
+	defer rows.Close()
 	if err != nil {
 		return user, err
 	}

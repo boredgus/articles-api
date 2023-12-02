@@ -46,7 +46,7 @@ func NewMySQLStore() gateways.Store {
 			logrus.Fatalf("failed to connect to DB: %v", err)
 		}
 
-		db.SetMaxOpenConns(5)
+		db.SetMaxOpenConns(10)
 		db.SetMaxIdleConns(5)
 		database = db
 	})
@@ -60,4 +60,7 @@ type MySQLStore struct {
 
 func (s MySQLStore) Query(q string, args ...any) (*sql.Rows, error) {
 	return s.db.Query(q, args...)
+}
+func (s MySQLStore) Stats() sql.DBStats {
+	return s.db.Stats()
 }
