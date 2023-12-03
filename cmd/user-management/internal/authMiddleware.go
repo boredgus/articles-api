@@ -14,8 +14,7 @@ func authMiddleware(model models.UserModel) middleware.BasicAuthValidator {
 	return func(username, password string, c echo.Context) (bool, error) {
 		_, _, err := model.Authorize(domain.NewUser(username, password))
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, controllers.ErrorBody{Error: "user is unauthorized"})
-			return false, nil
+			return false, c.JSON(http.StatusUnauthorized, controllers.ErrorBody{Error: "user is unauthorized"})
 		}
 		c.Request().Header.Set("Username", username)
 		return true, nil

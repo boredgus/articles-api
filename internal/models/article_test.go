@@ -6,7 +6,6 @@ import (
 	"time"
 	"user-management/internal/domain"
 	repoMocks "user-management/internal/mocks/repo"
-	"user-management/internal/models/repo"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -16,9 +15,6 @@ func TestArticleService_Create(t *testing.T) {
 	type args struct {
 		userOId string
 		article *domain.Article
-	}
-	type articleMocks struct {
-		repo repo.ArticleRepository
 	}
 	type mockedRes struct {
 		createErr error
@@ -134,9 +130,6 @@ func TestArticleService_Update(t *testing.T) {
 	type args struct {
 		username string
 		article  *domain.Article
-	}
-	type articleMocks struct {
-		repo repo.ArticleRepository
 	}
 	type mockedRes struct {
 		isOwnerErr error

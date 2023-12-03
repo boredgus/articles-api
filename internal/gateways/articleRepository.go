@@ -111,7 +111,6 @@ func (r ArticleRepository) GetForUser(username string, page, limit int) ([]domai
 	group by a.id, a.o_id, a.theme, a.text, a.created_at, a.updated_at, a.status
 	order by a.id desc
 	limit ?, ?;`, username, page*limit, limit)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -119,11 +118,12 @@ func (r ArticleRepository) GetForUser(username string, page, limit int) ([]domai
 	for rows.Next() {
 		article, err := r.scan(rows)
 		if err != nil {
+			rows.Close()
 			return []domain.Article{}, err
 		}
 		res = append(res, article)
 	}
-
+	rows.Close()
 	return res, nil
 }
 
@@ -133,13 +133,14 @@ func (r ArticleRepository) IsOwner(articleOId, username string) error {
 	from article a, user u
 	where u.username=? and
 		u.id=a.user_id and a.o_id=?;`, username, articleOId)
-	defer rows.Close()
 	if err != nil {
+		rows.Close()
 		return err
 	}
 	rows.Next()
 	var res string
 	err = rows.Scan(&res)
+	rows.Close()
 	if err != nil {
 		return models.UserIsNotAnOwnerErr
 	}
@@ -181,13 +182,14 @@ func (r ArticleRepository) Update(article repo.ArticleData) (time.Time, error) {
 	where o_id="%v";
 	`, article.OId)
 	rows, err := r.store.Query(query)
-	defer rows.Close()
 	if err != nil {
+		rows.Close()
 		return time.Time{}, err
 	}
 	rows.Next()
 	var timeOfCreation sql.NullTime
 	err = rows.Scan(&timeOfCreation)
+	rows.Close()
 	if err != nil {
 		return time.Time{}, err
 	}

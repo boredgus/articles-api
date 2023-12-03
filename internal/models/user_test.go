@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"testing"
-	"user-management/internal/auth"
 	"user-management/internal/domain"
 	authMocks "user-management/internal/mocks/auth"
 	repoMocks "user-management/internal/mocks/repo"
@@ -15,10 +14,6 @@ import (
 )
 
 func TestUserService_Create(t *testing.T) {
-	type fields struct {
-		repo repo.UserRepository
-		pswd auth.Password
-	}
 	type args struct {
 		user domain.User
 	}
@@ -87,11 +82,6 @@ func TestUserService_Create(t *testing.T) {
 }
 
 func TestUserService_Authorize(t *testing.T) {
-	type fields struct {
-		repo  repo.UserRepository
-		token auth.Token
-		pswd  auth.Password
-	}
 	type mockedRes struct {
 		user        repo.User
 		repoErr     error
@@ -180,10 +170,6 @@ func TestUserService_Authorize(t *testing.T) {
 }
 
 func Test_user_Exists(t *testing.T) {
-	type args struct {
-		oid      string
-		password string
-	}
 	type mockedRes struct {
 		user        repo.User
 		repoErr     error
@@ -191,9 +177,10 @@ func Test_user_Exists(t *testing.T) {
 	}
 	repoMock := repoMocks.NewUserRepository(t)
 	pswdMock := authMocks.NewPassword(t)
+	userData := repo.User{OId: "o_id", Username: "username", Password: "pass"}
 	setup := func(res mockedRes) func() {
 		repoCall := repoMock.EXPECT().
-			GetByOId(mock.Anything).Return(res.user, res.repoErr).Once()
+			GetByOId(userData.OId).Return(res.user, res.repoErr).Once()
 		pswdCall := pswdMock.EXPECT().
 			Compare(res.user.Password, mock.Anything).Return(res.isPswdValid).Once()
 
@@ -202,11 +189,9 @@ func Test_user_Exists(t *testing.T) {
 			pswdCall.Unset()
 		}
 	}
-	userData := repo.User{OId: "o_id", Username: "username", Password: "pass"}
 	someError := errors.New("some error")
 	tests := []struct {
 		name      string
-		args      args
 		mockedRes mockedRes
 		wantErr   error
 	}{
