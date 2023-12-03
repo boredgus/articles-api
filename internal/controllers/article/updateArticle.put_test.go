@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestArticle_Update(t *testing.T) {
+func TestArticleController_Update(t *testing.T) {
 	type mockedRes struct {
 		bindErr       error
 		jsonCode      int

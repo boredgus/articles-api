@@ -19,11 +19,13 @@ type PaginationData struct {
 type ArticleModel interface {
 	Create(userOId string, article *domain.Article) error
 	GetForUser(username string, page, limit int) ([]domain.Article, PaginationData, error)
+	Get(articleOId string) (domain.Article, error)
 	Update(userID string, article *domain.Article) error
 }
 
 var InvalidArticleErr = errors.New("invalid article")
 var UserIsNotAnOwnerErr = errors.New("user does not have such article")
+var ArticleNotFoundErr = errors.New("article is not found")
 
 func NewArticleModel(repo repo.ArticleRepository) ArticleModel {
 	return ArticleService{repo}
@@ -49,6 +51,10 @@ func (a ArticleService) Create(userOId string, article *domain.Article) error {
 	article.CreatedAt = time.Now()
 
 	return err
+}
+
+func (a ArticleService) Get(articleOId string) (domain.Article, error) {
+	return a.repo.Get(articleOId)
 }
 
 func (a ArticleService) GetForUser(username string, page, limit int) ([]domain.Article, PaginationData, error) {

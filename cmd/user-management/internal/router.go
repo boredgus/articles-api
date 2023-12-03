@@ -26,6 +26,9 @@ func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 	e.GET("/articles", func(c echo.Context) error {
 		return app.Article.GetForUser(NewContext((c)))
 	})
+	e.GET("/articles/:article_id", func(c echo.Context) error {
+		return app.Article.Get(NewContext(c))
+	})
 
 	protectedArticles := e.Group("/articles", middleware.BasicAuth(authMiddleware(app.User)))
 	protectedArticles.PUT("/:article_id", func(c echo.Context) error {

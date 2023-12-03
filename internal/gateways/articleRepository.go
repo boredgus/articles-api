@@ -98,6 +98,28 @@ func (r ArticleRepository) scan(rows *sql.Rows) (domain.Article, error) {
 	return a, nil
 }
 
+func (r ArticleRepository) Get(articleOId string) (a domain.Article, err error) {
+	rows, err := r.store.Query(`
+		select a.o_id, a.theme, a.text, group_concat(t.label) as tags, a.created_at, a.updated_at, a.status
+		from article a
+		left join (article_tag as ats join tag t)
+		on a.id=ats.article_id and ats.tag_id=t.id
+		where a.o_id=?
+		group by a.o_id;`, articleOId)
+	if err != nil {
+		return
+	}
+	if !rows.Next() {
+		return a, models.ArticleNotFoundErr
+	}
+	a, err = r.scan(rows)
+	rows.Close()
+	if err != nil {
+		return
+	}
+	return a, nil
+}
+
 func (r ArticleRepository) GetForUser(username string, page, limit int) ([]domain.Article, error) {
 	rows, err := r.store.Query(`
 	select a.o_id, a.theme, a.text, group_concat(a.tags), a.created_at, a.updated_at, a.status

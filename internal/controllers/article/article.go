@@ -7,6 +7,7 @@ import (
 
 type ArticleController interface {
 	Create(ctx controllers.Context) error
+	Get(ctx controllers.Context) error
 	GetForUser(ctx controllers.Context) error
 	Update(ctx controllers.Context) error
 }

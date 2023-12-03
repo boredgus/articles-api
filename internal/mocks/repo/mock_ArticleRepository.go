@@ -72,6 +72,62 @@ func (_c *ArticleRepository_Create_Call) RunAndReturn(run func(string, repo.Arti
 	return _c
 }
 
+// Get provides a mock function with given fields: articleOId
+func (_m *ArticleRepository) Get(articleOId string) (domain.Article, error) {
+	ret := _m.Called(articleOId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Get")
+	}
+
+	var r0 domain.Article
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (domain.Article, error)); ok {
+		return rf(articleOId)
+	}
+	if rf, ok := ret.Get(0).(func(string) domain.Article); ok {
+		r0 = rf(articleOId)
+	} else {
+		r0 = ret.Get(0).(domain.Article)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(articleOId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ArticleRepository_Get_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Get'
+type ArticleRepository_Get_Call struct {
+	*mock.Call
+}
+
+// Get is a helper method to define mock.On call
+//   - articleOId string
+func (_e *ArticleRepository_Expecter) Get(articleOId interface{}) *ArticleRepository_Get_Call {
+	return &ArticleRepository_Get_Call{Call: _e.mock.On("Get", articleOId)}
+}
+
+func (_c *ArticleRepository_Get_Call) Run(run func(articleOId string)) *ArticleRepository_Get_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string))
+	})
+	return _c
+}
+
+func (_c *ArticleRepository_Get_Call) Return(_a0 domain.Article, _a1 error) *ArticleRepository_Get_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ArticleRepository_Get_Call) RunAndReturn(run func(string) (domain.Article, error)) *ArticleRepository_Get_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetForUser provides a mock function with given fields: username, page, limit
 func (_m *ArticleRepository) GetForUser(username string, page int, limit int) ([]domain.Article, error) {
 	ret := _m.Called(username, page, limit)

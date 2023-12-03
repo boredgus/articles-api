@@ -23,6 +23,7 @@ type Article struct {
 
 type ArticleRepository interface {
 	Create(userOId string, article ArticleData) error
+	Get(articleOId string) (domain.Article, error)
 	GetForUser(username string, page, limit int) ([]domain.Article, error)
 	Update(article ArticleData) (time.Time, error)
 	IsOwner(articleOId, username string) error

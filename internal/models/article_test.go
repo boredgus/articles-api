@@ -189,3 +189,54 @@ func TestArticleService_Update(t *testing.T) {
 		})
 	}
 }
+
+func TestArticleService_Get(t *testing.T) {
+	type args struct {
+		articleOId string
+	}
+	type mockedRes struct {
+		article domain.Article
+		err     error
+	}
+	repoMock := repoMocks.NewArticleRepository(t)
+	setup := func(res mockedRes) func() {
+		getCall := repoMock.EXPECT().
+			Get(mock.Anything).Return(res.article, res.err).Once()
+		return func() {
+			getCall.Unset()
+		}
+	}
+	someErr := errors.New("some err")
+	tests := []struct {
+		name      string
+		args      args
+		mockedRes mockedRes
+		wantA     domain.Article
+		wantErr   error
+	}{
+		{
+			name:      "failed to fetch article",
+			mockedRes: mockedRes{article: domain.Article{}, err: someErr},
+			wantA:     domain.Article{},
+			wantErr:   someErr,
+		},
+		{
+			name:      "success",
+			mockedRes: mockedRes{article: domain.Article{}},
+			wantA:     domain.Article{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanSetup := setup(tt.mockedRes)
+			defer cleanSetup()
+			got, err := NewArticleModel(repoMock).Get(tt.args.articleOId)
+			assert.Equal(t, got, tt.wantA)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+				return
+			}
+			assert.Nil(t, err)
+		})
+	}
+}
