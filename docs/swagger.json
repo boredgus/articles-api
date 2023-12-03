@@ -82,7 +82,7 @@
         "parameters": [
           {
             "x-go-name": "Article",
-            "description": "unique user identifier",
+            "description": "article data",
             "name": "article",
             "in": "body",
             "required": true,
@@ -99,7 +99,7 @@
             "$ref": "#/responses/createArticleResp400"
           },
           "401": {
-            "$ref": "#/responses/createArticleResp401"
+            "$ref": "#/responses/unauthorizedResp"
           },
           "500": {
             "$ref": "#/responses/commonError"
@@ -143,6 +143,18 @@
         "responses": {
           "200": {
             "$ref": "#/responses/updateArticleResp200"
+          },
+          "400": {
+            "$ref": "#/responses/updateArticleResp400"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorizedResp"
+          },
+          "404": {
+            "$ref": "#/responses/updateArticleResp404"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
           }
         }
       }
@@ -228,7 +240,14 @@
           "x-go-name": "OId"
         },
         "status": {
-          "$ref": "#/definitions/ArticleStatus"
+          "description": "status of article",
+          "type": "string",
+          "enum": [
+            "deleted",
+            "created",
+            "updated"
+          ],
+          "x-go-name": "Status"
         },
         "tags": {
           "description": "tags related for article",
@@ -255,7 +274,7 @@
           "x-go-name": "UpdatedAt"
         }
       },
-      "x-go-package": "user-management/internal/domain"
+      "x-go-package": "user-management/internal/views"
     },
     "ArticleData": {
       "type": "object",
@@ -283,11 +302,6 @@
         }
       },
       "x-go-package": "user-management/internal/controllers/article"
-    },
-    "ArticleStatus": {
-      "type": "integer",
-      "format": "uint8",
-      "x-go-package": "user-management/internal/domain"
     },
     "ErrorBody": {
       "description": "error entity",
@@ -429,12 +443,6 @@
         "$ref": "#/definitions/ErrorBody"
       }
     },
-    "createArticleResp401": {
-      "description": "user_oid or password is invalid",
-      "schema": {
-        "$ref": "#/definitions/ErrorBody"
-      }
-    },
     "registerResp201": {
       "description": "user created"
     },
@@ -444,10 +452,28 @@
         "$ref": "#/definitions/ErrorBody"
       }
     },
+    "unauthorizedResp": {
+      "description": "unauthorized",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
     "updateArticleResp200": {
-      "description": "",
+      "description": "success",
       "schema": {
         "$ref": "#/definitions/Article"
+      }
+    },
+    "updateArticleResp400": {
+      "description": "invalid article data",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
+    "updateArticleResp404": {
+      "description": "user does not have such article",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
       }
     }
   },

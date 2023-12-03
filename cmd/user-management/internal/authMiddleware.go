@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"net/http"
+	"user-management/internal/controllers"
 	"user-management/internal/domain"
 	"user-management/internal/models"
 
@@ -12,6 +14,7 @@ func authMiddleware(model models.UserModel) middleware.BasicAuthValidator {
 	return func(username, password string, c echo.Context) (bool, error) {
 		_, _, err := model.Authorize(domain.NewUser(username, password))
 		if err != nil {
+			c.JSON(http.StatusUnauthorized, controllers.ErrorBody{Error: "user is unauthorized"})
 			return false, nil
 		}
 		c.Request().Header.Set("Username", username)

@@ -10,6 +10,8 @@ import (
 	"user-management/internal/views"
 )
 
+const UserOIdKey = "User-OId"
+
 type ArticleData struct {
 	// theme of article
 	// required: true
@@ -37,14 +39,6 @@ type authResp200 struct {
 	body domain.Article
 }
 
-// user_oid or password is invalid
-// swagger:response createArticleResp401
-// nolint:unused
-type createArticleResp401 struct {
-	// in: body
-	body controllers.ErrorBody
-}
-
 // invalid article data provided
 // swagger:response createArticleResp400
 // nolint:unused
@@ -67,11 +61,11 @@ type authResp401 struct {
 // responses:
 //
 //	201: createArticleResp201
-//	401: createArticleResp401
+//	401: unauthorizedResp
 //	400: createArticleResp400
 //	500: commonError
 func (a Article) Create(ctx controllers.Context) error {
-	userOId := ctx.Request().Header.Get("User-OId")
+	userOId := ctx.Request().Header.Get(UserOIdKey)
 	err := a.userModel.Exists(userOId, ctx.QueryParams().Get("password"))
 	if errors.Is(err, models.UserNotFoundErr) || errors.Is(err, models.InvalidAuthParameterErr) {
 		e := ctx.JSON(http.StatusUnauthorized, controllers.ErrorBody{Error: "invalid user_oid or password"})

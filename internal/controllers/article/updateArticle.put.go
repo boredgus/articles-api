@@ -23,13 +23,30 @@ type updateArticleParams struct {
 	Article ArticleData `json:"article"`
 }
 
+// success
 // swagger:response updateArticleResp200
 // nolint:unused
 type updateArticleResp200 struct {
 	// updated article
 	// in: body
-	// required: true
 	Article domain.Article
+}
+
+// invalid article data
+// swagger:response updateArticleResp400
+// nolint:unused
+type updateArticleResp400 struct {
+	// in: body
+	Body controllers.ErrorBody
+}
+
+// user does not have such article
+// swagger:response updateArticleResp404
+// nolint:unused
+type updateArticleResp404 struct {
+	// in: body
+	// required: true
+	Body controllers.ErrorBody
 }
 
 // swagger:route PUT /articles/{article_id} articles update_article
@@ -43,6 +60,10 @@ type updateArticleResp200 struct {
 // responses:
 //
 //	200: updateArticleResp200
+//	400: updateArticleResp400
+//	401: unauthorizedResp
+//	404: updateArticleResp404
+//	500: commonError
 func (a Article) Update(ctx controllers.Context) error {
 	var data ArticleData
 	err := ctx.Bind(&data)

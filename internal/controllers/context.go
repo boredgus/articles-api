@@ -20,6 +20,14 @@ type Error struct {
 	Body ErrorBody
 }
 
+// unauthorized
+// swagger:response unauthorizedResp
+// nolint:unused
+type updateArticleResp401 struct {
+	// in: body
+	Body ErrorBody
+}
+
 type Context interface {
 	QueryParams() url.Values
 	FormParams() (url.Values, error)
