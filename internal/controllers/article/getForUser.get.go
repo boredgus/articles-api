@@ -56,7 +56,7 @@ type articlesForUserResp400 struct {
 }
 
 // swagger:route GET /articles articles articles_for_user
-// get list of articles for specified user
+// gets list of articles for specified user
 // ---
 // Validates `page` and `limit` params and returns list of articles for specified user by his `username`.
 // New articles are in the start and old ones are in the end of list.

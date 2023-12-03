@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestArticle_GetForUser(t *testing.T) {
+func TestArticleController_GetForUser(t *testing.T) {
 	type params struct {
 		username string
 		page     int
