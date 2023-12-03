@@ -20,7 +20,7 @@
         "tags": [
           "articles"
         ],
-        "summary": "get list of articles for specified user",
+        "summary": "gets list of articles for specified user",
         "operationId": "articles_for_user",
         "parameters": [
           {
@@ -108,6 +108,35 @@
       }
     },
     "/articles/{article_id}": {
+      "get": {
+        "description": "Gets article by id.",
+        "tags": [
+          "articles"
+        ],
+        "summary": "gets article",
+        "operationId": "get_article",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ArticleId",
+            "description": "article identifier",
+            "name": "article_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/getArticleResp200"
+          },
+          "404": {
+            "$ref": "#/responses/getArticleResp404"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
+          }
+        }
+      },
       "put": {
         "security": [
           {
@@ -439,6 +468,18 @@
     },
     "createArticleResp400": {
       "description": "invalid article data provided",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
+    "getArticleResp200": {
+      "description": "success",
+      "schema": {
+        "$ref": "#/definitions/Article"
+      }
+    },
+    "getArticleResp404": {
+      "description": "there is no article with such id",
       "schema": {
         "$ref": "#/definitions/ErrorBody"
       }
