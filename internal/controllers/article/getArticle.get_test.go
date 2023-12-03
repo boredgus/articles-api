@@ -1,12 +1,14 @@
 package article
 
 import (
+	"errors"
 	"net/http"
 	"testing"
 	"user-management/internal/domain"
 	cntlrMocks "user-management/internal/mocks/controllers"
 	mdlMocks "user-management/internal/mocks/models"
 	"user-management/internal/models"
+	"user-management/internal/views"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -28,8 +30,8 @@ func TestArticleController_Get(t *testing.T) {
 		getCall := articleModelMock.EXPECT().Get(articleId).NotBefore(pathParamCall).Return(res.article, res.getErr).Once()
 		calls := []*mock.Call{
 			pathParamCall, getCall,
-			ctxMock.EXPECT().JSON(res.jsonCode, res.jsonBody).NotBefore(pathParamCall, getCall).Maybe(),
-			ctxMock.EXPECT().NoContent(res.noContentCode).NotBefore(pathParamCall, getCall).Maybe(),
+			ctxMock.EXPECT().JSON(res.jsonCode, res.jsonBody).NotBefore(pathParamCall, getCall).Return(nil).Maybe(),
+			ctxMock.EXPECT().NoContent(res.noContentCode).NotBefore(pathParamCall, getCall).Return(nil).Maybe(),
 		}
 		return func() {
 			for _, call := range calls {
@@ -37,8 +39,8 @@ func TestArticleController_Get(t *testing.T) {
 			}
 		}
 	}
-	// someError := errors.New("some error")
-	// artcl := domain.Article{Theme: "theme", Text: "text", Tags: []string{}}
+	someError := errors.New("some error")
+	artcl := domain.Article{Theme: "theme", Text: "text", Tags: []string{}}
 	tests := []struct {
 		name      string
 		mockedRes mockedRes
@@ -53,22 +55,22 @@ func TestArticleController_Get(t *testing.T) {
 			},
 			wantErr: models.ArticleNotFoundErr,
 		},
-		// {
-		// 	name: "internal server error",
-		// 	mockedRes: mockedRes{
-		// 		getErr:        someError,
-		// 		noContentCode: http.StatusInternalServerError,
-		// 	},
-		// 	wantErr: someError,
-		// },
-		// {
-		// 	name: "success",
-		// 	mockedRes: mockedRes{
-		// 		article:  artcl,
-		// 		jsonCode: http.StatusOK,
-		// 		jsonBody: views.NewArticleView(artcl),
-		// 	},
-		// },
+		{
+			name: "internal server error",
+			mockedRes: mockedRes{
+				getErr:        someError,
+				noContentCode: http.StatusInternalServerError,
+			},
+			wantErr: someError,
+		},
+		{
+			name: "success",
+			mockedRes: mockedRes{
+				article:  artcl,
+				jsonCode: http.StatusOK,
+				jsonBody: views.NewArticleView(artcl),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
