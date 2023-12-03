@@ -10,6 +10,7 @@ import (
 	cntlrMocks "user-management/internal/mocks/controllers"
 	mdlMocks "user-management/internal/mocks/models"
 	mdl "user-management/internal/models"
+	"user-management/internal/views"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -20,10 +21,8 @@ func TestArticleController_Create(t *testing.T) {
 		jsonCode      int
 		jsonBody      interface{}
 		noContentCode int
-		formParams    url.Values
-		formParamsErr error
 		userExistErr  error
-		createUserOId string
+		bindErr       error
 		createArticle domain.Article
 		createErr     error
 	}
@@ -31,24 +30,28 @@ func TestArticleController_Create(t *testing.T) {
 	articleModelMock := mdlMocks.NewArticleModel(t)
 	userModelMock := mdlMocks.NewUserModel(t)
 	setup := func(res mockedRes) func() {
-		formParamsCall := ctxMock.EXPECT().
-			FormParams().Return(res.formParams, res.formParamsErr).Once()
+		h := http.Header{}
+		h.Set(UserOIdKey, "user-identifier")
 		requestCall := ctxMock.EXPECT().
-			Request().Return(&http.Request{Header: http.Header{}}).
-			NotBefore(formParamsCall).Maybe()
+			Request().Return(&http.Request{Header: h}).Once()
+		q := url.Values{}
+		q.Set("passwrod", "pass")
+		queryParamsCall := ctxMock.EXPECT().QueryParams().NotBefore(requestCall).Return(q).Once()
 		existsCall := userModelMock.EXPECT().
-			Exists(mock.Anything, mock.Anything).NotBefore(formParamsCall, requestCall).
-			Return(res.userExistErr).Maybe()
+			Exists(h.Get(UserOIdKey), q.Get("password")).NotBefore(requestCall, queryParamsCall).
+			Return(res.userExistErr).Once()
 		calls := []*mock.Call{
-			formParamsCall,
-			requestCall,
+			requestCall, queryParamsCall, existsCall,
 			ctxMock.EXPECT().
-				JSON(res.jsonCode, res.jsonBody).Return(nil).NotBefore(formParamsCall).Maybe(),
-			existsCall,
+				JSON(res.jsonCode, res.jsonBody).Return(nil).
+				NotBefore(requestCall, queryParamsCall, existsCall).Maybe(),
 			ctxMock.EXPECT().
-				NoContent(res.noContentCode).Return(nil).NotBefore(formParamsCall).Maybe(),
+				NoContent(res.noContentCode).Return(nil).
+				NotBefore(requestCall, queryParamsCall, existsCall).Maybe(),
+			ctxMock.EXPECT().Bind(mock.Anything).
+				NotBefore(requestCall, queryParamsCall, existsCall).Return(res.bindErr).Maybe(),
 			articleModelMock.EXPECT().
-				Create(res.createUserOId, &res.createArticle).NotBefore(formParamsCall, requestCall, existsCall).
+				Create(h.Get(UserOIdKey), &res.createArticle).NotBefore(requestCall, existsCall).
 				Return(res.createErr).Maybe(),
 		}
 		return func() {
@@ -58,31 +61,14 @@ func TestArticleController_Create(t *testing.T) {
 		}
 	}
 	someError := errors.New("some error")
+	artcl := domain.Article{Tags: []string{}}
 	tests := []struct {
 		name      string
 		mockedRes mockedRes
 		wantErr   error
 	}{
 		{
-			name: "failed to get form params",
-			mockedRes: mockedRes{
-				formParamsErr: someError,
-				jsonCode:      http.StatusBadRequest,
-				jsonBody:      mock.Anything,
-			},
-			wantErr: someError,
-		},
-		{
-			name: "invalid user oid",
-			mockedRes: mockedRes{
-				userExistErr: mdl.UserNotFoundErr,
-				jsonCode:     http.StatusUnauthorized,
-				jsonBody:     cntrs.ErrorBody{Error: "invalid user_oid or password"},
-			},
-			wantErr: mdl.UserNotFoundErr,
-		},
-		{
-			name: "invalid user password",
+			name: "invalid user_oid or password",
 			mockedRes: mockedRes{
 				userExistErr: mdl.InvalidAuthParameterErr,
 				jsonCode:     http.StatusUnauthorized,
@@ -99,17 +85,28 @@ func TestArticleController_Create(t *testing.T) {
 			wantErr: someError,
 		},
 		{
+			name: "failed to get article data",
+			mockedRes: mockedRes{
+				bindErr:  someError,
+				jsonCode: http.StatusBadRequest,
+				jsonBody: cntrs.ErrorBody{Error: "failed to parse article"},
+			},
+			wantErr: someError,
+		},
+		{
 			name: "invalid article data provided",
 			mockedRes: mockedRes{
-				createErr: mdl.InvalidArticleErr,
-				jsonCode:  http.StatusBadRequest,
-				jsonBody:  cntrs.ErrorBody{Error: mdl.InvalidArticleErr.Error()},
+				createArticle: artcl,
+				createErr:     mdl.InvalidArticleErr,
+				jsonCode:      http.StatusBadRequest,
+				jsonBody:      cntrs.ErrorBody{Error: mdl.InvalidArticleErr.Error()},
 			},
 			wantErr: mdl.InvalidArticleErr,
 		},
 		{
 			name: "failed to create article",
 			mockedRes: mockedRes{
+				createArticle: artcl,
 				createErr:     someError,
 				noContentCode: http.StatusInternalServerError,
 			},
@@ -118,8 +115,9 @@ func TestArticleController_Create(t *testing.T) {
 		{
 			name: "success",
 			mockedRes: mockedRes{
-				jsonCode: http.StatusCreated,
-				jsonBody: domain.Article{},
+				createArticle: artcl,
+				jsonCode:      http.StatusCreated,
+				jsonBody:      views.NewArticleView(artcl),
 			},
 		},
 	}

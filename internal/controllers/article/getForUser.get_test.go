@@ -62,6 +62,10 @@ func TestArticle_GetForUser(t *testing.T) {
 		"page":     []string{fmt.Sprint(valildParams.page)},
 		"limit":    []string{fmt.Sprint(valildParams.limit)},
 	}
+	articls := []domain.Article{
+		{Theme: "first", Tags: []string{}},
+		{Theme: "second", Tags: []string{"update"}},
+	}
 	someErr := errors.New("some err")
 	tests := []struct {
 		name      string
@@ -92,7 +96,7 @@ func TestArticle_GetForUser(t *testing.T) {
 			mockedRes: mockedRes{
 				queryParams: validQueryParams,
 				fetchParams: valildParams,
-				fetchRes:    fetchRes{},
+				fetchRes:    fetchRes{articles: articls, pagination: models.PaginationData{Count: len(articls)}},
 				jsonCode:    http.StatusOK,
 				jsonBody:    articles{PaginationData: models.PaginationData{Limit: valildParams.limit}},
 			},
