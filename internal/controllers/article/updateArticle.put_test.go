@@ -21,7 +21,6 @@ func TestArticle_Update(t *testing.T) {
 		jsonCode      int
 		jsonBody      interface{}
 		noContentCode int
-		userExistErr  error
 		updateArticle domain.Article
 		updateErr     error
 	}

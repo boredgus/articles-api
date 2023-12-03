@@ -33,16 +33,18 @@ func (r UserRepository) Get(username string) (repo.User, error) {
 		select o_id, username, pswd
 		from user
 		where user.username=?;`, username)
-	defer rows.Close()
 	if err != nil {
+		rows.Close()
 		return user, err
 	}
 
 	exists := rows.Next()
 	if !exists {
+		rows.Close()
 		return user, models.InvalidAuthParameterErr
 	}
 	err = rows.Scan(&user.OId, &user.Username, &user.Password)
+	rows.Close()
 	if err != nil {
 		return user, err
 	}
@@ -55,15 +57,17 @@ func (r UserRepository) GetByOId(oid string) (repo.User, error) {
 		select o_id, username, pswd
 		from user
 		where user.o_id=?;`, oid)
-	defer rows.Close()
 	if err != nil {
+		rows.Close()
 		return user, err
 	}
 	exists := rows.Next()
 	if !exists {
+		rows.Close()
 		return user, models.UserNotFoundErr
 	}
 	err = rows.Scan(&user.OId, &user.Username, &user.Password)
+	rows.Close()
 	if err != nil {
 		return user, err
 	}
