@@ -44,19 +44,13 @@ func addTagsForArticle(articleOId string, tags []string) string {
 
 	-- bind tags to article without duplication of existed bindings
 	insert into article_tag (article_id, tag_id)
-	select new_.article_id, new_.tag_id
-	from 
-		(select a.id article_id, t.id tag_id, t.label
-		from  article a, tag t
-		where a.o_id="%v" and 
-			t.label in (%v)) as new_
-	where new_.label not in (
-		select t.label
-		from  article a, article_tag ats
-		join tag t
-		on ats.tag_id=t.id
-		where a.o_id="%v" and 
-			ats.article_id=a.id);`,
+	select "%v" article_id, t.id tag_id
+	from tag t
+	where t.label in (%v) and not exists (
+		select ats.tag_id
+		from  article_tag ats
+		where ats.article_id="%v" and
+			ats.tag_id=t.id);`,
 		tagsToString(tags, "select '", "' label", " union "), articleOId,
 		tagsToString(tags, "'", "'", ","), articleOId,
 	)
@@ -102,8 +96,10 @@ func (r ArticleRepository) Get(articleOId string) (a domain.Article, err error) 
 	rows, err := r.store.Query(`
 		select a.o_id, a.theme, a.text, group_concat(t.label) as tags, a.created_at, a.updated_at, a.status
 		from article a
-		left join (article_tag as ats join tag t)
-		on a.id=ats.article_id and ats.tag_id=t.id
+		inner join article_tag as ats 
+		on a.id=ats.article_id
+		inner join tag t
+		on ats.tag_id=t.id
 		where a.o_id=?
 		group by a.o_id;`, articleOId)
 	if err != nil {
@@ -122,17 +118,18 @@ func (r ArticleRepository) Get(articleOId string) (a domain.Article, err error) 
 
 func (r ArticleRepository) GetForUser(username string, page, limit int) ([]domain.Article, error) {
 	rows, err := r.store.Query(`
-	select a.o_id, a.theme, a.text, group_concat(a.tags), a.created_at, a.updated_at, a.status
-	from
-		(select a.id, a.o_id, a.user_id, a.theme, a.text, t.label as tags, a.created_at, a.updated_at, a.status
-		from article a
-		left join (article_tag as ats join tag t)
-		on a.id=ats.article_id and ats.tag_id=t.id) as a,
-		user as u
-	where u.username=? and a.user_id=u.id
-	group by a.id, a.o_id, a.theme, a.text, a.created_at, a.updated_at, a.status
+	select a.o_id, a.theme, a.text, group_concat(t.label) as tags, a.created_at, a.updated_at, a.status
+	from user u
+	inner join article a
+	on u.id=a.user_id
+	inner join article_tag as ats 
+	on a.id=ats.article_id
+	inner join tag t 
+	on ats.tag_id=t.id
+	where u.username=? 
+	group by a.id
 	order by a.id desc
-	limit ?, ?;`, username, page*limit, limit)
+	limit ?,?;`, username, page*limit, limit)
 	if err != nil {
 		return nil, err
 	}
