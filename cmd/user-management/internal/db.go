@@ -46,8 +46,9 @@ func NewMySQLStore() gateways.Store {
 			logrus.Fatalf("failed to connect to DB: %v", err)
 		}
 
-		db.SetMaxOpenConns(10)
-		db.SetMaxIdleConns(5)
+		cfg := config.GetConfig()
+		db.SetMaxOpenConns(cfg.MaxoOpenDBConnections)
+		db.SetMaxIdleConns(cfg.MaxIdleDBConnections)
 		database = db
 	})
 
