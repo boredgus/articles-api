@@ -48,7 +48,7 @@ func (a ArticleService) Create(userOId string, article *domain.Article) error {
 		Tags:  article.Tags,
 	})
 	article.OId = id
-	article.CreatedAt = time.Now()
+	article.CreatedAt = time.Now().UTC()
 
 	return err
 }
@@ -82,7 +82,7 @@ func (a ArticleService) Update(username string, article *domain.Article) error {
 	if err != nil {
 		return err
 	}
-	t := time.Now()
+	t := time.Now().UTC()
 	article.Status = domain.UpdatedStatus
 	article.CreatedAt = timeOfCreation
 	article.UpdatedAt = &t
