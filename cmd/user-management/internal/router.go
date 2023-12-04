@@ -57,12 +57,7 @@ func GetRouter(cntrs AppController) *echo.Echo {
 		},
 	}))
 
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{
-			"http://localhost:8080", // local server
-			"http://localhost:3033", // local docs
-		},
-	}))
+	e.Use(middleware.CORS())
 
 	registerRoutes(e, cntrs)
 
