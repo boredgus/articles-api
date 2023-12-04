@@ -47,7 +47,7 @@ func (a Article) Validate() error {
 	validate := validator.New()
 	err := validate.RegisterValidation("tags", func(fl validator.FieldLevel) bool {
 		for i := 0; i < fl.Field().Len(); i++ {
-			if strings.Index(fmt.Sprint(fl.Field().Index(i).Interface()), " ") >= 0 {
+			if strings.Contains(fmt.Sprint(fl.Field().Index(i).Interface()), " ") {
 				return false
 			}
 		}
