@@ -2,7 +2,7 @@ package domain
 
 import (
 	"fmt"
-	"regexp"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -43,13 +43,11 @@ var articleRequirements = Requirements{
 	"Tags":  "tag cannot have spaces",
 }
 
-var tagsRule = regexp.MustCompile("[\t\n\f\r ]")
-
 func (a Article) Validate() error {
 	validate := validator.New()
 	err := validate.RegisterValidation("tags", func(fl validator.FieldLevel) bool {
 		for i := 0; i < fl.Field().Len(); i++ {
-			if tagsRule.Match([]byte(fmt.Sprint(fl.Field().Index(i).Interface()))) {
+			if strings.Index(fmt.Sprint(fl.Field().Index(i).Interface()), " ") >= 0 {
 				return false
 			}
 		}
