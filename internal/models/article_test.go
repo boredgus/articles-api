@@ -3,7 +3,6 @@ package models
 import (
 	"errors"
 	"testing"
-	"time"
 	"user-management/internal/domain"
 	repoMocks "user-management/internal/mocks/repo"
 
@@ -138,10 +137,10 @@ func TestArticleService_Update(t *testing.T) {
 	repoMock := repoMocks.NewArticleRepository(t)
 	setup := func(res mockedRes) func() {
 		isOwnerCall := repoMock.EXPECT().IsOwner(mock.Anything, mock.Anything).
-			Return(res.isOwnerErr).Once()
+			Return(domain.Article{}, res.isOwnerErr).Once()
 		updateCall := repoMock.EXPECT().
-			Update(mock.Anything).NotBefore(isOwnerCall).
-			Return(time.Time{}, res.updateErr).Once()
+			Update(mock.Anything, mock.Anything).NotBefore(isOwnerCall).
+			Return(res.updateErr).Once()
 		return func() {
 			isOwnerCall.Unset()
 			updateCall.Unset()
