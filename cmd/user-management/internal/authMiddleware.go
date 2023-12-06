@@ -10,9 +10,9 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func authMiddleware(model models.UserModel) middleware.BasicAuthValidator {
+func authMiddleware(user models.UserModel) middleware.BasicAuthValidator {
 	return func(username, password string, c echo.Context) (bool, error) {
-		_, _, err := model.Authorize(domain.NewUser(username, password))
+		_, _, err := user.Authorize(domain.NewUser(username, password))
 		if err != nil {
 			return false, c.JSON(http.StatusUnauthorized, controllers.ErrorBody{Error: "user is unauthorized"})
 		}
