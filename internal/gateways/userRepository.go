@@ -15,50 +15,37 @@ type UserRepository struct {
 }
 
 func (r UserRepository) Create(user repo.User) error {
-	rows, err := r.store.Query(`
-		insert into user (o_id, username, pswd)
-		values (?, ?, ?);`,
+	rows, err := r.store.Query(`call CreateUser(?,?,?);`,
 		user.OId, user.Username, user.Password)
-	rows.Close()
 	if err != nil && strings.Contains(err.Error(), "Error 1062") {
 		return models.UsernameDuplicationErr
 	}
-
+	rows.Close()
 	return err
 }
 
 func (r UserRepository) Get(username string) (repo.User, error) {
 	var user repo.User
-	rows, err := r.store.Query(`
-		select o_id, username, pswd
-		from user
-		where user.username=?;`, username)
+	rows, err := r.store.Query(`call GetUserByUsername(?);`, username)
 	if err != nil {
-		rows.Close()
 		return user, err
 	}
-
 	exists := rows.Next()
 	if !exists {
-		rows.Close()
 		return user, models.InvalidAuthParameterErr
 	}
 	err = rows.Scan(&user.OId, &user.Username, &user.Password)
-	rows.Close()
 	if err != nil {
 		return user, err
 	}
+	rows.Close()
 	return user, nil
 }
 
 func (r UserRepository) GetByOId(oid string) (repo.User, error) {
 	var user repo.User
-	rows, err := r.store.Query(`
-		select o_id, username, pswd
-		from user
-		where user.o_id=?;`, oid)
+	rows, err := r.store.Query(`call GetUserByOId(?);`, oid)
 	if err != nil {
-		rows.Close()
 		return user, err
 	}
 	exists := rows.Next()

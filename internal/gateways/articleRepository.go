@@ -8,8 +8,6 @@ import (
 	"user-management/internal/domain"
 	"user-management/internal/models"
 	"user-management/internal/models/repo"
-
-	"github.com/sirupsen/logrus"
 )
 
 func NewArticleRepository(store Store) repo.ArticleRepository {
@@ -30,47 +28,26 @@ func tagsToString(tags []string, leftWrapper, rightWrapper, separator string) (r
 	return
 }
 
-func addTagsForArticle(articleOId string, tags []string) string {
-	return fmt.Sprintf(`
-	-- create new tags without duplication
-	insert into tag (label)
-	select * 
-	from (%v) as tmp
-	where not exists (
-		select label
-		from tag
-		where label=tmp.label
-	);
-
-	-- bind tags to article without duplication of existed bindings
-	insert into article_tag (article_id, tag_id)
-	select "%v" article_id, t.id tag_id
-	from tag t
-	where t.label in (%v) and not exists (
-		select ats.tag_id
-		from  article_tag ats
-		where ats.article_id="%v" and
-			ats.tag_id=t.id);`,
-		tagsToString(tags, "select '", "' label", " union "), articleOId,
-		tagsToString(tags, "'", "'", ","), articleOId,
-	)
+func addTagsForArticleQuery(articleOId string, tags []string) (res string) {
+	for _, tag := range tags {
+		res += fmt.Sprintf(`call CreateTag('%v');`, tag)
+	}
+	res += fmt.Sprintf(`call AddTagsToArticle("%v", "%v");`, articleOId, tagsToString(tags, "'", "'", ","))
+	return
 }
 
 func (r ArticleRepository) Create(userOId string, article repo.ArticleData) error {
 	query := fmt.Sprintf(`
-		insert into article (o_id, user_id, theme, text)
-		select "%v", id, "%v", "%v"
-		from user
-		where user.o_id="%v";`, article.OId, article.Theme, article.Text, userOId)
+		call CreateArticle('%v', '%v', '%v', '%v');`,
+		userOId, article.OId, article.Theme, article.Text)
 	if len(article.Tags) > 0 {
-		query += addTagsForArticle(article.OId, article.Tags)
+		query += addTagsForArticleQuery(article.OId, article.Tags)
 	}
 	rows, err := r.store.Query(query)
-	rows.Close()
 	if err != nil {
-		logrus.Infoln("failed to create article", err)
 		return err
 	}
+	rows.Close()
 	return nil
 }
 func (r ArticleRepository) scan(rows *sql.Rows) (domain.Article, error) {
@@ -93,15 +70,7 @@ func (r ArticleRepository) scan(rows *sql.Rows) (domain.Article, error) {
 }
 
 func (r ArticleRepository) Get(articleOId string) (a domain.Article, err error) {
-	rows, err := r.store.Query(`
-		select a.o_id, a.theme, a.text, group_concat(t.label) as tags, a.created_at, a.updated_at, a.status
-		from article a
-		inner join article_tag as ats 
-		on a.id=ats.article_id
-		inner join tag t
-		on ats.tag_id=t.id
-		where a.o_id=?
-		group by a.o_id;`, articleOId)
+	rows, err := r.store.Query(`call GetArticle(?);`, articleOId)
 	if err != nil {
 		return
 	}
@@ -109,27 +78,15 @@ func (r ArticleRepository) Get(articleOId string) (a domain.Article, err error) 
 		return a, models.ArticleNotFoundErr
 	}
 	a, err = r.scan(rows)
-	rows.Close()
 	if err != nil {
 		return
 	}
+	rows.Close()
 	return a, nil
 }
 
 func (r ArticleRepository) GetForUser(username string, page, limit int) ([]domain.Article, error) {
-	rows, err := r.store.Query(`
-	select a.o_id, a.theme, a.text, group_concat(t.label) as tags, a.created_at, a.updated_at, a.status
-	from user u
-	inner join article a
-	on u.id=a.user_id
-	inner join article_tag as ats 
-	on a.id=ats.article_id
-	inner join tag t 
-	on ats.tag_id=t.id
-	where u.username=? 
-	group by a.id
-	order by a.id desc
-	limit ?,?;`, username, page*limit, limit)
+	rows, err := r.store.Query(`call GetArticlesForUser(?,?,?);`, username, page*limit, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +94,6 @@ func (r ArticleRepository) GetForUser(username string, page, limit int) ([]domai
 	for rows.Next() {
 		article, err := r.scan(rows)
 		if err != nil {
-			rows.Close()
 			return []domain.Article{}, err
 		}
 		res = append(res, article)
@@ -147,70 +103,41 @@ func (r ArticleRepository) GetForUser(username string, page, limit int) ([]domai
 }
 
 func (r ArticleRepository) IsOwner(articleOId, username string) error {
-	rows, err := r.store.Query(`
-	select a.o_id
-	from article a, user u
-	where u.username=? and
-		u.id=a.user_id and a.o_id=?;`, username, articleOId)
+	rows, err := r.store.Query(`call IsOwnerOfArticle(?,?);`, articleOId, username)
 	if err != nil {
-		rows.Close()
 		return err
 	}
 	rows.Next()
 	var res string
 	err = rows.Scan(&res)
-	rows.Close()
 	if err != nil {
 		return models.UserIsNotAnOwnerErr
 	}
+	rows.Close()
 	return nil
 }
 
 func (r ArticleRepository) Update(article repo.ArticleData) (time.Time, error) {
-	query := fmt.Sprintf(`
-		-- update article
-		update article a
-		set a.theme="%v", a.text="%v", a.status=1
-		where a.o_id="%v";`, article.Theme, article.Text, article.OId)
+	query := fmt.Sprintf(`call UpdateArticle('%v','%v','%v');`,
+		article.Theme, article.Text, article.OId)
 	if len(article.Tags) == 0 {
-		query += fmt.Sprintf(`
-			-- delete all tags for this article
-			delete ats
-			from article_tag ats, article a
-			where ats.article_id=a.id and a.o_id="%v";`, article.OId)
+		query += fmt.Sprintf(`call RemoveAllTagsForArticle('%v');`, article.OId)
 	} else {
-		query += addTagsForArticle(article.OId, article.Tags) +
-			fmt.Sprintf(`
-				-- delete tags that are not in given data
-				delete ats
-				from
-					article_tag as ats,
-					(select a.id as article_id, t.id as tag_id, t.label as tag
-					from article a
-					left join (article_tag as ats join tag t)
-					on a.id=ats.article_id and ats.tag_id=t.id
-						where a.o_id="%v") as tags
-				where ats.article_id=tags.article_id and
-					tags.tag not in (%v);`,
+		query += addTagsForArticleQuery(article.OId, article.Tags) +
+			fmt.Sprintf(`call RemoveTagsForArticle("%v","%v");`,
 				article.OId, tagsToString(article.Tags, "'", "'", ","))
 	}
-	query += fmt.Sprintf(`
-	-- get time of creation
-	select created_at
-	from article
-	where o_id="%v";
-	`, article.OId)
+	query += fmt.Sprintf(`call GetTimeOfCreation('%v');`, article.OId)
 	rows, err := r.store.Query(query)
 	if err != nil {
-		rows.Close()
 		return time.Time{}, err
 	}
 	rows.Next()
 	var timeOfCreation sql.NullTime
 	err = rows.Scan(&timeOfCreation)
-	rows.Close()
 	if err != nil {
 		return time.Time{}, err
 	}
+	rows.Close()
 	return timeOfCreation.Time, nil
 }
