@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"os"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 
@@ -30,12 +31,16 @@ func LoadEnvFile(envFilePath string) {
 	}
 }
 
-func GetConfig() config {
-	cfg := config{}
+var cfg config
+var configOnce sync.Once
 
-	if err := env.Parse(&cfg); err != nil {
-		logrus.Error("failed to load env file", err)
-	}
+func GetConfig() config {
+	configOnce.Do(func() {
+		if err := env.Parse(&cfg); err != nil {
+			logrus.Error("failed to load env file", err)
+			cfg = config{}
+		}
+	})
 	return cfg
 }
 
