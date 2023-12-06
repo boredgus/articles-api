@@ -65,25 +65,29 @@ func (a ArticleService) GetForUser(username string, page, limit int) ([]domain.A
 }
 
 func (a ArticleService) Update(username string, article *domain.Article) error {
-	err := a.repo.IsOwner(article.OId, username)
-	if errors.Is(err, UserIsNotAnOwnerErr) {
+	oldArticle, err := a.repo.IsOwner(article.OId, username)
+	if err != nil {
 		return err
 	}
 	if err := article.Validate(); err != nil {
 		return fmt.Errorf("%w: %w", InvalidArticleErr, err)
 	}
-	timeOfCreation, err := a.repo.Update(repo.ArticleData{
+	err = a.repo.Update(repo.ArticleData{
 		OId:   article.OId,
 		Theme: article.Theme,
 		Text:  article.Text,
 		Tags:  article.Tags,
-	})
+	}, repo.ArticleData{
+		OId:   article.OId,
+		Theme: oldArticle.Theme,
+		Text:  oldArticle.Text,
+		Tags:  oldArticle.Tags})
 	if err != nil {
 		return err
 	}
 	t := time.Now().UTC()
 	article.Status = domain.UpdatedStatus
-	article.CreatedAt = timeOfCreation
+	article.CreatedAt = oldArticle.CreatedAt
 	article.UpdatedAt = &t
 	return nil
 }

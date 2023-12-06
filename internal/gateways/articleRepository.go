@@ -3,7 +3,6 @@ package gateways
 import (
 	"database/sql"
 	"strings"
-	"time"
 	"user-management/internal/domain"
 	"user-management/internal/models"
 	"user-management/internal/models/repo"
@@ -105,47 +104,40 @@ func (r ArticleRepository) GetForUser(username string, page, limit int) ([]domai
 	return res, nil
 }
 
-func (r ArticleRepository) IsOwner(articleOId, username string) error {
+func (r ArticleRepository) IsOwner(articleOId, username string) (domain.Article, error) {
 	rows, err := r.store.Query(`call IsOwnerOfArticle(?,?);`, articleOId, username)
+	if err != nil {
+		return domain.Article{}, err
+	}
+	rows.Next()
+	article, err := r.scan(rows)
+	if err != nil {
+		return domain.Article{}, models.UserIsNotAnOwnerErr
+	}
+	rows.Close()
+	return article, nil
+}
+
+func (r ArticleRepository) Update(newA repo.ArticleData, oldA repo.ArticleData) error {
+	query := "call UpdateArticle(?,?,?);\n"
+	tagsToRemove, tagsToAdd := oldA.CompareTags(newA.Tags)
+	args := make([]any, 0, 20)
+	args = append(args, newA.Theme, newA.Text, newA.OId)
+	if len(tagsToRemove) > 0 {
+		query += "call RemoveTagsForArticle(?,?);\n"
+		args = append(args, newA.OId, tagsToArrayStr(tagsToRemove))
+	}
+	if len(tagsToAdd) > 0 {
+		query += addTagsForArticleQuery(len(tagsToAdd))
+		for _, tag := range tagsToAdd {
+			args = append(args, tag)
+		}
+		args = append(args, newA.OId, tagsToArrayStr(tagsToAdd))
+	}
+	rows, err := r.store.Query(query, args...)
 	if err != nil {
 		return err
 	}
-	rows.Next()
-	var res string
-	err = rows.Scan(&res)
-	if err != nil {
-		return models.UserIsNotAnOwnerErr
-	}
 	rows.Close()
 	return nil
-}
-
-func (r ArticleRepository) Update(article repo.ArticleData) (time.Time, error) {
-	query := "call UpdateArticle(?,?,?);\n"
-	args := make([]any, 0, 3+1+len(article.Tags)+2+1+1)
-	args = append(args, article.Theme, article.Text, article.OId)
-
-	if len(article.Tags) == 0 {
-		query += "call RemoveAllTagsForArticle(?);\n"
-		args = append(args, article.OId)
-	} else {
-		query += addTagsForArticleQuery(len(article.Tags)) + "call RemoveTagsForArticle(?,?);\n"
-		for i := range article.Tags {
-			args = append(args, article.Tags[i])
-		}
-		args = append(args, article.OId, tagsToArrayStr(article.Tags), article.OId, tagsToArrayStr(article.Tags))
-	}
-	query += "call GetTimeOfCreation(?);"
-	rows, err := r.store.Query(query, append(args, article.OId))
-	if err != nil {
-		return time.Time{}, err
-	}
-	rows.Next()
-	var timeOfCreation sql.NullTime
-	err = rows.Scan(&timeOfCreation)
-	if err != nil {
-		return time.Time{}, err
-	}
-	rows.Close()
-	return timeOfCreation.Time, nil
 }
