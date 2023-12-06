@@ -48,7 +48,7 @@ func NewMySQLStore() gateways.Store {
 		}
 
 		cfg := config.GetConfig()
-		db.SetMaxOpenConns(cfg.MaxoOpenDBConnections)
+		db.SetMaxOpenConns(cfg.MaxOpenDBConnections)
 		db.SetMaxIdleConns(cfg.MaxIdleDBConnections)
 		database = db
 		migrations.InitMigrations(db, "mysql")
