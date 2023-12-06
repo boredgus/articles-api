@@ -2,7 +2,6 @@ package tools
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 )
 
@@ -23,7 +22,6 @@ func (n Pagination) Parse(page, limit string) (p, l int, e error) {
 	}
 	p, err := strconv.Atoi(page)
 	if err != nil {
-		fmt.Println("> failed to convert page:", err)
 		return 0, 0, PageNotANumberErr
 	}
 	if p < 0 {

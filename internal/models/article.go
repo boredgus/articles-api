@@ -39,7 +39,6 @@ func (a ArticleService) Create(userOId string, article *domain.Article) error {
 	if err := article.Validate(); err != nil {
 		return fmt.Errorf("%w: %w", InvalidArticleErr, err)
 	}
-	fmt.Print("> before repo call")
 	id := uuid.New().String()
 	err := a.repo.Create(userOId, repo.ArticleData{
 		OId:   id,
