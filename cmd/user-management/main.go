@@ -20,8 +20,11 @@
 package main
 
 import (
+	"database/sql"
 	infrastructure "user-management/cmd/user-management/internal"
 	"user-management/config"
+	"user-management/pkg/db"
+	migrations "user-management/sql"
 )
 
 func init() {
@@ -32,7 +35,7 @@ func init() {
 func main() {
 	router := infrastructure.GetRouter(
 		infrastructure.NewAppController(
-			infrastructure.NewMySQLStore(),
+			db.NewMySQLStore(func(db *sql.DB) { migrations.InitMigrations(db, "mysql") }),
 		),
 	)
 	router.Logger.Fatal(router.Start(":8080"))
