@@ -21,6 +21,7 @@ func getConfig() *mysql.Config {
 	config.DBName = env.MySQLDatabase
 	config.ParseTime = true
 	config.MultiStatements = true
+	config.InterpolateParams = true
 
 	return config
 }

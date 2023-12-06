@@ -2,7 +2,6 @@ package gateways
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 	"time"
 	"user-management/internal/domain"
@@ -18,32 +17,36 @@ type ArticleRepository struct {
 	store Store
 }
 
-func tagsToString(tags []string, leftWrapper, rightWrapper, separator string) (res string) {
+func tagsToArrayStr(tags []string) (res string) {
 	for i, t := range tags {
-		res += leftWrapper + t + rightWrapper
+		res += "'" + t + "'"
 		if i != len(tags)-1 {
-			res += separator
+			res += ","
 		}
 	}
 	return
 }
 
-func addTagsForArticleQuery(articleOId string, tags []string) (res string) {
-	for _, tag := range tags {
-		res += fmt.Sprintf(`call CreateTag('%v');`, tag)
+func addTagsForArticleQuery(count int) (res string) {
+	for i := 0; i < count; i++ {
+		res += "call CreateTag(?);\n"
 	}
-	res += fmt.Sprintf(`call AddTagsToArticle("%v", "%v");`, articleOId, tagsToString(tags, "'", "'", ","))
+	res += "call AddTagsToArticle(?,?);\n"
 	return
 }
 
 func (r ArticleRepository) Create(userOId string, article repo.ArticleData) error {
-	query := fmt.Sprintf(`
-		call CreateArticle('%v', '%v', '%v', '%v');`,
-		userOId, article.OId, article.Theme, article.Text)
+	query := "call CreateArticle(?,?,?,?);\n"
+	args := make([]any, 0, 4+len(article.Tags)+2)
+	args = append(args, userOId, article.OId, article.Theme, article.Text)
 	if len(article.Tags) > 0 {
-		query += addTagsForArticleQuery(article.OId, article.Tags)
+		query += addTagsForArticleQuery(len(article.Tags))
+		for i := range article.Tags {
+			args = append(args, article.Tags[i])
+		}
+		args = append(args, article.OId, tagsToArrayStr(article.Tags))
 	}
-	rows, err := r.store.Query(query)
+	rows, err := r.store.Query(query, args...)
 	if err != nil {
 		return err
 	}
@@ -118,17 +121,22 @@ func (r ArticleRepository) IsOwner(articleOId, username string) error {
 }
 
 func (r ArticleRepository) Update(article repo.ArticleData) (time.Time, error) {
-	query := fmt.Sprintf(`call UpdateArticle('%v','%v','%v');`,
-		article.Theme, article.Text, article.OId)
+	query := "call UpdateArticle(?,?,?);\n"
+	args := make([]any, 0, 3+1+len(article.Tags)+2+1+1)
+	args = append(args, article.Theme, article.Text, article.OId)
+
 	if len(article.Tags) == 0 {
-		query += fmt.Sprintf(`call RemoveAllTagsForArticle('%v');`, article.OId)
+		query += "call RemoveAllTagsForArticle(?);\n"
+		args = append(args, article.OId)
 	} else {
-		query += addTagsForArticleQuery(article.OId, article.Tags) +
-			fmt.Sprintf(`call RemoveTagsForArticle("%v","%v");`,
-				article.OId, tagsToString(article.Tags, "'", "'", ","))
+		query += addTagsForArticleQuery(len(article.Tags)) + "call RemoveTagsForArticle(?,?);\n"
+		for i := range article.Tags {
+			args = append(args, article.Tags[i])
+		}
+		args = append(args, article.OId, tagsToArrayStr(article.Tags), article.OId, tagsToArrayStr(article.Tags))
 	}
-	query += fmt.Sprintf(`call GetTimeOfCreation('%v');`, article.OId)
-	rows, err := r.store.Query(query)
+	query += "call GetTimeOfCreation(?);"
+	rows, err := r.store.Query(query, append(args, article.OId))
 	if err != nil {
 		return time.Time{}, err
 	}
