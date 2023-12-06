@@ -6,6 +6,7 @@ import (
 	"time"
 	"user-management/config"
 	"user-management/internal/gateways"
+	migrations "user-management/sql"
 
 	mysql "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
@@ -50,6 +51,7 @@ func NewMySQLStore() gateways.Store {
 		db.SetMaxOpenConns(cfg.MaxoOpenDBConnections)
 		db.SetMaxIdleConns(cfg.MaxIdleDBConnections)
 		database = db
+		migrations.InitMigrations(db, "mysql")
 	})
 
 	return MySQLStore{db: database}
