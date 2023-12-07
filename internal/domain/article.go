@@ -12,9 +12,9 @@ import (
 type ArticleStatus int
 
 const (
-	DeletedStatus ArticleStatus = -1
-	InitialStatus ArticleStatus = 0
-	UpdatedStatus ArticleStatus = 1
+	DeletedStatus ArticleStatus = iota - 1
+	InitialStatus
+	UpdatedStatus
 )
 
 var statuses = map[ArticleStatus]string{
