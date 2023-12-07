@@ -2,14 +2,10 @@
 -- +goose StatementBegin
 create procedure if not exists CreateTag (in tag varchar(100))
 begin
-  insert into tag (label)
-  select tmp.label
-  from (select tag label) as tmp
-  where not exists (
-    select label
-    from tag
-    where label=tmp.label
-  );
+  case (select label from tag where label=tag)
+		when tag then begin end;
+		else insert into tag (label) values (tag);
+	end case;
 end
 -- +goose StatementEnd
 
@@ -106,7 +102,7 @@ create procedure if not exists UpdateArticle (
   in text varchar(200)
 ) begin
     update article a
-		set a.theme=theme, a.text=text, a.status=1
+		set a.theme=theme, a.text=text, a.updated_at=CURRENT_TIMESTAMP(), a.status=1
 		where a.o_id=article_oid;
   end
 -- +goose StatementEnd
@@ -122,7 +118,7 @@ create procedure if not exists RemoveTagsForArticle (
       on a.id=ats.article_id
       inner join tag t
       on ats.tag_id=t.id 
-      where a.o_id="',article_oid,'" and t.label in ("',tagArray,'");');
+      where a.o_id="',article_oid,'" and t.label in (',tagArray,');');
     prepare stmt from @query;
     execute stmt;
     deallocate prepare stmt;
