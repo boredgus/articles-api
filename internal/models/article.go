@@ -40,7 +40,7 @@ func (a ArticleService) Create(userOId string, article *domain.Article) error {
 		return fmt.Errorf("%w: %w", InvalidArticleErr, err)
 	}
 	id := uuid.New().String()
-	err := a.repo.Create(userOId, repo.ArticleData{
+	err := a.repo.CreateArticle(userOId, repo.ArticleData{
 		OId:   id,
 		Theme: article.Theme,
 		Text:  article.Text,
@@ -72,18 +72,22 @@ func (a ArticleService) Update(username string, article *domain.Article) error {
 	if err := article.Validate(); err != nil {
 		return fmt.Errorf("%w: %w", InvalidArticleErr, err)
 	}
-	err = a.repo.Update(repo.ArticleData{
-		OId:   article.OId,
-		Theme: article.Theme,
-		Text:  article.Text,
-		Tags:  article.Tags,
-	}, repo.ArticleData{
-		OId:   article.OId,
-		Theme: oldArticle.Theme,
-		Text:  oldArticle.Text,
-		Tags:  oldArticle.Tags})
+	err = a.repo.UpdateArticle(article.OId, article.Theme, article.Text)
 	if err != nil {
 		return err
+	}
+	tagsToRemove, tagsToAdd := repo.ArticleData{Tags: oldArticle.Tags}.CompareTags(article.Tags)
+	if len(tagsToRemove) > 0 {
+		err = a.repo.RemoveTagsFromArticle(article.OId, tagsToRemove)
+		if err != nil {
+			return err
+		}
+	}
+	if len(tagsToAdd) > 0 {
+		err = a.repo.AddTagsForArticle(article.OId, tagsToAdd)
+		if err != nil {
+			return err
+		}
 	}
 	t := time.Now().UTC()
 	article.Status = domain.UpdatedStatus

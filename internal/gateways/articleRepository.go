@@ -26,31 +26,13 @@ func tagsToArrayStr(tags []string) (res string) {
 	return
 }
 
-func addTagsForArticleQuery(count int) (res string) {
-	for i := 0; i < count; i++ {
-		res += "call CreateTag(?);\n"
-	}
-	res += "call AddTagsToArticle(?,?);\n"
-	return
-}
-
-func (r ArticleRepository) Create(userOId string, article repo.ArticleData) error {
-	query := "call CreateArticle(?,?,?,?);\n"
-	args := make([]any, 0, 4+len(article.Tags)+2)
-	args = append(args, userOId, article.OId, article.Theme, article.Text)
-	if len(article.Tags) > 0 {
-		query += addTagsForArticleQuery(len(article.Tags))
-		for i := range article.Tags {
-			args = append(args, article.Tags[i])
-		}
-		args = append(args, article.OId, tagsToArrayStr(article.Tags))
-	}
-	rows, err := r.store.Query(query, args...)
+func (r ArticleRepository) CreateArticle(userOId string, article repo.ArticleData) error {
+	rows, err := r.store.Query("call CreateArticle(?,?,?,?);", userOId, article.OId, article.Theme, article.Text)
 	if err != nil {
 		return err
 	}
 	rows.Close()
-	return nil
+	return r.AddTagsForArticle(article.OId, article.Tags)
 }
 func (r ArticleRepository) scan(rows *sql.Rows) (domain.Article, error) {
 	var a domain.Article
@@ -117,24 +99,32 @@ func (r ArticleRepository) IsOwner(articleOId, username string) (domain.Article,
 	rows.Close()
 	return article, nil
 }
-
-func (r ArticleRepository) Update(newA repo.ArticleData, oldA repo.ArticleData) error {
-	query := "call UpdateArticle(?,?,?);\n"
-	tagsToRemove, tagsToAdd := oldA.CompareTags(newA.Tags)
-	args := make([]any, 0, 20)
-	args = append(args, newA.OId, newA.Theme, newA.Text)
-	if len(tagsToRemove) > 0 {
-		query += "call RemoveTagsForArticle(?,?);\n"
-		args = append(args, newA.OId, tagsToArrayStr(tagsToRemove))
+func (r ArticleRepository) UpdateArticle(oid, theme, text string) error {
+	rows, err := r.store.Query("call UpdateArticle(?,?,?);", oid, theme, text)
+	if err != nil {
+		return err
 	}
-	if len(tagsToAdd) > 0 {
-		query += addTagsForArticleQuery(len(tagsToAdd))
-		for _, tag := range tagsToAdd {
-			args = append(args, tag)
-		}
-		args = append(args, newA.OId, tagsToArrayStr(tagsToAdd))
+	rows.Close()
+	return nil
+}
+func (r ArticleRepository) AddTagsForArticle(articleOId string, tags []string) error {
+	var query string
+	args := make([]any, 0, len(tags)+2)
+	for _, t := range tags {
+		query += "call CreateTag(?);\n"
+		args = append(args, t)
 	}
+	query += "call AddTagsToArticle(?,?);\n"
+	args = append(args, articleOId, tagsToArrayStr(tags))
 	rows, err := r.store.Query(query, args...)
+	if err != nil {
+		return err
+	}
+	rows.Close()
+	return nil
+}
+func (r ArticleRepository) RemoveTagsFromArticle(articleOId string, tags []string) error {
+	rows, err := r.store.Query("call RemoveTagsForArticle(?,?);", articleOId, tagsToArrayStr(tags))
 	if err != nil {
 		return err
 	}

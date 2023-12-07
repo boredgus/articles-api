@@ -37,9 +37,11 @@ type Article struct {
 }
 
 type ArticleRepository interface {
-	Create(userOId string, article ArticleData) error
+	CreateArticle(userOId string, article ArticleData) error
 	Get(articleOId string) (domain.Article, error)
 	GetForUser(username string, page, limit int) ([]domain.Article, error)
-	Update(newA ArticleData, oldA ArticleData) error
 	IsOwner(articleOId, username string) (domain.Article, error)
+	UpdateArticle(oid, theme, text string) error
+	AddTagsForArticle(articleOId string, tags []string) error
+	RemoveTagsFromArticle(articleOId string, tags []string) error
 }
