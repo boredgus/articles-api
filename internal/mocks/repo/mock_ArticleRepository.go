@@ -23,12 +23,59 @@ func (_m *ArticleRepository) EXPECT() *ArticleRepository_Expecter {
 	return &ArticleRepository_Expecter{mock: &_m.Mock}
 }
 
-// Create provides a mock function with given fields: userOId, article
-func (_m *ArticleRepository) Create(userOId string, article repo.ArticleData) error {
+// AddTagsForArticle provides a mock function with given fields: articleOId, tags
+func (_m *ArticleRepository) AddTagsForArticle(articleOId string, tags []string) error {
+	ret := _m.Called(articleOId, tags)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddTagsForArticle")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, []string) error); ok {
+		r0 = rf(articleOId, tags)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ArticleRepository_AddTagsForArticle_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddTagsForArticle'
+type ArticleRepository_AddTagsForArticle_Call struct {
+	*mock.Call
+}
+
+// AddTagsForArticle is a helper method to define mock.On call
+//   - articleOId string
+//   - tags []string
+func (_e *ArticleRepository_Expecter) AddTagsForArticle(articleOId interface{}, tags interface{}) *ArticleRepository_AddTagsForArticle_Call {
+	return &ArticleRepository_AddTagsForArticle_Call{Call: _e.mock.On("AddTagsForArticle", articleOId, tags)}
+}
+
+func (_c *ArticleRepository_AddTagsForArticle_Call) Run(run func(articleOId string, tags []string)) *ArticleRepository_AddTagsForArticle_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].([]string))
+	})
+	return _c
+}
+
+func (_c *ArticleRepository_AddTagsForArticle_Call) Return(_a0 error) *ArticleRepository_AddTagsForArticle_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ArticleRepository_AddTagsForArticle_Call) RunAndReturn(run func(string, []string) error) *ArticleRepository_AddTagsForArticle_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CreateArticle provides a mock function with given fields: userOId, article
+func (_m *ArticleRepository) CreateArticle(userOId string, article repo.ArticleData) error {
 	ret := _m.Called(userOId, article)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Create")
+		panic("no return value specified for CreateArticle")
 	}
 
 	var r0 error
@@ -41,31 +88,31 @@ func (_m *ArticleRepository) Create(userOId string, article repo.ArticleData) er
 	return r0
 }
 
-// ArticleRepository_Create_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Create'
-type ArticleRepository_Create_Call struct {
+// ArticleRepository_CreateArticle_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateArticle'
+type ArticleRepository_CreateArticle_Call struct {
 	*mock.Call
 }
 
-// Create is a helper method to define mock.On call
+// CreateArticle is a helper method to define mock.On call
 //   - userOId string
 //   - article repo.ArticleData
-func (_e *ArticleRepository_Expecter) Create(userOId interface{}, article interface{}) *ArticleRepository_Create_Call {
-	return &ArticleRepository_Create_Call{Call: _e.mock.On("Create", userOId, article)}
+func (_e *ArticleRepository_Expecter) CreateArticle(userOId interface{}, article interface{}) *ArticleRepository_CreateArticle_Call {
+	return &ArticleRepository_CreateArticle_Call{Call: _e.mock.On("CreateArticle", userOId, article)}
 }
 
-func (_c *ArticleRepository_Create_Call) Run(run func(userOId string, article repo.ArticleData)) *ArticleRepository_Create_Call {
+func (_c *ArticleRepository_CreateArticle_Call) Run(run func(userOId string, article repo.ArticleData)) *ArticleRepository_CreateArticle_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(string), args[1].(repo.ArticleData))
 	})
 	return _c
 }
 
-func (_c *ArticleRepository_Create_Call) Return(_a0 error) *ArticleRepository_Create_Call {
+func (_c *ArticleRepository_CreateArticle_Call) Return(_a0 error) *ArticleRepository_CreateArticle_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *ArticleRepository_Create_Call) RunAndReturn(run func(string, repo.ArticleData) error) *ArticleRepository_Create_Call {
+func (_c *ArticleRepository_CreateArticle_Call) RunAndReturn(run func(string, repo.ArticleData) error) *ArticleRepository_CreateArticle_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -243,17 +290,17 @@ func (_c *ArticleRepository_IsOwner_Call) RunAndReturn(run func(string, string) 
 	return _c
 }
 
-// Update provides a mock function with given fields: newA, oldA
-func (_m *ArticleRepository) Update(newA repo.ArticleData, oldA repo.ArticleData) error {
-	ret := _m.Called(newA, oldA)
+// RemoveTagsFromArticle provides a mock function with given fields: articleOId, tags
+func (_m *ArticleRepository) RemoveTagsFromArticle(articleOId string, tags []string) error {
+	ret := _m.Called(articleOId, tags)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Update")
+		panic("no return value specified for RemoveTagsFromArticle")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(repo.ArticleData, repo.ArticleData) error); ok {
-		r0 = rf(newA, oldA)
+	if rf, ok := ret.Get(0).(func(string, []string) error); ok {
+		r0 = rf(articleOId, tags)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -261,31 +308,79 @@ func (_m *ArticleRepository) Update(newA repo.ArticleData, oldA repo.ArticleData
 	return r0
 }
 
-// ArticleRepository_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
-type ArticleRepository_Update_Call struct {
+// ArticleRepository_RemoveTagsFromArticle_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveTagsFromArticle'
+type ArticleRepository_RemoveTagsFromArticle_Call struct {
 	*mock.Call
 }
 
-// Update is a helper method to define mock.On call
-//   - newA repo.ArticleData
-//   - oldA repo.ArticleData
-func (_e *ArticleRepository_Expecter) Update(newA interface{}, oldA interface{}) *ArticleRepository_Update_Call {
-	return &ArticleRepository_Update_Call{Call: _e.mock.On("Update", newA, oldA)}
+// RemoveTagsFromArticle is a helper method to define mock.On call
+//   - articleOId string
+//   - tags []string
+func (_e *ArticleRepository_Expecter) RemoveTagsFromArticle(articleOId interface{}, tags interface{}) *ArticleRepository_RemoveTagsFromArticle_Call {
+	return &ArticleRepository_RemoveTagsFromArticle_Call{Call: _e.mock.On("RemoveTagsFromArticle", articleOId, tags)}
 }
 
-func (_c *ArticleRepository_Update_Call) Run(run func(newA repo.ArticleData, oldA repo.ArticleData)) *ArticleRepository_Update_Call {
+func (_c *ArticleRepository_RemoveTagsFromArticle_Call) Run(run func(articleOId string, tags []string)) *ArticleRepository_RemoveTagsFromArticle_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(repo.ArticleData), args[1].(repo.ArticleData))
+		run(args[0].(string), args[1].([]string))
 	})
 	return _c
 }
 
-func (_c *ArticleRepository_Update_Call) Return(_a0 error) *ArticleRepository_Update_Call {
+func (_c *ArticleRepository_RemoveTagsFromArticle_Call) Return(_a0 error) *ArticleRepository_RemoveTagsFromArticle_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *ArticleRepository_Update_Call) RunAndReturn(run func(repo.ArticleData, repo.ArticleData) error) *ArticleRepository_Update_Call {
+func (_c *ArticleRepository_RemoveTagsFromArticle_Call) RunAndReturn(run func(string, []string) error) *ArticleRepository_RemoveTagsFromArticle_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateArticle provides a mock function with given fields: oid, theme, text
+func (_m *ArticleRepository) UpdateArticle(oid string, theme string, text string) error {
+	ret := _m.Called(oid, theme, text)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateArticle")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, string) error); ok {
+		r0 = rf(oid, theme, text)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ArticleRepository_UpdateArticle_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateArticle'
+type ArticleRepository_UpdateArticle_Call struct {
+	*mock.Call
+}
+
+// UpdateArticle is a helper method to define mock.On call
+//   - oid string
+//   - theme string
+//   - text string
+func (_e *ArticleRepository_Expecter) UpdateArticle(oid interface{}, theme interface{}, text interface{}) *ArticleRepository_UpdateArticle_Call {
+	return &ArticleRepository_UpdateArticle_Call{Call: _e.mock.On("UpdateArticle", oid, theme, text)}
+}
+
+func (_c *ArticleRepository_UpdateArticle_Call) Run(run func(oid string, theme string, text string)) *ArticleRepository_UpdateArticle_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *ArticleRepository_UpdateArticle_Call) Return(_a0 error) *ArticleRepository_UpdateArticle_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ArticleRepository_UpdateArticle_Call) RunAndReturn(run func(string, string, string) error) *ArticleRepository_UpdateArticle_Call {
 	_c.Call.Return(run)
 	return _c
 }

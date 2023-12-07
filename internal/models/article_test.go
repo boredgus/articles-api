@@ -21,7 +21,7 @@ func TestArticleService_Create(t *testing.T) {
 	repoMock := repoMocks.NewArticleRepository(t)
 	setup := func(res mockedRes) func() {
 		repoCall := repoMock.EXPECT().
-			Create(mock.Anything, mock.Anything).Return(res.createErr).Once()
+			CreateArticle(mock.Anything, mock.Anything).Return(res.createErr).Once()
 		return func() {
 			repoCall.Unset()
 		}
@@ -131,19 +131,28 @@ func TestArticleService_Update(t *testing.T) {
 		article  *domain.Article
 	}
 	type mockedRes struct {
-		isOwnerErr error
-		updateErr  error
+		isOwnerErr    error
+		oldArticle    domain.Article
+		updateErr     error
+		addTagsErr    error
+		removeTagsErr error
 	}
 	repoMock := repoMocks.NewArticleRepository(t)
 	setup := func(res mockedRes) func() {
 		isOwnerCall := repoMock.EXPECT().IsOwner(mock.Anything, mock.Anything).
-			Return(domain.Article{}, res.isOwnerErr).Once()
+			Return(res.oldArticle, res.isOwnerErr).Once()
 		updateCall := repoMock.EXPECT().
-			Update(mock.Anything, mock.Anything).NotBefore(isOwnerCall).
+			UpdateArticle(mock.Anything, mock.Anything, mock.Anything).NotBefore(isOwnerCall).
 			Return(res.updateErr).Once()
+		removeTagsCall := repoMock.EXPECT().RemoveTagsFromArticle(mock.Anything, mock.Anything).
+			NotBefore(isOwnerCall, updateCall).Return(res.removeTagsErr).Maybe()
+		addTagsCall := repoMock.EXPECT().AddTagsForArticle(mock.Anything, mock.Anything).
+			NotBefore(isOwnerCall, updateCall).Return(res.addTagsErr).Maybe()
 		return func() {
 			isOwnerCall.Unset()
 			updateCall.Unset()
+			removeTagsCall.Unset()
+			addTagsCall.Unset()
 		}
 	}
 	someError := errors.New("some error")
@@ -169,6 +178,22 @@ func TestArticleService_Update(t *testing.T) {
 			args:      args{article: &domain.Article{Theme: "t", Tags: []string{}}},
 			mockedRes: mockedRes{updateErr: someError},
 			wantErr:   someError,
+		},
+		{
+			name: "failed to remove article tags",
+			args: args{article: &domain.Article{Theme: "t", Tags: []string{}}},
+			mockedRes: mockedRes{
+				oldArticle:    domain.Article{Theme: "t", Tags: []string{"old"}},
+				removeTagsErr: someError},
+			wantErr: someError,
+		},
+		{
+			name: "failed to add article tags",
+			args: args{article: &domain.Article{Theme: "t", Tags: []string{"new"}}},
+			mockedRes: mockedRes{
+				oldArticle: domain.Article{Theme: "t", Tags: []string{}},
+				addTagsErr: someError},
+			wantErr: someError,
 		},
 		{
 			name: "success",

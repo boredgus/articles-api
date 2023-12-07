@@ -66,6 +66,7 @@ func (a ArticleService) GetForUser(username string, page, limit int) ([]domain.A
 
 func (a ArticleService) Update(username string, article *domain.Article) error {
 	oldArticle, err := a.repo.IsOwner(article.OId, username)
+	fmt.Println("> is owner res", oldArticle, err)
 	if err != nil {
 		return err
 	}
@@ -73,18 +74,22 @@ func (a ArticleService) Update(username string, article *domain.Article) error {
 		return fmt.Errorf("%w: %w", InvalidArticleErr, err)
 	}
 	err = a.repo.UpdateArticle(article.OId, article.Theme, article.Text)
+	fmt.Println("> update err", err)
 	if err != nil {
 		return err
 	}
 	tagsToRemove, tagsToAdd := repo.ArticleData{Tags: oldArticle.Tags}.CompareTags(article.Tags)
+	fmt.Println("> compare res", tagsToRemove, tagsToAdd)
 	if len(tagsToRemove) > 0 {
 		err = a.repo.RemoveTagsFromArticle(article.OId, tagsToRemove)
+		fmt.Println("> remove tags err", err)
 		if err != nil {
 			return err
 		}
 	}
 	if len(tagsToAdd) > 0 {
 		err = a.repo.AddTagsForArticle(article.OId, tagsToAdd)
+		fmt.Println("> add tags err", err)
 		if err != nil {
 			return err
 		}
@@ -93,5 +98,6 @@ func (a ArticleService) Update(username string, article *domain.Article) error {
 	article.Status = domain.UpdatedStatus
 	article.CreatedAt = oldArticle.CreatedAt
 	article.UpdatedAt = &t
+	fmt.Println("> success")
 	return nil
 }
