@@ -122,7 +122,7 @@ func (r ArticleRepository) Update(newA repo.ArticleData, oldA repo.ArticleData) 
 	query := "call UpdateArticle(?,?,?);\n"
 	tagsToRemove, tagsToAdd := oldA.CompareTags(newA.Tags)
 	args := make([]any, 0, 20)
-	args = append(args, newA.Theme, newA.Text, newA.OId)
+	args = append(args, newA.OId, newA.Theme, newA.Text)
 	if len(tagsToRemove) > 0 {
 		query += "call RemoveTagsForArticle(?,?);\n"
 		args = append(args, newA.OId, tagsToArrayStr(tagsToRemove))
