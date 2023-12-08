@@ -12,6 +12,9 @@ import (
 // swagger:parameters registration
 // nolint:unused
 type registerParams struct {
+	// secret key to create user with protected role
+	// in: query
+	APIKey string `json:"api_key"`
 	// in: body
 	// required: true
 	Body domain.User `json:"user"`
@@ -47,12 +50,12 @@ func (c Login) Register(ctx cntrl.Context) error {
 		return fmt.Errorf("%v: %w", e, err)
 	}
 
-	err = c.userModel.Create(user)
+	err = c.userModel.Create(user, ctx.QueryParams().Get("api_key"))
 	if errors.Is(err, models.UsernameDuplicationErr) {
 		e := ctx.JSON(http.StatusConflict, cntrl.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}
-	if errors.Is(err, models.InvalidAuthParameterErr) {
+	if errors.Is(err, models.InvalidUserErr) || errors.Is(err, models.InvalidAPIKeyErr) {
 		e := ctx.JSON(http.StatusBadRequest, cntrl.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}

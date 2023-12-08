@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"user-management/config"
 	"user-management/internal/auth"
 	"user-management/internal/domain"
 	"user-management/internal/models/repo"
@@ -11,11 +12,13 @@ import (
 )
 
 type UserModel interface {
-	Create(user domain.User) error
+	Create(user domain.User, apiKey string) error
 	Authorize(user domain.User) (string, string, error)
 	Exists(oid, password string) error
 }
 
+var InvalidUserErr = errors.New("invalid user data")
+var InvalidAPIKeyErr = errors.New("invalid api key")
 var InvalidAuthParameterErr = errors.New("username or password is invalid")
 var UsernameDuplicationErr = errors.New("user with such username already exists")
 var UserNotFoundErr = errors.New("user not found")
@@ -30,16 +33,25 @@ type user struct {
 	pswd  auth.Password
 }
 
-func (u user) Create(user domain.User) error {
+func (u user) Create(user domain.User, apiKey string) error {
 	if err := user.Validate(); err != nil {
-		return fmt.Errorf("%w: %w", InvalidAuthParameterErr, err)
+		return fmt.Errorf("%w: %w", InvalidUserErr, err)
+	}
+	role := user.GetRole()
+	if role != domain.DefaultUserRole && apiKey != config.GetConfig().SecretAPIKey {
+		return fmt.Errorf("%w: %v role is protected and requires valid API key", InvalidAPIKeyErr, user.Role)
 	}
 
 	hashedPswd, err := u.pswd.Hash(user.Password)
 	if err != nil {
 		return err
 	}
-	return u.repo.Create(repo.User{OId: uuid.New().String(), Username: user.Username, Password: hashedPswd})
+	return u.repo.Create(repo.User{
+		OId:      uuid.New().String(),
+		Username: user.Username,
+		Password: hashedPswd,
+		Role:     int(role),
+	})
 }
 
 func (u user) Authorize(user domain.User) (userId string, token string, err error) {

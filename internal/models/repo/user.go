@@ -4,6 +4,7 @@ type User struct {
 	OId      string `sql:"o_id"`
 	Username string `sql:"username"`
 	Password string `sql:"pswd"`
+	Role     int    `sql:"role"`
 }
 
 type UserRepository interface {

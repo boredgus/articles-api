@@ -12,17 +12,34 @@ func NewUser(name, pswd string) User {
 	return User{Username: name, Password: pswd}
 }
 
+type UserRole int
+
+const (
+	DefaultUserRole UserRole = iota + 0
+	ModeratorRole
+	AdminRole
+)
+
+var userRoles = map[UserRole]string{
+	DefaultUserRole: "user",
+	ModeratorRole:   "moderator",
+	AdminRole:       "admin",
+}
+
 // user credentials
 // swagger:model
 type User struct {
 	// unique username
 	// required: true
 	// example: username
-	Username string `json:"username" sql:"username" form:"username" validate:"required,min=4,max=20"`
+	Username string `json:"username" form:"username" validate:"required,min=4,max=20"`
 	// secret password
 	// required: true
 	// example: qweQWE123.
-	Password string `json:"password" sql:"pswd" form:"password" validate:"min=8,max=20,password"`
+	Password string `json:"password" form:"password" validate:"min=8,max=20,password"`
+	// role of user
+	// enum: user,moderator,admin
+	Role string `json:"role,omitempty" form:"role" validate:"role"`
 }
 
 type Requirements map[string]string
@@ -30,6 +47,7 @@ type Requirements map[string]string
 var userRequirements = Requirements{
 	"Password": "password should have lenth between 8 and 20, at least one lowercase letter, at least one uppercase letter, at least one number, at least one of special symbols .;_*/",
 	"Username": "username should have length between 4 and 20",
+	"Role":     "there are only user, moderator and admin roles",
 }
 
 var passwordRules = []*regexp.Regexp{
@@ -38,6 +56,14 @@ var passwordRules = []*regexp.Regexp{
 	regexp.MustCompile("[0-9]"),
 	regexp.MustCompile("[./_*;]")}
 
+func (u User) GetRole() UserRole {
+	for numb, str := range userRoles {
+		if u.Role == str {
+			return numb
+		}
+	}
+	return DefaultUserRole
+}
 func (u User) Validate() error {
 	validate := validator.New()
 	err := validate.RegisterValidation("password", func(fl validator.FieldLevel) bool {
@@ -50,6 +76,21 @@ func (u User) Validate() error {
 	})
 	if err != nil {
 		logrus.Warnf("failed to register custom password validation")
+	}
+	err = validate.RegisterValidation("role", func(fl validator.FieldLevel) bool {
+		value := fl.Field().String()
+		if value == "" {
+			return true
+		}
+		for _, role := range userRoles {
+			if role == value {
+				return true
+			}
+		}
+		return false
+	})
+	if err != nil {
+		logrus.Warnf("failed to register custom role validation")
 	}
 	return parseError(validate.Struct(u), userRequirements)
 }
