@@ -198,13 +198,18 @@
         "operationId": "authorization",
         "parameters": [
           {
-            "x-go-name": "Body",
-            "name": "user",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/User"
-            }
+            "type": "string",
+            "x-go-name": "Username",
+            "name": "username",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Password",
+            "name": "password",
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {
