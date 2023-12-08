@@ -15,7 +15,8 @@ import (
 
 func TestUserService_Create(t *testing.T) {
 	type args struct {
-		user domain.User
+		user   domain.User
+		apiKey string
 	}
 	type mockedRes struct {
 		createErr error
@@ -34,7 +35,7 @@ func TestUserService_Create(t *testing.T) {
 			pswdCall.Unset()
 		}
 	}
-	validUser := domain.NewUser("username", "PASsword/123")
+	validUser := domain.User{Username: "username", Password: "PASsword/123", Role: "admin"}
 	hashErr := fmt.Errorf("hash error")
 	tests := []struct {
 		name      string
@@ -43,10 +44,16 @@ func TestUserService_Create(t *testing.T) {
 		wantErr   error
 	}{
 		{
-			name:      "invalid credentials",
+			name:      "invalid user data",
 			mockedRes: mockedRes{},
 			args:      args{user: domain.NewUser("qw", "er")},
-			wantErr:   InvalidAuthParameterErr,
+			wantErr:   InvalidUserErr,
+		},
+		{
+			name:      "invalid api key on protected user creation",
+			mockedRes: mockedRes{},
+			args:      args{user: validUser, apiKey: "invalid key"},
+			wantErr:   InvalidAPIKeyErr, //InvalidAPIKeyErr,
 		},
 		{
 			name:      "password hashing failed",
@@ -71,7 +78,7 @@ func TestUserService_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := user{repo: repoMock, pswd: pswdMock}.Create(tt.args.user)
+			err := user{repo: repoMock, pswd: pswdMock}.Create(tt.args.user, tt.args.apiKey)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return

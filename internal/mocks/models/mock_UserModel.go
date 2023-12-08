@@ -84,17 +84,17 @@ func (_c *UserModel_Authorize_Call) RunAndReturn(run func(domain.User) (string, 
 	return _c
 }
 
-// Create provides a mock function with given fields: user
-func (_m *UserModel) Create(user domain.User) error {
-	ret := _m.Called(user)
+// Create provides a mock function with given fields: user, apiKey
+func (_m *UserModel) Create(user domain.User, apiKey string) error {
+	ret := _m.Called(user, apiKey)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Create")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(domain.User) error); ok {
-		r0 = rf(user)
+	if rf, ok := ret.Get(0).(func(domain.User, string) error); ok {
+		r0 = rf(user, apiKey)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -109,13 +109,14 @@ type UserModel_Create_Call struct {
 
 // Create is a helper method to define mock.On call
 //   - user domain.User
-func (_e *UserModel_Expecter) Create(user interface{}) *UserModel_Create_Call {
-	return &UserModel_Create_Call{Call: _e.mock.On("Create", user)}
+//   - apiKey string
+func (_e *UserModel_Expecter) Create(user interface{}, apiKey interface{}) *UserModel_Create_Call {
+	return &UserModel_Create_Call{Call: _e.mock.On("Create", user, apiKey)}
 }
 
-func (_c *UserModel_Create_Call) Run(run func(user domain.User)) *UserModel_Create_Call {
+func (_c *UserModel_Create_Call) Run(run func(user domain.User, apiKey string)) *UserModel_Create_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(domain.User))
+		run(args[0].(domain.User), args[1].(string))
 	})
 	return _c
 }
@@ -125,7 +126,7 @@ func (_c *UserModel_Create_Call) Return(_a0 error) *UserModel_Create_Call {
 	return _c
 }
 
-func (_c *UserModel_Create_Call) RunAndReturn(run func(domain.User) error) *UserModel_Create_Call {
+func (_c *UserModel_Create_Call) RunAndReturn(run func(domain.User, string) error) *UserModel_Create_Call {
 	_c.Call.Return(run)
 	return _c
 }
