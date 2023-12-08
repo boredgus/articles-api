@@ -12,9 +12,12 @@ import (
 // swagger:parameters authorization
 // nolint:unused
 type authParams struct {
-	// in: body
+	// in: query
 	// required: true
-	Body domain.User `json:"user"`
+	Username string `json:"username"`
+	// in: query
+	// required: true
+	Password string `json:"password"`
 }
 
 // access token and user id
@@ -55,14 +58,10 @@ type authResp401 struct {
 //		401: authResp401
 //		500: commonError
 func (c Login) Authorize(ctx cntrl.Context) error {
-	var user domain.User
-	err := ctx.Bind(&user)
-	if err != nil {
-		e := ctx.JSON(http.StatusUnauthorized, cntrl.ErrorBody{Error: "username and password are required"})
-		return fmt.Errorf("%v: %w", e, err)
-	}
-
-	userId, token, err := c.userModel.Authorize(user)
+	queryParams := ctx.QueryParams()
+	userId, token, err := c.userModel.Authorize(
+		domain.NewUser(queryParams.Get("username"), queryParams.Get("password")),
+	)
 	if errors.Is(err, models.InvalidAuthParameterErr) {
 		e := ctx.JSON(http.StatusUnauthorized, cntrl.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
