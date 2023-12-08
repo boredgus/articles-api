@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"os"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 
@@ -11,10 +12,12 @@ import (
 )
 
 type config struct {
-	MySQLUsername string `env:"MYSQL_USERNAME"`
-	MySQLPassword string `env:"MYSQL_PASSWORD"`
-	MySQLDatabase string `env:"MYSQL_DATABASE"`
-	DBContainer   string `env:"DB_CONTAINER"`
+	MySQLUsername        string `env:"MYSQL_USERNAME"`
+	MySQLPassword        string `env:"MYSQL_PASSWORD"`
+	MySQLDatabase        string `env:"MYSQL_DATABASE"`
+	MaxOpenDBConnections int    `env:"MAX_OPEN_DB_CONNECTIONS"`
+	MaxIdleDBConnections int    `env:"MAX_IDLE_DB_CONNECTIONS"`
+	DBContainer          string `env:"DB_CONTAINER"`
 }
 
 func LoadEnvFile(envFilePath string) {
@@ -28,12 +31,16 @@ func LoadEnvFile(envFilePath string) {
 	}
 }
 
-func GetConfig() config {
-	cfg := config{}
+var cfg config
+var configOnce sync.Once
 
-	if err := env.Parse(&cfg); err != nil {
-		logrus.Error("failed to load env file", err)
-	}
+func GetConfig() config {
+	configOnce.Do(func() {
+		if err := env.Parse(&cfg); err != nil {
+			logrus.Error("failed to load env file", err)
+			cfg = config{}
+		}
+	})
 	return cfg
 }
 

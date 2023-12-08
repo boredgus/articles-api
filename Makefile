@@ -13,7 +13,9 @@ remove-data:
 	docker volume rm $(composeName)_db
 
 restart:
-	make clean
+	docker stop articles-api
+	docker rm articles-api
+	docker rmi $(composeName)-server
 	make start
 
 # tests
@@ -21,7 +23,7 @@ generate-mocks:
 	mockery --config=./config/.mockery.yaml
 
 tests:
-	go test ./... -v -coverprofile="coverage.txt" -covermode count
+	go test ./... -coverprofile="coverage.txt" -covermode count
 	go tool cover -func="coverage.txt"
 
 show coverage:

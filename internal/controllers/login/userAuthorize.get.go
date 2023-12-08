@@ -9,7 +9,6 @@ import (
 	"user-management/internal/models"
 )
 
-// user qqq
 // swagger:parameters authorization
 // nolint:unused
 type authParams struct {

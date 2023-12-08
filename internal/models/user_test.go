@@ -1,9 +1,9 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"testing"
-	"user-management/internal/auth"
 	"user-management/internal/domain"
 	authMocks "user-management/internal/mocks/auth"
 	repoMocks "user-management/internal/mocks/repo"
@@ -14,10 +14,6 @@ import (
 )
 
 func TestUserService_Create(t *testing.T) {
-	type fields struct {
-		repo repo.UserRepository
-		pswd auth.Password
-	}
 	type args struct {
 		user domain.User
 	}
@@ -25,10 +21,12 @@ func TestUserService_Create(t *testing.T) {
 		createErr error
 		hashErr   error
 	}
-	setup := func(mocks *fields, res mockedRes) func() {
-		repoCall := mocks.repo.(*repoMocks.UserRepository).EXPECT().
+	repoMock := repoMocks.NewUserRepository(t)
+	pswdMock := authMocks.NewPassword(t)
+	setup := func(res mockedRes) func() {
+		repoCall := repoMock.EXPECT().
 			Create(mock.Anything).Return(res.createErr).Once()
-		pswdCall := mocks.pswd.(*authMocks.Password).EXPECT().
+		pswdCall := pswdMock.EXPECT().
 			Hash(mock.Anything).Return("", res.hashErr).Once()
 
 		return func() {
@@ -36,8 +34,6 @@ func TestUserService_Create(t *testing.T) {
 			pswdCall.Unset()
 		}
 	}
-	repoMock := repoMocks.NewUserRepository(t)
-	pswdMock := authMocks.NewPassword(t)
 	validUser := domain.NewUser("username", "PASsword/123")
 	hashErr := fmt.Errorf("hash error")
 	tests := []struct {
@@ -73,7 +69,7 @@ func TestUserService_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cleanSetup := setup(&fields{repo: repoMock, pswd: pswdMock}, tt.mockedRes)
+			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
 			err := user{repo: repoMock, pswd: pswdMock}.Create(tt.args.user)
 			if err != nil {
@@ -86,11 +82,6 @@ func TestUserService_Create(t *testing.T) {
 }
 
 func TestUserService_Authorize(t *testing.T) {
-	type fields struct {
-		repo  repo.UserRepository
-		token auth.Token
-		pswd  auth.Password
-	}
 	type mockedRes struct {
 		user        repo.User
 		repoErr     error
@@ -98,12 +89,15 @@ func TestUserService_Authorize(t *testing.T) {
 		token       string
 		tokenErr    error
 	}
-	setup := func(mocks *fields, res mockedRes) func() {
-		repoCall := mocks.repo.(*repoMocks.UserRepository).EXPECT().
+	repoMock := repoMocks.NewUserRepository(t)
+	pswdMock := authMocks.NewPassword(t)
+	tokenMock := authMocks.NewToken(t)
+	setup := func(res mockedRes) func() {
+		repoCall := repoMock.EXPECT().
 			Get(mock.Anything).Return(res.user, res.repoErr).Once()
-		pswdCall := mocks.pswd.(*authMocks.Password).EXPECT().
+		pswdCall := pswdMock.EXPECT().
 			Compare(mock.Anything, mock.Anything).Return(res.isPswdValid).Once()
-		tokenCall := mocks.token.(*authMocks.Token).EXPECT().
+		tokenCall := tokenMock.EXPECT().
 			Generate(mock.Anything).Return(res.token, res.tokenErr).Once()
 		return func() {
 			repoCall.Unset()
@@ -111,9 +105,6 @@ func TestUserService_Authorize(t *testing.T) {
 			tokenCall.Unset()
 		}
 	}
-	repoMock := repoMocks.NewUserRepository(t)
-	pswdMock := authMocks.NewPassword(t)
-	tokenMock := authMocks.NewToken(t)
 	validUser := domain.NewUser("username", "PASsword/123")
 	userToken := "dXNlcm5hbWU6UEFTc3dvcmQvMTIz"
 	userFromRepo := repo.User{
@@ -160,7 +151,7 @@ func TestUserService_Authorize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cleanSetup := setup(&fields{repo: repoMock, pswd: pswdMock, token: tokenMock}, tt.mockedRes)
+			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
 			gotUserId, gotToken, err := user{
 				repo:  repoMock,
@@ -170,6 +161,62 @@ func TestUserService_Authorize(t *testing.T) {
 			assert.Equal(t, gotUserId, tt.wantUserId)
 			assert.Equal(t, gotToken, tt.wantToken)
 			if err != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+				return
+			}
+			assert.Nil(t, err)
+		})
+	}
+}
+
+func Test_user_Exists(t *testing.T) {
+	type mockedRes struct {
+		user        repo.User
+		repoErr     error
+		isPswdValid bool
+	}
+	repoMock := repoMocks.NewUserRepository(t)
+	pswdMock := authMocks.NewPassword(t)
+	userData := repo.User{OId: "o_id", Username: "username", Password: "pass"}
+	setup := func(res mockedRes) func() {
+		repoCall := repoMock.EXPECT().
+			GetByOId(userData.OId).Return(res.user, res.repoErr).Once()
+		pswdCall := pswdMock.EXPECT().
+			Compare(res.user.Password, mock.Anything).Return(res.isPswdValid).Once()
+
+		return func() {
+			repoCall.Unset()
+			pswdCall.Unset()
+		}
+	}
+	someError := errors.New("some error")
+	tests := []struct {
+		name      string
+		mockedRes mockedRes
+		wantErr   error
+	}{
+		{
+			name:      "there is no user with such oid",
+			mockedRes: mockedRes{repoErr: someError},
+			wantErr:   someError,
+		},
+		{
+			name:      "password is invalid",
+			mockedRes: mockedRes{user: userData, isPswdValid: false},
+			wantErr:   InvalidAuthParameterErr,
+		},
+		{
+			name:      "success",
+			mockedRes: mockedRes{user: userData, isPswdValid: true},
+			wantErr:   nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanSetup := setup(tt.mockedRes)
+			defer cleanSetup()
+			err := user{repo: repoMock, pswd: pswdMock}.Exists(userData.OId, userData.Password)
+			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
 			}

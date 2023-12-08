@@ -123,6 +123,62 @@ func (_c *UserRepository_Get_Call) RunAndReturn(run func(string) (repo.User, err
 	return _c
 }
 
+// GetByOId provides a mock function with given fields: oid
+func (_m *UserRepository) GetByOId(oid string) (repo.User, error) {
+	ret := _m.Called(oid)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetByOId")
+	}
+
+	var r0 repo.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (repo.User, error)); ok {
+		return rf(oid)
+	}
+	if rf, ok := ret.Get(0).(func(string) repo.User); ok {
+		r0 = rf(oid)
+	} else {
+		r0 = ret.Get(0).(repo.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(oid)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UserRepository_GetByOId_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByOId'
+type UserRepository_GetByOId_Call struct {
+	*mock.Call
+}
+
+// GetByOId is a helper method to define mock.On call
+//   - oid string
+func (_e *UserRepository_Expecter) GetByOId(oid interface{}) *UserRepository_GetByOId_Call {
+	return &UserRepository_GetByOId_Call{Call: _e.mock.On("GetByOId", oid)}
+}
+
+func (_c *UserRepository_GetByOId_Call) Run(run func(oid string)) *UserRepository_GetByOId_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string))
+	})
+	return _c
+}
+
+func (_c *UserRepository_GetByOId_Call) Return(_a0 repo.User, _a1 error) *UserRepository_GetByOId_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *UserRepository_GetByOId_Call) RunAndReturn(run func(string) (repo.User, error)) *UserRepository_GetByOId_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewUserRepository creates a new instance of UserRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewUserRepository(t interface {

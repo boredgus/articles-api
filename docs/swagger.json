@@ -14,6 +14,180 @@
   "host": "localhost:8080",
   "basePath": "/",
   "paths": {
+    "/articles": {
+      "get": {
+        "description": "Validates `page` and `limit` params and returns list of articles for specified user by his `username`.\nNew articles are in the start and old ones are in the end of list.",
+        "tags": [
+          "articles"
+        ],
+        "summary": "gets list of articles for specified user",
+        "operationId": "articles_for_user",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Username",
+            "description": "username of owner of articles",
+            "name": "username",
+            "in": "query"
+          },
+          {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "x-go-name": "Page",
+            "description": "number of page in pagination",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "maximum": 50,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int64",
+            "default": 10,
+            "x-go-name": "Limit",
+            "description": "maximal number of fetched articles",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/articlesForUserResp200"
+          },
+          "400": {
+            "$ref": "#/responses/articlesForUserResp400"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "userOId": []
+          },
+          {
+            "password": []
+          }
+        ],
+        "description": "Checks user with provided `user_oid` and `password` exists and validates article data.\nThen saves and returns created item.",
+        "tags": [
+          "articles"
+        ],
+        "summary": "creates new article",
+        "operationId": "create_article",
+        "parameters": [
+          {
+            "x-go-name": "Article",
+            "description": "article data",
+            "name": "article",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ArticleData"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "$ref": "#/responses/createArticleResp201"
+          },
+          "400": {
+            "$ref": "#/responses/createArticleResp400"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorizedResp"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
+          }
+        }
+      }
+    },
+    "/articles/{article_id}": {
+      "get": {
+        "description": "Gets article by id.",
+        "tags": [
+          "articles"
+        ],
+        "summary": "gets article",
+        "operationId": "get_article",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ArticleId",
+            "description": "article identifier",
+            "name": "article_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/getArticleResp200"
+          },
+          "404": {
+            "$ref": "#/responses/getArticleResp404"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "BasicAuth": []
+          }
+        ],
+        "description": "Checks whether article is owned by authorized user, validates provided article data, updates article and returns updates item.",
+        "tags": [
+          "articles"
+        ],
+        "summary": "updates article",
+        "operationId": "update_article",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ArticleId",
+            "description": "article identifier",
+            "name": "article_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "x-go-name": "Article",
+            "description": "article data to update",
+            "name": "article",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ArticleData"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/updateArticleResp200"
+          },
+          "400": {
+            "$ref": "#/responses/updateArticleResp400"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorizedResp"
+          },
+          "404": {
+            "$ref": "#/responses/updateArticleResp404"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
+          }
+        }
+      }
+    },
     "/authorize": {
       "get": {
         "description": "Checks whether user with such username exists and compares his password with given one.",
@@ -70,7 +244,7 @@
             "$ref": "#/responses/registerResp201"
           },
           "409": {
-            "$ref": "#/responses/commonError"
+            "$ref": "#/responses/registerResp409"
           },
           "500": {
             "$ref": "#/responses/commonError"
@@ -80,6 +254,84 @@
     }
   },
   "definitions": {
+    "Article": {
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "description": "time of creation",
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "CreatedAt"
+        },
+        "id": {
+          "description": "identifier of article",
+          "type": "string",
+          "x-go-name": "OId"
+        },
+        "status": {
+          "description": "status of article",
+          "type": "string",
+          "enum": [
+            "deleted",
+            "created",
+            "updated"
+          ],
+          "x-go-name": "Status"
+        },
+        "tags": {
+          "description": "tags related for article",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Tags"
+        },
+        "text": {
+          "description": "content of article",
+          "type": "string",
+          "x-go-name": "Text"
+        },
+        "theme": {
+          "description": "theme/topic of article",
+          "type": "string",
+          "x-go-name": "Theme"
+        },
+        "updated_at": {
+          "description": "time when was updated",
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "UpdatedAt"
+        }
+      },
+      "x-go-package": "user-management/internal/views"
+    },
+    "ArticleData": {
+      "type": "object",
+      "required": [
+        "theme"
+      ],
+      "properties": {
+        "tags": {
+          "description": "topics of article",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Tags"
+        },
+        "text": {
+          "description": "content of article",
+          "type": "string",
+          "x-go-name": "Text"
+        },
+        "theme": {
+          "description": "theme of article",
+          "type": "string",
+          "x-go-name": "Theme"
+        }
+      },
+      "x-go-package": "user-management/internal/controllers/article"
+    },
     "ErrorBody": {
       "description": "error entity",
       "type": "object",
@@ -94,6 +346,27 @@
         }
       },
       "x-go-package": "user-management/internal/controllers"
+    },
+    "PaginationData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Count"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Limit"
+        },
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Page"
+        }
+      },
+      "x-go-package": "user-management/internal/models"
     },
     "User": {
       "description": "user credentials",
@@ -118,6 +391,22 @@
       },
       "x-go-package": "user-management/internal/domain"
     },
+    "articles": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Article"
+          },
+          "x-go-name": "Data"
+        },
+        "pagination": {
+          "$ref": "#/definitions/PaginationData"
+        }
+      },
+      "x-go-package": "user-management/internal/controllers/article"
+    },
     "authResult": {
       "description": "access token and user id",
       "type": "object",
@@ -141,6 +430,18 @@
     }
   },
   "responses": {
+    "articlesForUserResp200": {
+      "description": "success",
+      "schema": {
+        "$ref": "#/definitions/articles"
+      }
+    },
+    "articlesForUserResp400": {
+      "description": "invalid prameters provided",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
     "authResp200": {
       "description": "successfully authorized",
       "schema": {
@@ -159,6 +460,30 @@
         "$ref": "#/definitions/ErrorBody"
       }
     },
+    "createArticleResp201": {
+      "description": "successfully created",
+      "schema": {
+        "$ref": "#/definitions/Article"
+      }
+    },
+    "createArticleResp400": {
+      "description": "invalid article data provided",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
+    "getArticleResp200": {
+      "description": "success",
+      "schema": {
+        "$ref": "#/definitions/Article"
+      }
+    },
+    "getArticleResp404": {
+      "description": "there is no article with such id",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
     "registerResp201": {
       "description": "user created"
     },
@@ -167,11 +492,47 @@
       "schema": {
         "$ref": "#/definitions/ErrorBody"
       }
+    },
+    "unauthorizedResp": {
+      "description": "unauthorized",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
+    "updateArticleResp200": {
+      "description": "success",
+      "schema": {
+        "$ref": "#/definitions/Article"
+      }
+    },
+    "updateArticleResp400": {
+      "description": "invalid article data",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
+    "updateArticleResp404": {
+      "description": "user does not have such article",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
     }
   },
   "securityDefinitions": {
-    "basicAuth": {
+    "BasicAuth": {
       "type": "basic"
+    },
+    "password": {
+      "description": "secret password",
+      "type": "apiKey",
+      "name": "password",
+      "in": "query"
+    },
+    "userOId": {
+      "description": "user unique identifier",
+      "type": "apiKey",
+      "name": "User-OId",
+      "in": "header"
     }
   }
 }

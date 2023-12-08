@@ -9,4 +9,5 @@ type User struct {
 type UserRepository interface {
 	Create(user User) error
 	Get(username string) (User, error)
+	GetByOId(oid string) (User, error)
 }

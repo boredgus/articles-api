@@ -13,10 +13,12 @@ import (
 type UserModel interface {
 	Create(user domain.User) error
 	Authorize(user domain.User) (string, string, error)
+	Exists(oid, password string) error
 }
 
 var InvalidAuthParameterErr = errors.New("username or password is invalid")
 var UsernameDuplicationErr = errors.New("user with such username already exists")
+var UserNotFoundErr = errors.New("user not found")
 
 func NewUserModel(repo repo.UserRepository) UserModel {
 	return user{repo: repo, token: auth.NewToken(), pswd: auth.NewPassword()}
@@ -51,4 +53,15 @@ func (u user) Authorize(user domain.User) (userId string, token string, err erro
 
 	token, err = u.token.Generate(user)
 	return userFromDB.OId, token, err
+}
+
+func (u user) Exists(oid, password string) error {
+	userFromDB, err := u.repo.GetByOId(oid)
+	if err != nil {
+		return err
+	}
+	if !u.pswd.Compare(userFromDB.Password, password) {
+		return InvalidAuthParameterErr
+	}
+	return nil
 }

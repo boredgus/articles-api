@@ -37,7 +37,7 @@ type registerResp409 struct {
 // responses:
 //
 //		201: registerResp201
-//	 	409: commonError
+//	 	409: registerResp409
 //		500: commonError
 func (c Login) Register(ctx cntrl.Context) error {
 	var user domain.User

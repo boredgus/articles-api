@@ -6,6 +6,8 @@ services:
     build:
       context: ../
       dockerfile: ./docker/Dockerfile.server
+    volumes:
+      - ../.:/app
     ports:
       - 8080:8080
     depends_on:
@@ -14,9 +16,7 @@ services:
 
   database:
     container_name: ${DB_CONTAINER}
-    build:
-      context: ../
-      dockerfile: ./docker/Dockerfile.db
+    image: mysql:8.0
     restart: always
     ports:
       - 3306:3306
