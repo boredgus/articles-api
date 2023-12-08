@@ -230,6 +230,13 @@
         "operationId": "registration",
         "parameters": [
           {
+            "type": "string",
+            "x-go-name": "APIKey",
+            "description": "secret key to create user with protected role",
+            "name": "api_key",
+            "in": "query"
+          },
+          {
             "x-go-name": "Body",
             "name": "user",
             "in": "body",
@@ -381,6 +388,16 @@
           "type": "string",
           "x-go-name": "Password",
           "example": "qweQWE123."
+        },
+        "role": {
+          "description": "role of user",
+          "type": "string",
+          "enum": [
+            "user",
+            "moderator",
+            "admin"
+          ],
+          "x-go-name": "Role"
         },
         "username": {
           "description": "unique username",
