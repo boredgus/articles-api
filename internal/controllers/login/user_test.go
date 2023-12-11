@@ -3,7 +3,6 @@ package user_test
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	"testing"
 	cntrl "user-management/internal/controllers"
 	user "user-management/internal/controllers/login"
@@ -98,17 +97,16 @@ func TestLoginController_Authorize(t *testing.T) {
 		jsonCode      int
 		noContentCode int
 	}
-	ctxMock := cntrlMocks.NewContext(t)
-	userModelMock := mdlMocks.NewUserModel(t)
 	userId, token := "user-id", "token"
-	setup := func(res mockedRes) func() {
-		queryParamsCall := ctxMock.EXPECT().QueryParams().Return(url.Values{}).Once()
+	setup := func(mocks *loginMocks, res mockedRes) func() {
+		ctx := mocks.ctx.(*cntrlMocks.Context).EXPECT()
+		bindCall := ctx.Bind(mock.Anything).Return(res.bindingErr).Once()
 		calls := []*mock.Call{
-			queryParamsCall,
-			ctxMock.EXPECT().JSON(res.jsonCode, mock.Anything).Return(nil).NotBefore(queryParamsCall).Maybe(),
-			ctxMock.EXPECT().NoContent(res.noContentCode).Return(nil).NotBefore(queryParamsCall).Maybe(),
-			userModelMock.EXPECT().
-				Authorize(mock.Anything).Return(userId, token, res.authErr).NotBefore(queryParamsCall).Once(),
+			bindCall,
+			ctx.JSON(res.jsonCode, mock.Anything).Return(nil).NotBefore(bindCall).Maybe(),
+			ctx.NoContent(res.noContentCode).Return(nil).NotBefore(bindCall).Maybe(),
+			mocks.userModel.(*mdlMocks.UserModel).EXPECT().
+				Authorize(mock.Anything).Return(userId, token, res.authErr).NotBefore(bindCall).Once(),
 		}
 		return func() {
 			for _, call := range calls {
@@ -116,12 +114,19 @@ func TestLoginController_Authorize(t *testing.T) {
 			}
 		}
 	}
+	ctx := cntrlMocks.NewContext(t)
+	userModel := mdlMocks.NewUserModel(t)
 	err := fmt.Errorf("invoked error")
 	tests := []struct {
 		name      string
 		mockedRes mockedRes
 		wantErr   error
 	}{
+		{
+			name:      "binding failed",
+			mockedRes: mockedRes{bindingErr: err, jsonCode: http.StatusUnauthorized},
+			wantErr:   err,
+		},
 		{
 			name:      "invalid credentials",
 			mockedRes: mockedRes{authErr: models.InvalidAuthParameterErr, jsonCode: http.StatusUnauthorized},
@@ -140,9 +145,9 @@ func TestLoginController_Authorize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cleanSetup := setup(tt.mockedRes)
+			cleanSetup := setup(&loginMocks{ctx: ctx, userModel: userModel}, tt.mockedRes)
 			defer cleanSetup()
-			err := user.NewLoginController(userModelMock).Authorize(ctxMock)
+			err := user.NewLoginController(userModel).Authorize(ctx)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
