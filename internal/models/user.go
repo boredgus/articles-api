@@ -44,7 +44,7 @@ func (u user) Create(user domain.User) error {
 		OId:      uuid.New().String(),
 		Username: user.Username,
 		Password: hashedPswd,
-		Role:     int(domain.DefaultUserRole),
+		Role:     repo.DefaultUserRole,
 	})
 }
 

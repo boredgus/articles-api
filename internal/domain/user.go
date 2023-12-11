@@ -12,25 +12,6 @@ func NewUser(name, pswd string) User {
 	return User{Username: name, Password: pswd}
 }
 
-type UserRole int
-
-const (
-	DefaultUserRole UserRole = iota + 0
-	ModeratorRole
-	AdminRole
-)
-
-var userRoles = map[UserRole]string{
-	DefaultUserRole: "user",
-	ModeratorRole:   "moderator",
-	AdminRole:       "admin",
-}
-var roleToValue = map[string]UserRole{
-	"user":      DefaultUserRole,
-	"moderator": ModeratorRole,
-	"admin":     AdminRole,
-}
-
 // user credentials
 // swagger:model
 type User struct {
