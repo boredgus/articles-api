@@ -230,13 +230,6 @@
         "operationId": "registration",
         "parameters": [
           {
-            "type": "string",
-            "x-go-name": "APIKey",
-            "description": "secret key to create user with protected role",
-            "name": "api_key",
-            "in": "query"
-          },
-          {
             "x-go-name": "Body",
             "name": "user",
             "in": "body",

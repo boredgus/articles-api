@@ -3,7 +3,6 @@ package user_test
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	"testing"
 	cntrl "user-management/internal/controllers"
 	user "user-management/internal/controllers/login"
@@ -31,13 +30,12 @@ func TestLoginController_Register(t *testing.T) {
 	userModelMock := mdlMocks.NewUserModel(t)
 	setup := func(res mockedRes) func() {
 		bindCall := ctxMock.EXPECT().Bind(mock.Anything).Return(res.bindingErr).Once()
-		queryParamsCall := ctxMock.EXPECT().QueryParams().NotBefore(bindCall).Return(url.Values{})
 		calls := []*mock.Call{
-			bindCall, queryParamsCall,
+			bindCall,
 			ctxMock.EXPECT().JSON(res.jsonCode, mock.Anything).Return(nil).NotBefore(bindCall).Maybe(),
 			ctxMock.EXPECT().NoContent(res.noContentCode).Return(nil).NotBefore(bindCall).Maybe(),
 			userModelMock.EXPECT().
-				Create(mock.Anything, mock.Anything).Return(res.createErr).NotBefore(bindCall, queryParamsCall).Once(),
+				Create(mock.Anything).Return(res.createErr).NotBefore(bindCall).Once(),
 		}
 		return func() {
 			for _, call := range calls {
@@ -65,11 +63,6 @@ func TestLoginController_Register(t *testing.T) {
 			name:      "invalid user credentials",
 			mockedRes: mockedRes{createErr: models.InvalidUserErr, jsonCode: http.StatusBadRequest},
 			wantErr:   models.InvalidUserErr,
-		},
-		{
-			name:      "invalid user credentials",
-			mockedRes: mockedRes{createErr: models.InvalidAPIKeyErr, jsonCode: http.StatusBadRequest},
-			wantErr:   models.InvalidAPIKeyErr,
 		},
 		{
 			name:      "internal server error",

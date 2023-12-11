@@ -15,8 +15,7 @@ import (
 
 func TestUserService_Create(t *testing.T) {
 	type args struct {
-		user   domain.User
-		apiKey string
+		user domain.User
 	}
 	type mockedRes struct {
 		createErr error
@@ -52,8 +51,8 @@ func TestUserService_Create(t *testing.T) {
 		{
 			name:      "invalid api key on protected user creation",
 			mockedRes: mockedRes{},
-			args:      args{user: validUser, apiKey: "invalid key"},
-			wantErr:   InvalidAPIKeyErr, //InvalidAPIKeyErr,
+			args:      args{user: validUser},
+			wantErr:   InvalidAPIKeyErr,
 		},
 		{
 			name:      "password hashing failed",
@@ -78,7 +77,7 @@ func TestUserService_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := user{repo: repoMock, pswd: pswdMock}.Create(tt.args.user, tt.args.apiKey)
+			err := user{repo: repoMock, pswd: pswdMock}.Create(tt.args.user)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
