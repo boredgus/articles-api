@@ -93,6 +93,7 @@ func TestLoginController_Register(t *testing.T) {
 
 func TestLoginController_Authorize(t *testing.T) {
 	type mockedRes struct {
+		bindingErr    error
 		authErr       error
 		jsonCode      int
 		noContentCode int
