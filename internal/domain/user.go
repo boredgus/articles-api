@@ -18,11 +18,11 @@ type User struct {
 	// unique username
 	// required: true
 	// example: username
-	Username string `json:"username" sql:"username" form:"username" validate:"required,min=4,max=20"`
+	Username string `json:"username" form:"username" validate:"required,min=4,max=20"`
 	// secret password
 	// required: true
 	// example: qweQWE123.
-	Password string `json:"password" sql:"pswd" form:"password" validate:"min=8,max=20,password"`
+	Password string `json:"password" form:"password" validate:"min=8,max=20,password"`
 }
 
 type Requirements map[string]string

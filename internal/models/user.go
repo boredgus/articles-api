@@ -16,6 +16,8 @@ type UserModel interface {
 	Exists(oid, password string) error
 }
 
+var InvalidUserErr = errors.New("invalid user data")
+var InvalidAPIKeyErr = errors.New("invalid api key")
 var InvalidAuthParameterErr = errors.New("username or password is invalid")
 var UsernameDuplicationErr = errors.New("user with such username already exists")
 var UserNotFoundErr = errors.New("user not found")
@@ -32,14 +34,18 @@ type user struct {
 
 func (u user) Create(user domain.User) error {
 	if err := user.Validate(); err != nil {
-		return fmt.Errorf("%w: %w", InvalidAuthParameterErr, err)
+		return fmt.Errorf("%w: %w", InvalidUserErr, err)
 	}
-
 	hashedPswd, err := u.pswd.Hash(user.Password)
 	if err != nil {
 		return err
 	}
-	return u.repo.Create(repo.User{OId: uuid.New().String(), Username: user.Username, Password: hashedPswd})
+	return u.repo.Create(repo.User{
+		OId:      uuid.New().String(),
+		Username: user.Username,
+		Password: hashedPswd,
+		Role:     repo.DefaultUserRole,
+	})
 }
 
 func (u user) Authorize(user domain.User) (userId string, token string, err error) {

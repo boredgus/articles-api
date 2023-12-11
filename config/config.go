@@ -12,6 +12,7 @@ import (
 )
 
 type config struct {
+	SecretAPIKey         string `env:"SECRET_API_KEY"`
 	MySQLUsername        string `env:"MYSQL_USERNAME"`
 	MySQLPassword        string `env:"MYSQL_PASSWORD"`
 	MySQLDatabase        string `env:"MYSQL_DATABASE"`

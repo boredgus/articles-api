@@ -34,7 +34,7 @@ func TestUserService_Create(t *testing.T) {
 			pswdCall.Unset()
 		}
 	}
-	validUser := domain.NewUser("username", "PASsword/123")
+	validUser := domain.User{Username: "username", Password: "PASsword/123"}
 	hashErr := fmt.Errorf("hash error")
 	tests := []struct {
 		name      string
@@ -43,10 +43,16 @@ func TestUserService_Create(t *testing.T) {
 		wantErr   error
 	}{
 		{
-			name:      "invalid credentials",
+			name:      "invalid user data",
 			mockedRes: mockedRes{},
 			args:      args{user: domain.NewUser("qw", "er")},
-			wantErr:   InvalidAuthParameterErr,
+			wantErr:   InvalidUserErr,
+		},
+		{
+			name:      "invalid api key on protected user creation",
+			mockedRes: mockedRes{},
+			args:      args{user: validUser},
+			wantErr:   InvalidAPIKeyErr,
 		},
 		{
 			name:      "password hashing failed",

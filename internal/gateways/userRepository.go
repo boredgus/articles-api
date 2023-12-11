@@ -15,8 +15,8 @@ type UserRepository struct {
 }
 
 func (r UserRepository) Create(user repo.User) error {
-	rows, err := r.store.Query(`call CreateUser(?,?,?);`,
-		user.OId, user.Username, user.Password)
+	rows, err := r.store.Query(`call CreateUser(?,?,?,?);`,
+		user.OId, user.Username, user.Password, user.Role)
 	if err != nil && strings.Contains(err.Error(), "Error 1062") {
 		return models.UsernameDuplicationErr
 	}
@@ -34,7 +34,7 @@ func (r UserRepository) Get(username string) (repo.User, error) {
 	if !exists {
 		return user, models.InvalidAuthParameterErr
 	}
-	err = rows.Scan(&user.OId, &user.Username, &user.Password)
+	err = rows.Scan(&user.OId, &user.Username, &user.Password, &user.Role)
 	if err != nil {
 		return user, err
 	}
@@ -53,7 +53,7 @@ func (r UserRepository) GetByOId(oid string) (repo.User, error) {
 		rows.Close()
 		return user, models.UserNotFoundErr
 	}
-	err = rows.Scan(&user.OId, &user.Username, &user.Password)
+	err = rows.Scan(&user.OId, &user.Username, &user.Password, &user.Role)
 	rows.Close()
 	if err != nil {
 		return user, err

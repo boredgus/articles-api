@@ -52,7 +52,7 @@ func (c Login) Register(ctx cntrl.Context) error {
 		e := ctx.JSON(http.StatusConflict, cntrl.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}
-	if errors.Is(err, models.InvalidAuthParameterErr) {
+	if errors.Is(err, models.InvalidUserErr) || errors.Is(err, models.InvalidAPIKeyErr) {
 		e := ctx.JSON(http.StatusBadRequest, cntrl.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}

@@ -26,14 +26,15 @@ func TestLoginController_Register(t *testing.T) {
 		jsonCode      int
 		noContentCode int
 	}
-	setup := func(mocks *loginMocks, res mockedRes) func() {
-		ctx := mocks.ctx.(*cntrlMocks.Context).EXPECT()
-		bindCall := ctx.Bind(mock.Anything).Return(res.bindingErr).Once()
+	ctxMock := cntrlMocks.NewContext(t)
+	userModelMock := mdlMocks.NewUserModel(t)
+	setup := func(res mockedRes) func() {
+		bindCall := ctxMock.EXPECT().Bind(mock.Anything).Return(res.bindingErr).Once()
 		calls := []*mock.Call{
 			bindCall,
-			ctx.JSON(res.jsonCode, mock.Anything).Return(nil).NotBefore(bindCall).Maybe(),
-			ctx.NoContent(res.noContentCode).Return(nil).NotBefore(bindCall).Maybe(),
-			mocks.userModel.(*mdlMocks.UserModel).EXPECT().
+			ctxMock.EXPECT().JSON(res.jsonCode, mock.Anything).Return(nil).NotBefore(bindCall).Maybe(),
+			ctxMock.EXPECT().NoContent(res.noContentCode).Return(nil).NotBefore(bindCall).Maybe(),
+			userModelMock.EXPECT().
 				Create(mock.Anything).Return(res.createErr).NotBefore(bindCall).Once(),
 		}
 		return func() {
@@ -42,8 +43,6 @@ func TestLoginController_Register(t *testing.T) {
 			}
 		}
 	}
-	ctx := cntrlMocks.NewContext(t)
-	userModel := mdlMocks.NewUserModel(t)
 	err := fmt.Errorf("invoked error")
 	tests := []struct {
 		name      string
@@ -62,8 +61,8 @@ func TestLoginController_Register(t *testing.T) {
 		},
 		{
 			name:      "invalid user credentials",
-			mockedRes: mockedRes{createErr: models.InvalidAuthParameterErr, jsonCode: http.StatusBadRequest},
-			wantErr:   models.InvalidAuthParameterErr,
+			mockedRes: mockedRes{createErr: models.InvalidUserErr, jsonCode: http.StatusBadRequest},
+			wantErr:   models.InvalidUserErr,
 		},
 		{
 			name:      "internal server error",
@@ -78,9 +77,9 @@ func TestLoginController_Register(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cleanSetup := setup(&loginMocks{ctx: ctx, userModel: userModel}, tt.mockedRes)
+			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := user.NewLoginController(userModel).Register(ctx)
+			err := user.NewLoginController(userModelMock).Register(ctxMock)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
