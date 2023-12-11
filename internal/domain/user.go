@@ -25,6 +25,11 @@ var userRoles = map[UserRole]string{
 	ModeratorRole:   "moderator",
 	AdminRole:       "admin",
 }
+var roleToValue = map[string]UserRole{
+	"user":      DefaultUserRole,
+	"moderator": ModeratorRole,
+	"admin":     AdminRole,
+}
 
 // user credentials
 // swagger:model
@@ -57,12 +62,7 @@ var passwordRules = []*regexp.Regexp{
 	regexp.MustCompile("[./_*;]")}
 
 func (u User) GetRole() UserRole {
-	for numb, str := range userRoles {
-		if u.Role == str {
-			return numb
-		}
-	}
-	return DefaultUserRole
+	return roleToValue[u.Role]
 }
 func (u User) Validate() error {
 	validate := validator.New()
