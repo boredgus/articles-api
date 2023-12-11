@@ -44,7 +44,7 @@ type authResp401 struct {
 	body cntrl.ErrorBody
 }
 
-// swagger:route GET /authorize login authorization
+// swagger:route POST /authorize login authorization
 // authorizes user
 // ---
 // Checks whether user with such username exists and compares his password with given one.
