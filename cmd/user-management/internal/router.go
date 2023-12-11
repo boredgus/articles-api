@@ -17,7 +17,7 @@ func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 	e.POST("/register", func(c echo.Context) error {
 		return app.Login.Register(NewContext(c))
 	})
-	e.GET("/authorize", func(c echo.Context) error {
+	e.POST("/authorize", func(c echo.Context) error {
 		return app.Login.Authorize(NewContext(c))
 	})
 	e.POST("/articles", func(c echo.Context) error {

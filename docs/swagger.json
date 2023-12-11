@@ -189,7 +189,7 @@
       }
     },
     "/authorize": {
-      "get": {
+      "post": {
         "description": "Checks whether user with such username exists and compares his password with given one.",
         "tags": [
           "login"
