@@ -34,7 +34,7 @@ func TestUserService_Create(t *testing.T) {
 			pswdCall.Unset()
 		}
 	}
-	validUser := domain.User{Username: "username", Password: "PASsword/123", Role: "admin"}
+	validUser := domain.User{Username: "username", Password: "PASsword/123"}
 	hashErr := fmt.Errorf("hash error")
 	tests := []struct {
 		name      string

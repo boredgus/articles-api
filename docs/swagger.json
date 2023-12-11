@@ -382,16 +382,6 @@
           "x-go-name": "Password",
           "example": "qweQWE123."
         },
-        "role": {
-          "description": "role of user",
-          "type": "string",
-          "enum": [
-            "user",
-            "moderator",
-            "admin"
-          ],
-          "x-go-name": "Role"
-        },
         "username": {
           "description": "unique username",
           "type": "string",
