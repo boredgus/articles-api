@@ -16,19 +16,36 @@ type ErrorBody struct {
 // internal server error
 // swagger:response commonError
 type Error struct {
+}
+
+// unauthorized
+// swagger:response unauthorizedResp401
+// nolint:unused
+type unauthorizedResp401 struct {
 	// in: body
 	Body ErrorBody
 }
 
-// unauthorized
-// swagger:response unauthorizedResp
+// user does not enough rights to perform action
+// swagger:response forbiddenResp403
 // nolint:unused
-type updateArticleResp401 struct {
+type forbiddenResp403 struct {
 	// in: body
+	// required: true
+	Body ErrorBody
+}
+
+// there is no article with such id
+// swagger:response notFoundResp404
+// nolint:unused
+type notFoundResp404 struct {
+	// in: body
+	// required: true
 	Body ErrorBody
 }
 
 type Context interface {
+	Get(key string) interface{}
 	QueryParams() url.Values
 	FormParams() (url.Values, error)
 	Request() *http.Request

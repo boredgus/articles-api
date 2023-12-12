@@ -8,6 +8,25 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type UserRole int
+
+const (
+	DefaultUserRole UserRole = iota + 0
+	ModeratorRole
+	AdminRole
+)
+
+var UserRoles = map[UserRole]string{
+	DefaultUserRole: "user",
+	ModeratorRole:   "moderator",
+	AdminRole:       "admin",
+}
+var RoleToValue = map[string]UserRole{
+	"user":      DefaultUserRole,
+	"moderator": ModeratorRole,
+	"admin":     AdminRole,
+}
+
 func NewUser(name, pswd string) User {
 	return User{Username: name, Password: pswd}
 }

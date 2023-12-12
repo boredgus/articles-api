@@ -40,7 +40,9 @@ func NewMySQLStore(handlers ...func(db *sql.DB)) MySQLStore {
 			if err != nil {
 				logrus.Warnf("db connection (attempt #%v) failed: %v", i+1, err)
 				time.Sleep(10 * time.Second)
+				continue
 			}
+			break
 		}
 		if err != nil {
 			logrus.Fatalf("failed to connect to DB: %v", err)

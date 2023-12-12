@@ -23,9 +23,6 @@ type authResult struct {
 	// access token
 	// required: true
 	Token string `json:"token"`
-	// user identificator
-	// required: true
-	UserId string `json:"user_id"`
 }
 
 // successfully authorized
@@ -62,7 +59,7 @@ func (c Login) Authorize(ctx cntrl.Context) error {
 		return fmt.Errorf("%v: %w", e, err)
 	}
 
-	userId, token, err := c.userModel.Authorize(user)
+	token, err := c.userModel.Authorize(user.Username, user.Password)
 	if errors.Is(err, models.InvalidAuthParameterErr) {
 		e := ctx.JSON(http.StatusUnauthorized, cntrl.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
@@ -72,5 +69,5 @@ func (c Login) Authorize(ctx cntrl.Context) error {
 		return fmt.Errorf("%v: %w", e, err)
 	}
 
-	return ctx.JSON(http.StatusOK, authResult{Token: token, UserId: userId})
+	return ctx.JSON(http.StatusOK, authResult{Token: token})
 }

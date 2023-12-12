@@ -70,6 +70,54 @@ func (_c *ArticleModel_Create_Call) RunAndReturn(run func(string, *domain.Articl
 	return _c
 }
 
+// Delete provides a mock function with given fields: userOId, userRole, articleOId
+func (_m *ArticleModel) Delete(userOId string, userRole string, articleOId string) error {
+	ret := _m.Called(userOId, userRole, articleOId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Delete")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, string) error); ok {
+		r0 = rf(userOId, userRole, articleOId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ArticleModel_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
+type ArticleModel_Delete_Call struct {
+	*mock.Call
+}
+
+// Delete is a helper method to define mock.On call
+//   - userOId string
+//   - userRole string
+//   - articleOId string
+func (_e *ArticleModel_Expecter) Delete(userOId interface{}, userRole interface{}, articleOId interface{}) *ArticleModel_Delete_Call {
+	return &ArticleModel_Delete_Call{Call: _e.mock.On("Delete", userOId, userRole, articleOId)}
+}
+
+func (_c *ArticleModel_Delete_Call) Run(run func(userOId string, userRole string, articleOId string)) *ArticleModel_Delete_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *ArticleModel_Delete_Call) Return(_a0 error) *ArticleModel_Delete_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ArticleModel_Delete_Call) RunAndReturn(run func(string, string, string) error) *ArticleModel_Delete_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Get provides a mock function with given fields: articleOId
 func (_m *ArticleModel) Get(articleOId string) (domain.Article, error) {
 	ret := _m.Called(articleOId)
@@ -193,17 +241,17 @@ func (_c *ArticleModel_GetForUser_Call) RunAndReturn(run func(string, int, int) 
 	return _c
 }
 
-// Update provides a mock function with given fields: userID, article
-func (_m *ArticleModel) Update(userID string, article *domain.Article) error {
-	ret := _m.Called(userID, article)
+// Update provides a mock function with given fields: userOId, userRole, article
+func (_m *ArticleModel) Update(userOId string, userRole string, article *domain.Article) error {
+	ret := _m.Called(userOId, userRole, article)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Update")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, *domain.Article) error); ok {
-		r0 = rf(userID, article)
+	if rf, ok := ret.Get(0).(func(string, string, *domain.Article) error); ok {
+		r0 = rf(userOId, userRole, article)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -217,15 +265,16 @@ type ArticleModel_Update_Call struct {
 }
 
 // Update is a helper method to define mock.On call
-//   - userID string
+//   - userOId string
+//   - userRole string
 //   - article *domain.Article
-func (_e *ArticleModel_Expecter) Update(userID interface{}, article interface{}) *ArticleModel_Update_Call {
-	return &ArticleModel_Update_Call{Call: _e.mock.On("Update", userID, article)}
+func (_e *ArticleModel_Expecter) Update(userOId interface{}, userRole interface{}, article interface{}) *ArticleModel_Update_Call {
+	return &ArticleModel_Update_Call{Call: _e.mock.On("Update", userOId, userRole, article)}
 }
 
-func (_c *ArticleModel_Update_Call) Run(run func(userID string, article *domain.Article)) *ArticleModel_Update_Call {
+func (_c *ArticleModel_Update_Call) Run(run func(userOId string, userRole string, article *domain.Article)) *ArticleModel_Update_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(*domain.Article))
+		run(args[0].(string), args[1].(string), args[2].(*domain.Article))
 	})
 	return _c
 }
@@ -235,7 +284,7 @@ func (_c *ArticleModel_Update_Call) Return(_a0 error) *ArticleModel_Update_Call 
 	return _c
 }
 
-func (_c *ArticleModel_Update_Call) RunAndReturn(run func(string, *domain.Article) error) *ArticleModel_Update_Call {
+func (_c *ArticleModel_Update_Call) RunAndReturn(run func(string, string, *domain.Article) error) *ArticleModel_Update_Call {
 	_c.Call.Return(run)
 	return _c
 }

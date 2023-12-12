@@ -3,33 +3,11 @@
     "BasicAuth": {
       "type": "basic"
     },
-    "userOId": {
-      "description": "user unique identifier",
+    "jwt": {
+      "description": "prefix `Bearer ` + JSON web token",
       "type": "apiKey",
       "in": "header",
-      "name": "User-OId"
-    },
-    "password": {
-      "description": "secret password",
-      "type": "apiKey",
-      "in": "query",
-      "name": "password"
-    }
-  },
-  "paths": {
-    "/articles": {
-      "post": {
-        "security": [
-          {
-            "userOId": [
-              "[]"
-            ],
-            "password": [
-              "[]"
-            ]
-          }
-        ]
-      }
+      "name": "Authorization"
     }
   }
 }

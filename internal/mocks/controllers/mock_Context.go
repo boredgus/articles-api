@@ -125,6 +125,54 @@ func (_c *Context_FormParams_Call) RunAndReturn(run func() (url.Values, error)) 
 	return _c
 }
 
+// Get provides a mock function with given fields: key
+func (_m *Context) Get(key string) interface{} {
+	ret := _m.Called(key)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Get")
+	}
+
+	var r0 interface{}
+	if rf, ok := ret.Get(0).(func(string) interface{}); ok {
+		r0 = rf(key)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(interface{})
+		}
+	}
+
+	return r0
+}
+
+// Context_Get_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Get'
+type Context_Get_Call struct {
+	*mock.Call
+}
+
+// Get is a helper method to define mock.On call
+//   - key string
+func (_e *Context_Expecter) Get(key interface{}) *Context_Get_Call {
+	return &Context_Get_Call{Call: _e.mock.On("Get", key)}
+}
+
+func (_c *Context_Get_Call) Run(run func(key string)) *Context_Get_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string))
+	})
+	return _c
+}
+
+func (_c *Context_Get_Call) Return(_a0 interface{}) *Context_Get_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Context_Get_Call) RunAndReturn(run func(string) interface{}) *Context_Get_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // JSON provides a mock function with given fields: code, i
 func (_m *Context) JSON(code int, i interface{}) error {
 	ret := _m.Called(code, i)

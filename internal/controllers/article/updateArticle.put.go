@@ -4,10 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"user-management/internal/auth"
 	"user-management/internal/controllers"
 	"user-management/internal/domain"
 	"user-management/internal/models"
 	"user-management/internal/views"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // swagger:parameters update_article
@@ -40,29 +43,21 @@ type updateArticleResp400 struct {
 	Body controllers.ErrorBody
 }
 
-// user does not have such article
-// swagger:response updateArticleResp404
-// nolint:unused
-type updateArticleResp404 struct {
-	// in: body
-	// required: true
-	Body controllers.ErrorBody
-}
-
 // swagger:route PUT /articles/{article_id} articles update_article
 // updates article
 // ---
 // - Checks whether article is owned by authorized user, validates provided article data, updates article and returns updates item.
 //
 // security:
-//   - BasicAuth:
+//   - jwt:
 //
 // responses:
 //
 //	200: updateArticleResp200
 //	400: updateArticleResp400
-//	401: unauthorizedResp
-//	404: updateArticleResp404
+//	401: unauthorizedResp401
+//	403: forbiddenResp403
+//	404: notFoundResp404
 //	500: commonError
 func (a Article) Update(ctx controllers.Context) error {
 	var data ArticleData
@@ -79,10 +74,14 @@ func (a Article) Update(ctx controllers.Context) error {
 	if len(article.Tags) == 0 {
 		article.Tags = []string{}
 	}
-
-	err = a.articleModel.Update(ctx.Request().Header.Get("Username"), &article)
-	if errors.Is(err, models.UserIsNotAnOwnerErr) {
+	claims := ctx.Get("user").(*jwt.Token).Claims.(*auth.JWTClaims)
+	err = a.articleModel.Update(claims.UserOId, claims.Role, &article)
+	if errors.Is(err, models.ArticleNotFoundErr) {
 		e := ctx.JSON(http.StatusNotFound, controllers.ErrorBody{Error: err.Error()})
+		return fmt.Errorf("%v: %w", e, err)
+	}
+	if errors.Is(err, models.NotEnoughRightsErr) {
+		e := ctx.JSON(http.StatusForbidden, controllers.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}
 	if errors.Is(err, models.InvalidArticleErr) {

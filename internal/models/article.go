@@ -20,12 +20,14 @@ type ArticleModel interface {
 	Create(userOId string, article *domain.Article) error
 	GetForUser(username string, page, limit int) ([]domain.Article, PaginationData, error)
 	Get(articleOId string) (domain.Article, error)
-	Update(userID string, article *domain.Article) error
+	Update(userOId, userRole string, article *domain.Article) error
+	Delete(userOId, userRole, articleOId string) error
 }
 
 var InvalidArticleErr = errors.New("invalid article")
-var UserIsNotAnOwnerErr = errors.New("user does not have such article")
+var NotEnoughRightsErr = errors.New("the user does not have enough rights to perform the action")
 var ArticleNotFoundErr = errors.New("article is not found")
+var UnknownUserErr = errors.New("unknown user")
 
 func NewArticleModel(repo repo.ArticleRepository) ArticleModel {
 	return ArticleService{repo}
@@ -46,10 +48,15 @@ func (a ArticleService) Create(userOId string, article *domain.Article) error {
 		Text:  article.Text,
 		Tags:  article.Tags,
 	})
+	if err == ArticleNotFoundErr {
+		return UnknownUserErr
+	}
+	if err != nil {
+		return err
+	}
 	article.OId = id
 	article.CreatedAt = time.Now().UTC()
-
-	return err
+	return nil
 }
 
 func (a ArticleService) Get(articleOId string) (domain.Article, error) {
@@ -64,8 +71,27 @@ func (a ArticleService) GetForUser(username string, page, limit int) ([]domain.A
 	return articles, PaginationData{Page: page, Limit: limit, Count: len(articles)}, nil
 }
 
-func (a ArticleService) Update(username string, article *domain.Article) error {
-	oldArticle, err := a.repo.IsOwner(article.OId, username)
+func (a ArticleService) checkRights(userOId, userRole, articleOId string) error {
+	if userRole == domain.UserRoles[domain.DefaultUserRole] {
+		err := a.repo.IsOwner(articleOId, userOId)
+		if err == ArticleNotFoundErr {
+			return fmt.Errorf("%w: user is not an owner", NotEnoughRightsErr)
+		}
+		if err != nil {
+			return err
+		}
+	} else if domain.RoleToValue[userRole] == domain.DefaultUserRole {
+		return fmt.Errorf("%w: unknown user role", NotEnoughRightsErr)
+	}
+	return nil
+}
+
+func (a ArticleService) Update(userOId, userRole string, article *domain.Article) error {
+	oldArticle, err := a.repo.Get(article.OId)
+	if err != nil {
+		return err
+	}
+	err = a.checkRights(userOId, userRole, article.OId)
 	if err != nil {
 		return err
 	}
@@ -94,4 +120,16 @@ func (a ArticleService) Update(username string, article *domain.Article) error {
 	article.CreatedAt = oldArticle.CreatedAt
 	article.UpdatedAt = &t
 	return nil
+}
+
+func (a ArticleService) Delete(userOId, userRole, articleOId string) error {
+	article, err := a.repo.Get(articleOId)
+	if err != nil {
+		return err
+	}
+	err = a.checkRights(userOId, userRole, articleOId)
+	if err != nil {
+		return err
+	}
+	return a.repo.DeleteArticle(articleOId, article.Tags)
 }

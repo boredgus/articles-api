@@ -39,6 +39,12 @@ func TestArticleService_Create(t *testing.T) {
 			wantErr: InvalidArticleErr,
 		},
 		{
+			name:      "there is no user with such oid",
+			args:      args{article: &domain.Article{Theme: "error"}},
+			mockedRes: mockedRes{createErr: ArticleNotFoundErr},
+			wantErr:   UnknownUserErr,
+		},
+		{
 			name:      "failed to insert article data to db",
 			args:      args{article: &domain.Article{Theme: "error"}},
 			mockedRes: mockedRes{createErr: someError},
@@ -127,32 +133,38 @@ func TestArticleService_GetForUser(t *testing.T) {
 
 func TestArticleService_Update(t *testing.T) {
 	type args struct {
-		username string
+		userOId  string
+		userRole string
 		article  *domain.Article
 	}
 	type mockedRes struct {
-		isOwnerErr    error
 		oldArticle    domain.Article
+		oldArticleErr error
+		isOwnerErr    error
 		updateErr     error
 		addTagsErr    error
 		removeTagsErr error
 	}
 	repoMock := repoMocks.NewArticleRepository(t)
 	setup := func(res mockedRes) func() {
-		isOwnerCall := repoMock.EXPECT().IsOwner(mock.Anything, mock.Anything).
-			Return(res.oldArticle, res.isOwnerErr).Once()
+		getCall := repoMock.EXPECT().Get(mock.Anything).Return(res.oldArticle, res.oldArticleErr).Once()
 		updateCall := repoMock.EXPECT().
-			UpdateArticle(mock.Anything, mock.Anything, mock.Anything).NotBefore(isOwnerCall).
+			UpdateArticle(mock.Anything, mock.Anything, mock.Anything).NotBefore(getCall).
 			Return(res.updateErr).Once()
-		removeTagsCall := repoMock.EXPECT().RemoveTagsFromArticle(mock.Anything, mock.Anything).
-			NotBefore(isOwnerCall, updateCall).Return(res.removeTagsErr).Maybe()
-		addTagsCall := repoMock.EXPECT().AddTagsForArticle(mock.Anything, mock.Anything).
-			NotBefore(isOwnerCall, updateCall).Return(res.addTagsErr).Maybe()
+		calls := []*mock.Call{
+			getCall,
+			repoMock.EXPECT().IsOwner(mock.Anything, mock.Anything).
+				Return(res.isOwnerErr).NotBefore(getCall).Maybe(),
+			updateCall,
+			repoMock.EXPECT().RemoveTagsFromArticle(mock.Anything, mock.Anything).
+				NotBefore(updateCall).Return(res.removeTagsErr).Maybe(),
+			repoMock.EXPECT().AddTagsForArticle(mock.Anything, mock.Anything).
+				NotBefore(updateCall).Return(res.addTagsErr).Maybe(),
+		}
 		return func() {
-			isOwnerCall.Unset()
-			updateCall.Unset()
-			removeTagsCall.Unset()
-			addTagsCall.Unset()
+			for _, call := range calls {
+				call.Unset()
+			}
 		}
 	}
 	someError := errors.New("some error")
@@ -163,25 +175,30 @@ func TestArticleService_Update(t *testing.T) {
 		wantErr   error
 	}{
 		{
-			name:      "user is not an owner of article",
-			args:      args{article: &domain.Article{Theme: ""}},
-			mockedRes: mockedRes{isOwnerErr: UserIsNotAnOwnerErr},
-			wantErr:   UserIsNotAnOwnerErr,
+			name:      "failed to get old article",
+			args:      args{article: &domain.Article{}},
+			mockedRes: mockedRes{oldArticleErr: someError},
+			wantErr:   someError,
+		},
+		{
+			name:    "not enough rights to update article",
+			args:    args{userRole: "kek", article: &domain.Article{}},
+			wantErr: NotEnoughRightsErr,
 		},
 		{
 			name:    "article data is not valid",
-			args:    args{article: &domain.Article{Theme: ""}},
+			args:    args{userRole: "admin", article: &domain.Article{Theme: ""}},
 			wantErr: InvalidArticleErr,
 		},
 		{
 			name:      "failed to update article",
-			args:      args{article: &domain.Article{Theme: "t", Tags: []string{}}},
+			args:      args{userRole: "admin", article: &domain.Article{Theme: "t", Tags: []string{}}},
 			mockedRes: mockedRes{updateErr: someError},
 			wantErr:   someError,
 		},
 		{
 			name: "failed to remove article tags",
-			args: args{article: &domain.Article{Theme: "t", Tags: []string{}}},
+			args: args{userRole: "admin", article: &domain.Article{Theme: "t", Tags: []string{}}},
 			mockedRes: mockedRes{
 				oldArticle:    domain.Article{Theme: "t", Tags: []string{"old"}},
 				removeTagsErr: someError},
@@ -189,7 +206,7 @@ func TestArticleService_Update(t *testing.T) {
 		},
 		{
 			name: "failed to add article tags",
-			args: args{article: &domain.Article{Theme: "t", Tags: []string{"new"}}},
+			args: args{userRole: "admin", article: &domain.Article{Theme: "t", Tags: []string{"new"}}},
 			mockedRes: mockedRes{
 				oldArticle: domain.Article{Theme: "t", Tags: []string{}},
 				addTagsErr: someError},
@@ -197,14 +214,14 @@ func TestArticleService_Update(t *testing.T) {
 		},
 		{
 			name: "success",
-			args: args{article: &domain.Article{Theme: "t", Tags: []string{}}},
+			args: args{userRole: "admin", article: &domain.Article{Theme: "t", Tags: []string{}}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := NewArticleModel(repoMock).Update(tt.args.username, tt.args.article)
+			err := NewArticleModel(repoMock).Update(tt.args.userOId, tt.args.userRole, tt.args.article)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
@@ -256,6 +273,133 @@ func TestArticleService_Get(t *testing.T) {
 			defer cleanSetup()
 			got, err := NewArticleModel(repoMock).Get(tt.args.articleOId)
 			assert.Equal(t, got, tt.wantA)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+				return
+			}
+			assert.Nil(t, err)
+		})
+	}
+}
+
+func TestArticleService_Delete(t *testing.T) {
+	type args struct {
+		userOId    string
+		userRole   string
+		articleOId string
+	}
+	type mockedRes struct {
+		getErr    error
+		article   domain.Article
+		deleteErr error
+	}
+	repoMock := repoMocks.NewArticleRepository(t)
+	setup := func(res mockedRes) func() {
+		getCall := repoMock.EXPECT().
+			Get(mock.Anything).Return(res.article, res.getErr).Once()
+		deleteCall := repoMock.EXPECT().DeleteArticle(mock.Anything, res.article.Tags).
+			NotBefore(getCall).Return(res.deleteErr)
+		return func() {
+			getCall.Unset()
+			deleteCall.Unset()
+		}
+	}
+	someErr := errors.New("some err")
+	tests := []struct {
+		name      string
+		args      args
+		mockedRes mockedRes
+		wantErr   error
+	}{
+		{
+			name:      "failed to get article",
+			args:      args{userRole: "admin"},
+			mockedRes: mockedRes{getErr: someErr},
+			wantErr:   someErr,
+		},
+		{
+			name:    "not enough rights to delete article",
+			args:    args{userRole: "kek"},
+			wantErr: NotEnoughRightsErr,
+		},
+		{
+			name:      "failed to delete article",
+			args:      args{userRole: "admin"},
+			mockedRes: mockedRes{deleteErr: someErr},
+			wantErr:   someErr,
+		},
+		{
+			name:    "success",
+			args:    args{userRole: "admin"},
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanSetup := setup(tt.mockedRes)
+			defer cleanSetup()
+			err := ArticleService{repo: repoMock}.Delete(tt.args.userOId, tt.args.userRole, tt.args.articleOId)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+				return
+			}
+			assert.Nil(t, err)
+		})
+	}
+}
+
+func TestArticleService_checkRights(t *testing.T) {
+	type args struct {
+		userOId    string
+		userRole   string
+		articleOId string
+	}
+	type mockedRes struct {
+		isOwnerErr error
+	}
+	repoMock := repoMocks.NewArticleRepository(t)
+	setup := func(res mockedRes) func() {
+		isOwnerCall := repoMock.EXPECT().IsOwner(mock.Anything, mock.Anything).
+			Return(res.isOwnerErr).Maybe()
+		return func() {
+			isOwnerCall.Unset()
+		}
+	}
+	someError := errors.New("some err")
+	tests := []struct {
+		name      string
+		args      args
+		mockedRes mockedRes
+		wantErr   error
+	}{
+		{
+			name:      "user with default role is trying to change not his article",
+			args:      args{userRole: "user"},
+			mockedRes: mockedRes{isOwnerErr: ArticleNotFoundErr},
+			wantErr:   NotEnoughRightsErr,
+		},
+		{
+			name:      "server error on IsOwner check",
+			args:      args{userRole: "user"},
+			mockedRes: mockedRes{isOwnerErr: someError},
+			wantErr:   someError,
+		},
+		{
+			name:    "server error on IsOwner check",
+			args:    args{userRole: "kek"},
+			wantErr: NotEnoughRightsErr,
+		},
+		{
+			name:    "success",
+			args:    args{userRole: "kek"},
+			wantErr: NotEnoughRightsErr,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanSetup := setup(tt.mockedRes)
+			defer cleanSetup()
+			err := ArticleService{repo: repoMock}.checkRights(tt.args.userOId, tt.args.userRole, tt.args.articleOId)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return

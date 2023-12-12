@@ -9,7 +9,7 @@
   "info": {
     "description": "Spec Documentation for article service.",
     "title": "Articles API",
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "host": "localhost:8080",
   "basePath": "/",
@@ -67,13 +67,10 @@
       "post": {
         "security": [
           {
-            "userOId": []
-          },
-          {
-            "password": []
+            "jwt": []
           }
         ],
-        "description": "Checks user with provided `user_oid` and `password` exists and validates article data.\nThen saves and returns created item.",
+        "description": "Checks user with provided `user_oid` and `password` exists and validates article data.\nThen creates and returns created item.",
         "tags": [
           "articles"
         ],
@@ -99,7 +96,7 @@
             "$ref": "#/responses/createArticleResp400"
           },
           "401": {
-            "$ref": "#/responses/unauthorizedResp"
+            "$ref": "#/responses/unauthorizedResp401"
           },
           "500": {
             "$ref": "#/responses/commonError"
@@ -130,7 +127,7 @@
             "$ref": "#/responses/getArticleResp200"
           },
           "404": {
-            "$ref": "#/responses/getArticleResp404"
+            "$ref": "#/responses/notFoundResp404"
           },
           "500": {
             "$ref": "#/responses/commonError"
@@ -140,7 +137,7 @@
       "put": {
         "security": [
           {
-            "BasicAuth": []
+            "jwt": []
           }
         ],
         "description": "Checks whether article is owned by authorized user, validates provided article data, updates article and returns updates item.",
@@ -177,10 +174,53 @@
             "$ref": "#/responses/updateArticleResp400"
           },
           "401": {
-            "$ref": "#/responses/unauthorizedResp"
+            "$ref": "#/responses/unauthorizedResp401"
+          },
+          "403": {
+            "$ref": "#/responses/forbiddenResp403"
           },
           "404": {
-            "$ref": "#/responses/updateArticleResp404"
+            "$ref": "#/responses/notFoundResp404"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "description": "Checks whether article is owned by authorized user, validates provided article data, updates article and returns updates item.",
+        "tags": [
+          "articles"
+        ],
+        "summary": "deletes article",
+        "operationId": "delete_article",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ArticleId",
+            "description": "article identifier",
+            "name": "article_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/deleteUserResp200"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorizedResp401"
+          },
+          "403": {
+            "$ref": "#/responses/forbiddenResp403"
+          },
+          "404": {
+            "$ref": "#/responses/notFoundResp404"
           },
           "500": {
             "$ref": "#/responses/commonError"
@@ -411,22 +451,16 @@
       "description": "access token and user id",
       "type": "object",
       "required": [
-        "token",
-        "user_id"
+        "token"
       ],
       "properties": {
         "token": {
           "description": "access token",
           "type": "string",
           "x-go-name": "Token"
-        },
-        "user_id": {
-          "description": "user identificator",
-          "type": "string",
-          "x-go-name": "UserId"
         }
       },
-      "x-go-package": "user-management/internal/controllers/login"
+      "x-go-package": "user-management/internal/controllers/user"
     }
   },
   "responses": {
@@ -455,10 +489,7 @@
       }
     },
     "commonError": {
-      "description": "internal server error",
-      "schema": {
-        "$ref": "#/definitions/ErrorBody"
-      }
+      "description": "internal server error"
     },
     "createArticleResp201": {
       "description": "successfully created",
@@ -467,7 +498,16 @@
       }
     },
     "createArticleResp400": {
-      "description": "invalid article data provided",
+      "description": "invalid data provided",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
+    "deleteUserResp200": {
+      "description": "user deleted"
+    },
+    "forbiddenResp403": {
+      "description": "user does not enough rights to perform action",
       "schema": {
         "$ref": "#/definitions/ErrorBody"
       }
@@ -478,7 +518,7 @@
         "$ref": "#/definitions/Article"
       }
     },
-    "getArticleResp404": {
+    "notFoundResp404": {
       "description": "there is no article with such id",
       "schema": {
         "$ref": "#/definitions/ErrorBody"
@@ -493,7 +533,7 @@
         "$ref": "#/definitions/ErrorBody"
       }
     },
-    "unauthorizedResp": {
+    "unauthorizedResp401": {
       "description": "unauthorized",
       "schema": {
         "$ref": "#/definitions/ErrorBody"
@@ -510,28 +550,16 @@
       "schema": {
         "$ref": "#/definitions/ErrorBody"
       }
-    },
-    "updateArticleResp404": {
-      "description": "user does not have such article",
-      "schema": {
-        "$ref": "#/definitions/ErrorBody"
-      }
     }
   },
   "securityDefinitions": {
     "BasicAuth": {
       "type": "basic"
     },
-    "password": {
-      "description": "secret password",
+    "jwt": {
+      "description": "prefix `Bearer ` + JSON web token",
       "type": "apiKey",
-      "name": "password",
-      "in": "query"
-    },
-    "userOId": {
-      "description": "user unique identifier",
-      "type": "apiKey",
-      "name": "User-OId",
+      "name": "Authorization",
       "in": "header"
     }
   }

@@ -12,7 +12,7 @@ import (
 
 type UserModel interface {
 	Create(user domain.User) error
-	Authorize(user domain.User) (string, string, error)
+	Authorize(username, password string) (string, error)
 	Exists(oid, password string) error
 }
 
@@ -23,12 +23,12 @@ var UsernameDuplicationErr = errors.New("user with such username already exists"
 var UserNotFoundErr = errors.New("user not found")
 
 func NewUserModel(repo repo.UserRepository) UserModel {
-	return user{repo: repo, token: auth.NewToken(), pswd: auth.NewPassword()}
+	return user{repo: repo, token: auth.NewJWT(), pswd: auth.NewPassword()}
 }
 
 type user struct {
 	repo  repo.UserRepository
-	token auth.Token
+	token auth.Token[auth.JWTPayload]
 	pswd  auth.Password
 }
 
@@ -44,21 +44,23 @@ func (u user) Create(user domain.User) error {
 		OId:      uuid.New().String(),
 		Username: user.Username,
 		Password: hashedPswd,
-		Role:     repo.DefaultUserRole,
+		Role:     domain.DefaultUserRole,
 	})
 }
 
-func (u user) Authorize(user domain.User) (userId string, token string, err error) {
-	userFromDB, err := u.repo.Get(user.Username)
+func (u user) Authorize(username, password string) (token string, err error) {
+	userFromDB, err := u.repo.Get(username)
 	if err != nil {
-		return "", "", InvalidAuthParameterErr
+		return "", InvalidAuthParameterErr
 	}
-	if !u.pswd.Compare(userFromDB.Password, user.Password) {
-		return "", "", InvalidAuthParameterErr
+	if !u.pswd.Compare(userFromDB.Password, password) {
+		return "", InvalidAuthParameterErr
 	}
-
-	token, err = u.token.Generate(user)
-	return userFromDB.OId, token, err
+	return u.token.Generate(auth.JWTPayload{
+		Username: userFromDB.Username,
+		UserOId:  userFromDB.OId,
+		Role:     domain.UserRoles[userFromDB.Role],
+	})
 }
 
 func (u user) Exists(oid, password string) error {

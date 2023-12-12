@@ -117,6 +117,53 @@ func (_c *ArticleRepository_CreateArticle_Call) RunAndReturn(run func(string, re
 	return _c
 }
 
+// DeleteArticle provides a mock function with given fields: oid, tags
+func (_m *ArticleRepository) DeleteArticle(oid string, tags []string) error {
+	ret := _m.Called(oid, tags)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteArticle")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, []string) error); ok {
+		r0 = rf(oid, tags)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ArticleRepository_DeleteArticle_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteArticle'
+type ArticleRepository_DeleteArticle_Call struct {
+	*mock.Call
+}
+
+// DeleteArticle is a helper method to define mock.On call
+//   - oid string
+//   - tags []string
+func (_e *ArticleRepository_Expecter) DeleteArticle(oid interface{}, tags interface{}) *ArticleRepository_DeleteArticle_Call {
+	return &ArticleRepository_DeleteArticle_Call{Call: _e.mock.On("DeleteArticle", oid, tags)}
+}
+
+func (_c *ArticleRepository_DeleteArticle_Call) Run(run func(oid string, tags []string)) *ArticleRepository_DeleteArticle_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].([]string))
+	})
+	return _c
+}
+
+func (_c *ArticleRepository_DeleteArticle_Call) Return(_a0 error) *ArticleRepository_DeleteArticle_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ArticleRepository_DeleteArticle_Call) RunAndReturn(run func(string, []string) error) *ArticleRepository_DeleteArticle_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Get provides a mock function with given fields: articleOId
 func (_m *ArticleRepository) Get(articleOId string) (domain.Article, error) {
 	ret := _m.Called(articleOId)
@@ -233,32 +280,22 @@ func (_c *ArticleRepository_GetForUser_Call) RunAndReturn(run func(string, int, 
 	return _c
 }
 
-// IsOwner provides a mock function with given fields: articleOId, username
-func (_m *ArticleRepository) IsOwner(articleOId string, username string) (domain.Article, error) {
-	ret := _m.Called(articleOId, username)
+// IsOwner provides a mock function with given fields: articleOId, userOId
+func (_m *ArticleRepository) IsOwner(articleOId string, userOId string) error {
+	ret := _m.Called(articleOId, userOId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for IsOwner")
 	}
 
-	var r0 domain.Article
-	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string) (domain.Article, error)); ok {
-		return rf(articleOId, username)
-	}
-	if rf, ok := ret.Get(0).(func(string, string) domain.Article); ok {
-		r0 = rf(articleOId, username)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(articleOId, userOId)
 	} else {
-		r0 = ret.Get(0).(domain.Article)
+		r0 = ret.Error(0)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(articleOId, username)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // ArticleRepository_IsOwner_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsOwner'
@@ -268,24 +305,24 @@ type ArticleRepository_IsOwner_Call struct {
 
 // IsOwner is a helper method to define mock.On call
 //   - articleOId string
-//   - username string
-func (_e *ArticleRepository_Expecter) IsOwner(articleOId interface{}, username interface{}) *ArticleRepository_IsOwner_Call {
-	return &ArticleRepository_IsOwner_Call{Call: _e.mock.On("IsOwner", articleOId, username)}
+//   - userOId string
+func (_e *ArticleRepository_Expecter) IsOwner(articleOId interface{}, userOId interface{}) *ArticleRepository_IsOwner_Call {
+	return &ArticleRepository_IsOwner_Call{Call: _e.mock.On("IsOwner", articleOId, userOId)}
 }
 
-func (_c *ArticleRepository_IsOwner_Call) Run(run func(articleOId string, username string)) *ArticleRepository_IsOwner_Call {
+func (_c *ArticleRepository_IsOwner_Call) Run(run func(articleOId string, userOId string)) *ArticleRepository_IsOwner_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(string), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *ArticleRepository_IsOwner_Call) Return(_a0 domain.Article, _a1 error) *ArticleRepository_IsOwner_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *ArticleRepository_IsOwner_Call) Return(_a0 error) *ArticleRepository_IsOwner_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *ArticleRepository_IsOwner_Call) RunAndReturn(run func(string, string) (domain.Article, error)) *ArticleRepository_IsOwner_Call {
+func (_c *ArticleRepository_IsOwner_Call) RunAndReturn(run func(string, string) error) *ArticleRepository_IsOwner_Call {
 	_c.Call.Return(run)
 	return _c
 }

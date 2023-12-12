@@ -21,39 +21,32 @@ func (_m *UserModel) EXPECT() *UserModel_Expecter {
 	return &UserModel_Expecter{mock: &_m.Mock}
 }
 
-// Authorize provides a mock function with given fields: user
-func (_m *UserModel) Authorize(user domain.User) (string, string, error) {
-	ret := _m.Called(user)
+// Authorize provides a mock function with given fields: username, password
+func (_m *UserModel) Authorize(username string, password string) (string, error) {
+	ret := _m.Called(username, password)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Authorize")
 	}
 
 	var r0 string
-	var r1 string
-	var r2 error
-	if rf, ok := ret.Get(0).(func(domain.User) (string, string, error)); ok {
-		return rf(user)
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, string) (string, error)); ok {
+		return rf(username, password)
 	}
-	if rf, ok := ret.Get(0).(func(domain.User) string); ok {
-		r0 = rf(user)
+	if rf, ok := ret.Get(0).(func(string, string) string); ok {
+		r0 = rf(username, password)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(domain.User) string); ok {
-		r1 = rf(user)
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(username, password)
 	} else {
-		r1 = ret.Get(1).(string)
+		r1 = ret.Error(1)
 	}
 
-	if rf, ok := ret.Get(2).(func(domain.User) error); ok {
-		r2 = rf(user)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
+	return r0, r1
 }
 
 // UserModel_Authorize_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Authorize'
@@ -62,24 +55,25 @@ type UserModel_Authorize_Call struct {
 }
 
 // Authorize is a helper method to define mock.On call
-//   - user domain.User
-func (_e *UserModel_Expecter) Authorize(user interface{}) *UserModel_Authorize_Call {
-	return &UserModel_Authorize_Call{Call: _e.mock.On("Authorize", user)}
+//   - username string
+//   - password string
+func (_e *UserModel_Expecter) Authorize(username interface{}, password interface{}) *UserModel_Authorize_Call {
+	return &UserModel_Authorize_Call{Call: _e.mock.On("Authorize", username, password)}
 }
 
-func (_c *UserModel_Authorize_Call) Run(run func(user domain.User)) *UserModel_Authorize_Call {
+func (_c *UserModel_Authorize_Call) Run(run func(username string, password string)) *UserModel_Authorize_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(domain.User))
+		run(args[0].(string), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *UserModel_Authorize_Call) Return(_a0 string, _a1 string, _a2 error) *UserModel_Authorize_Call {
-	_c.Call.Return(_a0, _a1, _a2)
+func (_c *UserModel_Authorize_Call) Return(_a0 string, _a1 error) *UserModel_Authorize_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *UserModel_Authorize_Call) RunAndReturn(run func(domain.User) (string, string, error)) *UserModel_Authorize_Call {
+func (_c *UserModel_Authorize_Call) RunAndReturn(run func(string, string) (string, error)) *UserModel_Authorize_Call {
 	_c.Call.Return(run)
 	return _c
 }
