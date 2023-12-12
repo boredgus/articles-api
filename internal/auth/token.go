@@ -8,12 +8,12 @@ import (
 	"user-management/internal/domain"
 )
 
-type Token interface {
-	Generate(user domain.User) (string, error)
-	Decode(token string) (domain.User, error)
+type Token[T any] interface {
+	Generate(data T) (string, error)
+	Decode(token string) (T, error)
 }
 
-func NewToken() Token {
+func NewToken() Token[domain.User] {
 	return BasicToken{}
 }
 

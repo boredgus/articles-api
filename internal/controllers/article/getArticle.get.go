@@ -26,15 +26,6 @@ type getArticleResp200 struct {
 	body views.Article
 }
 
-// there is no article with such id
-// swagger:response getArticleResp404
-// nolint:unused
-type getArticleResp404 struct {
-	// in: body
-	// required: true
-	Body controllers.ErrorBody
-}
-
 // swagger:route GET /articles/{article_id} articles get_article
 // gets article
 // ---
@@ -42,7 +33,7 @@ type getArticleResp404 struct {
 // responses:
 //
 //	200: getArticleResp200
-//	404: getArticleResp404
+//	404: notFoundResp404
 //	500: commonError
 func (a Article) Get(ctx controllers.Context) error {
 	article, err := a.articleModel.Get(ctx.PathParam("article_id"))

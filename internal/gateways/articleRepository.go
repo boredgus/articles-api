@@ -32,7 +32,21 @@ func (r ArticleRepository) CreateArticle(userOId string, article repo.ArticleDat
 		return err
 	}
 	rows.Close()
-	return r.AddTagsForArticle(article.OId, article.Tags)
+	if len(article.Tags) > 0 {
+		return r.AddTagsForArticle(article.OId, article.Tags)
+	}
+	return nil
+}
+func (r ArticleRepository) DeleteArticle(oid string, tags []string) error {
+	rows, err := r.store.Query("call DeleteArticle(?);", oid)
+	if err != nil {
+		return err
+	}
+	rows.Close()
+	if len(tags) > 0 {
+		return r.RemoveTagsFromArticle(oid, tags)
+	}
+	return nil
 }
 func (r ArticleRepository) scan(rows *sql.Rows) (domain.Article, error) {
 	var a domain.Article
@@ -86,18 +100,16 @@ func (r ArticleRepository) GetForUser(username string, page, limit int) ([]domai
 	return res, nil
 }
 
-func (r ArticleRepository) IsOwner(articleOId, username string) (domain.Article, error) {
-	rows, err := r.store.Query(`call IsOwnerOfArticle(?,?);`, articleOId, username)
+func (r ArticleRepository) IsOwner(articleOId, userOId string) error {
+	rows, err := r.store.Query(`call IsOwnerOfArticle(?,?);`, articleOId, userOId)
 	if err != nil {
-		return domain.Article{}, err
+		return err
 	}
-	rows.Next()
-	article, err := r.scan(rows)
-	if err != nil {
-		return domain.Article{}, models.UserIsNotAnOwnerErr
+	if !rows.Next() {
+		return models.ArticleNotFoundErr
 	}
 	rows.Close()
-	return article, nil
+	return nil
 }
 func (r ArticleRepository) UpdateArticle(oid, theme, text string) error {
 	rows, err := r.store.Query("call UpdateArticle(?,?,?);", oid, theme, text)

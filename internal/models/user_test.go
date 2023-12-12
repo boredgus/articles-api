@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"user-management/internal/auth"
 	"user-management/internal/domain"
 	authMocks "user-management/internal/mocks/auth"
 	repoMocks "user-management/internal/mocks/repo"
@@ -97,7 +98,7 @@ func TestUserService_Authorize(t *testing.T) {
 	}
 	repoMock := repoMocks.NewUserRepository(t)
 	pswdMock := authMocks.NewPassword(t)
-	tokenMock := authMocks.NewToken(t)
+	tokenMock := authMocks.NewToken[auth.JWTPayload](t)
 	setup := func(res mockedRes) func() {
 		repoCall := repoMock.EXPECT().
 			Get(mock.Anything).Return(res.user, res.repoErr).Once()
@@ -159,12 +160,11 @@ func TestUserService_Authorize(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			gotUserId, gotToken, err := user{
+			gotToken, err := user{
 				repo:  repoMock,
 				token: tokenMock,
 				pswd:  pswdMock,
-			}.Authorize(validUser)
-			assert.Equal(t, gotUserId, tt.wantUserId)
+			}.Authorize(validUser.Username, validUser.Password)
 			assert.Equal(t, gotToken, tt.wantToken)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)

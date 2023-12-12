@@ -10,6 +10,7 @@ type ArticleController interface {
 	Get(ctx controllers.Context) error
 	GetForUser(ctx controllers.Context) error
 	Update(ctx controllers.Context) error
+	Delete(ctx controllers.Context) error
 }
 
 func NewArticleController(user models.UserModel, article models.ArticleModel) ArticleController {

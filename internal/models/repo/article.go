@@ -38,10 +38,12 @@ type Article struct {
 
 type ArticleRepository interface {
 	CreateArticle(userOId string, article ArticleData) error
+	UpdateArticle(oid, theme, text string) error
+	DeleteArticle(oid string, tags []string) error
 	Get(articleOId string) (domain.Article, error)
 	GetForUser(username string, page, limit int) ([]domain.Article, error)
-	IsOwner(articleOId, username string) (domain.Article, error)
-	UpdateArticle(oid, theme, text string) error
+	IsOwner(articleOId, userOId string) error
+
 	AddTagsForArticle(articleOId string, tags []string) error
 	RemoveTagsFromArticle(articleOId string, tags []string) error
 }

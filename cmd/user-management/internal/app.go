@@ -2,7 +2,7 @@ package internal
 
 import (
 	"user-management/internal/controllers/article"
-	user "user-management/internal/controllers/login"
+	user "user-management/internal/controllers/user"
 	"user-management/internal/gateways"
 	"user-management/internal/models"
 )

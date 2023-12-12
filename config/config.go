@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"os"
-	"sync"
 
 	"github.com/sirupsen/logrus"
 
@@ -12,7 +11,7 @@ import (
 )
 
 type config struct {
-	SecretAPIKey         string `env:"SECRET_API_KEY"`
+	JWTSecretKey         string `env:"JWT_SECRET_KEY"`
 	MySQLUsername        string `env:"MYSQL_USERNAME"`
 	MySQLPassword        string `env:"MYSQL_PASSWORD"`
 	MySQLDatabase        string `env:"MYSQL_DATABASE"`
@@ -33,18 +32,15 @@ func LoadEnvFile(envFilePath string) {
 }
 
 var cfg config
-var configOnce sync.Once
-
-func GetConfig() config {
-	configOnce.Do(func() {
-		if err := env.Parse(&cfg); err != nil {
-			logrus.Error("failed to load env file", err)
-			cfg = config{}
-		}
-	})
-	return cfg
-}
 
 func InitConfig() {
 	LoadEnvFile(".env")
+	if err := env.Parse(&cfg); err != nil {
+		logrus.Error("failed to load env file", err)
+		cfg = config{}
+	}
+}
+
+func GetConfig() config {
+	return cfg
 }

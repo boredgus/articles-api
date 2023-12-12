@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"testing"
+	"user-management/internal/auth"
 	"user-management/internal/controllers"
 	"user-management/internal/domain"
 	cntlrMocks "user-management/internal/mocks/controllers"
@@ -11,6 +12,7 @@ import (
 	"user-management/internal/models"
 	"user-management/internal/views"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -18,6 +20,7 @@ import (
 func TestArticleController_Update(t *testing.T) {
 	type mockedRes struct {
 		bindErr       error
+		userRole      string
 		jsonCode      int
 		jsonBody      interface{}
 		noContentCode int
@@ -30,27 +33,26 @@ func TestArticleController_Update(t *testing.T) {
 	articleId := "artice-id"
 	setup := func(res mockedRes) func() {
 		bindCall := ctxMock.EXPECT().Bind(mock.Anything).Return(res.bindErr).Maybe()
+		userOId := "user-oid"
 		pathParamCall := ctxMock.EXPECT().
 			PathParam("article_id").Return(articleId).Once().NotBefore(bindCall)
-		username := "username-1"
-		h := http.Header{}
-		h.Set("Username", username)
-		requestCall := ctxMock.EXPECT().
-			Request().Return(&http.Request{Header: h}).Once().NotBefore(bindCall, pathParamCall)
+		getCall := ctxMock.EXPECT().Get("user").NotBefore(bindCall).
+			Return(jwt.NewWithClaims(jwt.SigningMethodHS256,
+				&auth.JWTClaims{JWTPayload: auth.JWTPayload{UserOId: userOId, Role: res.userRole}})).Once()
 		updateCall := articleModelMock.EXPECT().
-			Update(username, &res.updateArticle).NotBefore(bindCall, pathParamCall, requestCall).
+			Update(userOId, res.userRole, &res.updateArticle).NotBefore(getCall).
 			Return(res.updateErr).Maybe()
 		calls := []*mock.Call{
 			bindCall,
 			pathParamCall,
-			requestCall,
+			getCall,
 			updateCall,
 			ctxMock.EXPECT().
 				JSON(res.jsonCode, res.jsonBody).Return(nil).
 				NotBefore(bindCall).Maybe(),
 			ctxMock.EXPECT().
 				NoContent(res.noContentCode).Return(nil).
-				NotBefore(bindCall, pathParamCall, requestCall, updateCall).Maybe(),
+				NotBefore(updateCall).Maybe(),
 		}
 		return func() {
 			for _, call := range calls {
@@ -66,7 +68,7 @@ func TestArticleController_Update(t *testing.T) {
 		wantErr   error
 	}{
 		{
-			name: "failed to get article data",
+			name: "failed to bind article data",
 			mockedRes: mockedRes{
 				bindErr:  someError,
 				jsonCode: http.StatusBadRequest,
@@ -74,13 +76,22 @@ func TestArticleController_Update(t *testing.T) {
 			wantErr: someError,
 		},
 		{
-			name: "user is not an owner",
+			name: "article with such oid does not exist",
 			mockedRes: mockedRes{
 				updateArticle: artcl,
-				updateErr:     models.UserIsNotAnOwnerErr,
+				updateErr:     models.ArticleNotFoundErr,
 				jsonCode:      http.StatusNotFound,
 				jsonBody:      mock.Anything},
-			wantErr: models.UserIsNotAnOwnerErr,
+			wantErr: models.ArticleNotFoundErr,
+		},
+		{
+			name: "user does not have rights to change this article",
+			mockedRes: mockedRes{
+				updateArticle: artcl,
+				updateErr:     models.NotEnoughRightsErr,
+				jsonCode:      http.StatusForbidden,
+				jsonBody:      mock.Anything},
+			wantErr: models.NotEnoughRightsErr,
 		},
 		{
 			name: "article data is invalid",

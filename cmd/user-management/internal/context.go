@@ -18,6 +18,9 @@ type EchoContext struct {
 	echo echo.Context
 }
 
+func (c EchoContext) Get(key string) interface{} {
+	return c.echo.Get(key)
+}
 func (c EchoContext) QueryParams() url.Values {
 	return c.echo.QueryParams()
 }

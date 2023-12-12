@@ -1,29 +1,12 @@
 package repo
 
-type UserRole int
-
-const (
-	DefaultUserRole UserRole = iota + 0
-	ModeratorRole
-	AdminRole
-)
-
-var UserRoles = map[UserRole]string{
-	DefaultUserRole: "user",
-	ModeratorRole:   "moderator",
-	AdminRole:       "admin",
-}
-var RoleToValue = map[string]UserRole{
-	"user":      DefaultUserRole,
-	"moderator": ModeratorRole,
-	"admin":     AdminRole,
-}
+import "user-management/internal/domain"
 
 type User struct {
-	OId      string   `sql:"o_id"`
-	Username string   `sql:"username"`
-	Password string   `sql:"pswd"`
-	Role     UserRole `sql:"role"`
+	OId      string          `sql:"o_id"`
+	Username string          `sql:"username"`
+	Password string          `sql:"pswd"`
+	Role     domain.UserRole `sql:"role"`
 }
 
 type UserRepository interface {

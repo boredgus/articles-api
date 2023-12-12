@@ -20,9 +20,6 @@ func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 	e.POST("/authorize", func(c echo.Context) error {
 		return app.Login.Authorize(NewContext(c))
 	})
-	e.POST("/articles", func(c echo.Context) error {
-		return app.Article.Create(NewContext(c))
-	})
 	e.GET("/articles", func(c echo.Context) error {
 		return app.Article.GetForUser(NewContext((c)))
 	})
@@ -30,9 +27,15 @@ func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 		return app.Article.Get(NewContext(c))
 	})
 
-	protectedArticles := e.Group("/articles", middleware.BasicAuth(authMiddleware(app.User)))
+	protectedArticles := e.Group("/articles", jwtAuthMiddleware())
+	protectedArticles.POST("", func(c echo.Context) error {
+		return app.Article.Create(NewContext(c))
+	})
 	protectedArticles.PUT("/:article_id", func(c echo.Context) error {
 		return app.Article.Update(NewContext(c))
+	})
+	protectedArticles.DELETE("/:article_id", func(c echo.Context) error {
+		return app.Article.Delete(NewContext(c))
 	})
 
 	return e
