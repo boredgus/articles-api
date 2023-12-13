@@ -10,6 +10,14 @@ import (
 
 type UserRole string
 
+func (r UserRole) IsValid() bool {
+	switch r {
+	case DefaultUserRole, ModeratorRole, AdminRole:
+		return true
+	}
+	return false
+}
+
 const (
 	DefaultUserRole UserRole = "user"
 	ModeratorRole   UserRole = "moderator"

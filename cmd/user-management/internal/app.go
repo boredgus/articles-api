@@ -8,16 +8,14 @@ import (
 )
 
 type AppController struct {
-	Login   user.LoginController
+	User    user.UserController
 	Article article.ArticleController
-	User    models.UserModel
 }
 
 func NewAppController(store gateways.Store) AppController {
 	userModel := models.NewUserModel(gateways.NewUserRepository(store))
 	return AppController{
-		User:  userModel,
-		Login: user.NewLoginController(userModel),
+		User: user.NewUserController(userModel),
 		Article: article.NewArticleController(
 			userModel,
 			models.NewArticleModel(gateways.NewArticleRepository(store))),

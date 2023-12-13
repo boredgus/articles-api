@@ -51,7 +51,7 @@ type authResp401 struct {
 //	 	200: authResp200
 //		401: authResp401
 //		500: commonError
-func (c Login) Authorize(ctx cntrl.Context) error {
+func (c User) Authorize(ctx cntrl.Context) error {
 	var user domain.User
 	err := ctx.Bind(&user)
 	if err != nil {

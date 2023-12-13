@@ -124,6 +124,53 @@ func (_c *UserModel_Create_Call) RunAndReturn(run func(domain.User) error) *User
 	return _c
 }
 
+// Delete provides a mock function with given fields: issuerRole, userToDeleteOId
+func (_m *UserModel) Delete(issuerRole string, userToDeleteOId string) error {
+	ret := _m.Called(issuerRole, userToDeleteOId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Delete")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(issuerRole, userToDeleteOId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UserModel_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
+type UserModel_Delete_Call struct {
+	*mock.Call
+}
+
+// Delete is a helper method to define mock.On call
+//   - issuerRole string
+//   - userToDeleteOId string
+func (_e *UserModel_Expecter) Delete(issuerRole interface{}, userToDeleteOId interface{}) *UserModel_Delete_Call {
+	return &UserModel_Delete_Call{Call: _e.mock.On("Delete", issuerRole, userToDeleteOId)}
+}
+
+func (_c *UserModel_Delete_Call) Run(run func(issuerRole string, userToDeleteOId string)) *UserModel_Delete_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *UserModel_Delete_Call) Return(_a0 error) *UserModel_Delete_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *UserModel_Delete_Call) RunAndReturn(run func(string, string) error) *UserModel_Delete_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Exists provides a mock function with given fields: oid, password
 func (_m *UserModel) Exists(oid string, password string) error {
 	ret := _m.Called(oid, password)
@@ -167,6 +214,54 @@ func (_c *UserModel_Exists_Call) Return(_a0 error) *UserModel_Exists_Call {
 }
 
 func (_c *UserModel_Exists_Call) RunAndReturn(run func(string, string) error) *UserModel_Exists_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateRole provides a mock function with given fields: issuerRole, userToUpdateOId, roleToSet
+func (_m *UserModel) UpdateRole(issuerRole string, userToUpdateOId string, roleToSet string) error {
+	ret := _m.Called(issuerRole, userToUpdateOId, roleToSet)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateRole")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, string) error); ok {
+		r0 = rf(issuerRole, userToUpdateOId, roleToSet)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UserModel_UpdateRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateRole'
+type UserModel_UpdateRole_Call struct {
+	*mock.Call
+}
+
+// UpdateRole is a helper method to define mock.On call
+//   - issuerRole string
+//   - userToUpdateOId string
+//   - roleToSet string
+func (_e *UserModel_Expecter) UpdateRole(issuerRole interface{}, userToUpdateOId interface{}, roleToSet interface{}) *UserModel_UpdateRole_Call {
+	return &UserModel_UpdateRole_Call{Call: _e.mock.On("UpdateRole", issuerRole, userToUpdateOId, roleToSet)}
+}
+
+func (_c *UserModel_UpdateRole_Call) Run(run func(issuerRole string, userToUpdateOId string, roleToSet string)) *UserModel_UpdateRole_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *UserModel_UpdateRole_Call) Return(_a0 error) *UserModel_UpdateRole_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *UserModel_UpdateRole_Call) RunAndReturn(run func(string, string, string) error) *UserModel_UpdateRole_Call {
 	_c.Call.Return(run)
 	return _c
 }

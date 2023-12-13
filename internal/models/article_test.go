@@ -374,25 +374,24 @@ func TestArticleService_checkRights(t *testing.T) {
 	}{
 		{
 			name:      "user with default role is trying to change not his article",
-			args:      args{userRole: "user"},
+			args:      args{userRole: string(domain.DefaultUserRole)},
 			mockedRes: mockedRes{isOwnerErr: ArticleNotFoundErr},
 			wantErr:   NotEnoughRightsErr,
 		},
 		{
 			name:      "server error on IsOwner check",
-			args:      args{userRole: "user"},
+			args:      args{userRole: string(domain.DefaultUserRole)},
 			mockedRes: mockedRes{isOwnerErr: someError},
 			wantErr:   someError,
 		},
 		{
-			name:    "server error on IsOwner check",
+			name:    "unknown role provided",
 			args:    args{userRole: "kek"},
 			wantErr: NotEnoughRightsErr,
 		},
 		{
-			name:    "success",
-			args:    args{userRole: "kek"},
-			wantErr: NotEnoughRightsErr,
+			name: "success",
+			args: args{userRole: string(domain.AdminRole)},
 		},
 	}
 	for _, tt := range tests {

@@ -9,7 +9,7 @@
   "info": {
     "description": "Spec Documentation for article service.",
     "title": "Articles API",
-    "version": "1.0.1"
+    "version": "1.1.0"
   },
   "host": "localhost:8080",
   "basePath": "/",
@@ -211,7 +211,7 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/deleteUserResp200"
+            "$ref": "#/responses/successResp200"
           },
           "401": {
             "$ref": "#/responses/unauthorizedResp401"
@@ -285,6 +285,115 @@
           },
           "409": {
             "$ref": "#/responses/registerResp409"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
+          }
+        }
+      }
+    },
+    "/users/{user_id}": {
+      "delete": {
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "description": "Checks role in token (`admin` role required). It is prohibited to delete user with `admin` role.",
+        "tags": [
+          "users"
+        ],
+        "summary": "deletes user",
+        "operationId": "delete_user",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "UserId",
+            "description": "user identifier",
+            "name": "user_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "enum": [
+              "user",
+              "moderator",
+              "admin"
+            ],
+            "type": "string",
+            "x-go-name": "Role",
+            "description": "user role to set",
+            "name": "role",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/successResp200"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorizedResp401"
+          },
+          "403": {
+            "$ref": "#/responses/forbiddenResp403"
+          },
+          "404": {
+            "$ref": "#/responses/userNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
+          }
+        }
+      }
+    },
+    "/users/{user_id}/role": {
+      "patch": {
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "description": "Requires admin role. It is prohibited to update user with `admin` role.",
+        "tags": [
+          "users"
+        ],
+        "summary": "updates user role",
+        "operationId": "update_user_role",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "UserOId",
+            "description": "user identifier",
+            "name": "user_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "x-go-name": "Payload",
+            "name": "payload",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/updatePayload"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/updateUserResp200"
+          },
+          "400": {
+            "$ref": "#/responses/updateUserResp400"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorizedResp401"
+          },
+          "403": {
+            "$ref": "#/responses/forbiddenResp403"
+          },
+          "404": {
+            "$ref": "#/responses/userNotFound"
           },
           "500": {
             "$ref": "#/responses/commonError"
@@ -461,6 +570,34 @@
         }
       },
       "x-go-package": "user-management/internal/controllers/user"
+    },
+    "updatePayload": {
+      "type": "object",
+      "required": [
+        "role"
+      ],
+      "properties": {
+        "role": {
+          "description": "role to set for specified user",
+          "type": "string",
+          "enum": [
+            "user",
+            "moderator"
+          ],
+          "x-go-name": "Role"
+        }
+      },
+      "x-go-package": "user-management/internal/controllers/user"
+    },
+    "updateRes": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "x-go-name": "Message"
+        }
+      },
+      "x-go-package": "user-management/internal/controllers/user"
     }
   },
   "responses": {
@@ -503,11 +640,8 @@
         "$ref": "#/definitions/ErrorBody"
       }
     },
-    "deleteUserResp200": {
-      "description": "user deleted"
-    },
     "forbiddenResp403": {
-      "description": "user does not enough rights to perform action",
+      "description": "user does not have enough rights to perform action",
       "schema": {
         "$ref": "#/definitions/ErrorBody"
       }
@@ -533,6 +667,9 @@
         "$ref": "#/definitions/ErrorBody"
       }
     },
+    "successResp200": {
+      "description": "success"
+    },
     "unauthorizedResp401": {
       "description": "unauthorized",
       "schema": {
@@ -550,12 +687,27 @@
       "schema": {
         "$ref": "#/definitions/ErrorBody"
       }
+    },
+    "updateUserResp200": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/updateRes"
+      }
+    },
+    "updateUserResp400": {
+      "description": "invalid role data",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
+    "userNotFound": {
+      "description": "user with such id not found",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
     }
   },
   "securityDefinitions": {
-    "BasicAuth": {
-      "type": "basic"
-    },
     "jwt": {
       "description": "prefix `Bearer ` + JSON web token",
       "type": "apiKey",

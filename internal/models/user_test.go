@@ -47,7 +47,7 @@ func TestUserService_Create(t *testing.T) {
 			name:      "invalid user data",
 			mockedRes: mockedRes{},
 			args:      args{user: domain.NewUser("qw", "er")},
-			wantErr:   InvalidUserErr,
+			wantErr:   InvalidUserDataErr,
 		},
 		{
 			name:      "invalid api key on protected user creation",
@@ -175,7 +175,7 @@ func TestUserService_Authorize(t *testing.T) {
 	}
 }
 
-func Test_user_Exists(t *testing.T) {
+func TestUserService_Exists(t *testing.T) {
 	type mockedRes struct {
 		user        repo.User
 		repoErr     error
@@ -222,6 +222,159 @@ func Test_user_Exists(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
 			err := user{repo: repoMock, pswd: pswdMock}.Exists(userData.OId, userData.Password)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+				return
+			}
+			assert.Nil(t, err)
+		})
+	}
+}
+
+func TestUserService_Delete(t *testing.T) {
+	type args struct {
+		issuerRole      string
+		userToDeleteOId string
+	}
+	type mockedRes struct {
+		userFromDB repo.User
+		getErr     error
+		deleteErr  error
+	}
+	repoMock := repoMocks.NewUserRepository(t)
+	setup := func(res mockedRes) func() {
+		getCall := repoMock.EXPECT().
+			GetByOId(mock.Anything).Return(res.userFromDB, res.getErr).Maybe()
+		deleteCall := repoMock.EXPECT().
+			Delete(mock.Anything).Return(res.deleteErr).NotBefore(getCall).Maybe()
+		return func() {
+			getCall.Unset()
+			deleteCall.Unset()
+		}
+	}
+	someErr := errors.New("some err")
+	tests := []struct {
+		name      string
+		args      args
+		mockedRes mockedRes
+		wantErr   error
+	}{
+		{
+			name:    "issuer is not an admin",
+			wantErr: NotEnoughRightsErr,
+		},
+		{
+			name:      "failed to get user from db",
+			args:      args{issuerRole: "admin"},
+			mockedRes: mockedRes{getErr: someErr},
+			wantErr:   someErr,
+		},
+		{
+			name:      "user to delete is an admin",
+			args:      args{issuerRole: "admin"},
+			mockedRes: mockedRes{userFromDB: repo.User{Role: domain.AdminRole}},
+			wantErr:   NotEnoughRightsErr,
+		},
+		{
+			name: "failed to delete user",
+			args: args{issuerRole: "admin"},
+			mockedRes: mockedRes{
+				deleteErr:  someErr,
+				userFromDB: repo.User{Role: domain.DefaultUserRole}},
+			wantErr: someErr,
+		},
+		{
+			name:      "success",
+			args:      args{issuerRole: "admin"},
+			mockedRes: mockedRes{userFromDB: repo.User{Role: domain.DefaultUserRole}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanSetup := setup(tt.mockedRes)
+			defer cleanSetup()
+			err := user{repo: repoMock}.
+				Delete(tt.args.issuerRole, tt.args.userToDeleteOId)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+				return
+			}
+			assert.Nil(t, err)
+		})
+	}
+}
+
+func TestUserService_UpdateRole(t *testing.T) {
+	type args struct {
+		issuerRole      string
+		userToUpdateOId string
+		roleToSet       string
+	}
+	type mockedRes struct {
+		userFromDB repo.User
+		getErr     error
+		updateErr  error
+	}
+	repoMock := repoMocks.NewUserRepository(t)
+	setup := func(res mockedRes) func() {
+		getCall := repoMock.EXPECT().
+			GetByOId(mock.Anything).Return(res.userFromDB, res.getErr).Maybe()
+		deleteCall := repoMock.EXPECT().
+			UpdateRole(mock.Anything, mock.Anything).Return(res.updateErr).NotBefore(getCall).Maybe()
+		return func() {
+			getCall.Unset()
+			deleteCall.Unset()
+		}
+	}
+	someErr := errors.New("some err")
+	tests := []struct {
+		name      string
+		args      args
+		mockedRes mockedRes
+		wantErr   error
+	}{
+		{
+			name:    "issuer is not an admin",
+			wantErr: NotEnoughRightsErr,
+		},
+		{
+			name:      "unknown role provided",
+			args:      args{issuerRole: "admin"},
+			mockedRes: mockedRes{userFromDB: repo.User{Role: domain.AdminRole}},
+			wantErr:   InvalidUserDataErr,
+		},
+		{
+			name:      "failed to get user from db",
+			args:      args{issuerRole: "admin", roleToSet: "user"},
+			mockedRes: mockedRes{getErr: someErr},
+			wantErr:   someErr,
+		},
+		{
+			name:      "user to update is an admin",
+			args:      args{issuerRole: "admin", roleToSet: "user"},
+			mockedRes: mockedRes{userFromDB: repo.User{Role: domain.AdminRole}},
+			wantErr:   NotEnoughRightsErr,
+		},
+		{
+			name: "failed to update user",
+			args: args{issuerRole: "admin", roleToSet: "user"},
+			mockedRes: mockedRes{
+				updateErr:  someErr,
+				userFromDB: repo.User{Role: domain.DefaultUserRole}},
+			wantErr: someErr,
+		},
+		{
+			name:      "success",
+			args:      args{issuerRole: "admin", roleToSet: "user"},
+			mockedRes: mockedRes{userFromDB: repo.User{Role: domain.DefaultUserRole}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanSetup := setup(tt.mockedRes)
+			defer cleanSetup()
+			err := user{repo: repoMock}.
+				UpdateRole(tt.args.issuerRole, tt.args.userToUpdateOId, tt.args.roleToSet)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return

@@ -5,15 +5,17 @@ import (
 	"user-management/internal/models"
 )
 
-type LoginController interface {
+type UserController interface {
 	Register(ctx controllers.Context) error
 	Authorize(ctx controllers.Context) error
+	Delete(ctx controllers.Context) error
+	UpdateRole(ctx controllers.Context) error
 }
 
-func NewLoginController(userModel models.UserModel) LoginController {
-	return Login{userModel: userModel}
+func NewUserController(userModel models.UserModel) UserController {
+	return User{userModel: userModel}
 }
 
-type Login struct {
+type User struct {
 	userModel models.UserModel
 }
