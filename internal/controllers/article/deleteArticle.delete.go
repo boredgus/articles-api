@@ -11,11 +11,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// user deleted
-// swagger:response deleteUserResp200
-// nolint:unused
-type deleteUserResp200 struct{}
-
 // swagger:parameters delete_article
 // nolint:unused
 type deleteArticleParams struct {
@@ -35,7 +30,7 @@ type deleteArticleParams struct {
 //
 // responses:
 //
-//	200: deleteUserResp200
+//	200: successResp200
 //	401: unauthorizedResp401
 //	403: forbiddenResp403
 //	404: notFoundResp404

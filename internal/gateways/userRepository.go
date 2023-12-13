@@ -2,6 +2,7 @@ package gateways
 
 import (
 	"strings"
+	"user-management/internal/domain"
 	"user-management/internal/models"
 	"user-management/internal/models/repo"
 )
@@ -48,8 +49,7 @@ func (r UserRepository) GetByOId(oid string) (repo.User, error) {
 	if err != nil {
 		return user, err
 	}
-	exists := rows.Next()
-	if !exists {
+	if !rows.Next() {
 		rows.Close()
 		return user, models.UserNotFoundErr
 	}
@@ -59,4 +59,22 @@ func (r UserRepository) GetByOId(oid string) (repo.User, error) {
 		return user, err
 	}
 	return user, nil
+}
+
+func (r UserRepository) Delete(oid string) error {
+	rows, err := r.store.Query("call DeleteUser(?);", oid)
+	if err != nil {
+		return err
+	}
+	rows.Close()
+	return nil
+}
+
+func (r UserRepository) UpdateRole(oid string, role domain.UserRole) error {
+	rows, err := r.store.Query("call UpdateUserRole(?,?);", oid, role)
+	if err != nil {
+		return err
+	}
+	rows.Close()
+	return nil
 }

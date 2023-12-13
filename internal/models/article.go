@@ -78,10 +78,7 @@ func (a ArticleService) checkRights(userOId, userRole, articleOId string) error 
 		if err == ArticleNotFoundErr {
 			return fmt.Errorf("%w: user is not an owner", NotEnoughRightsErr)
 		}
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	case domain.ModeratorRole, domain.AdminRole:
 		return nil
 	default:

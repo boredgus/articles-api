@@ -14,9 +14,11 @@ type UserModel interface {
 	Create(user domain.User) error
 	Authorize(username, password string) (string, error)
 	Exists(oid, password string) error
+	Delete(issuerRole, userToDeleteOId string) error
+	UpdateRole(issuerRole, userToUpdateOId, roleToSet string) error
 }
 
-var InvalidUserErr = errors.New("invalid user data")
+var InvalidUserDataErr = errors.New("invalid user data")
 var InvalidAPIKeyErr = errors.New("invalid api key")
 var InvalidAuthParameterErr = errors.New("username or password is invalid")
 var UsernameDuplicationErr = errors.New("user with such username already exists")
@@ -34,7 +36,7 @@ type user struct {
 
 func (u user) Create(user domain.User) error {
 	if err := user.Validate(); err != nil {
-		return fmt.Errorf("%w: %w", InvalidUserErr, err)
+		return fmt.Errorf("%w: %w", InvalidUserDataErr, err)
 	}
 	hashedPswd, err := u.pswd.Hash(user.Password)
 	if err != nil {
@@ -72,4 +74,35 @@ func (u user) Exists(oid, password string) error {
 		return InvalidAuthParameterErr
 	}
 	return nil
+}
+
+func (u user) Delete(issuerRole, userToDeleteOId string) error {
+	if issuerRole != string(domain.AdminRole) {
+		return fmt.Errorf("%w: you have to be admin", NotEnoughRightsErr)
+	}
+	userFromDB, err := u.repo.GetByOId(userToDeleteOId)
+	if err != nil {
+		return err
+	}
+	if userFromDB.Role == domain.AdminRole {
+		return fmt.Errorf("%w: you cannot delete admin", NotEnoughRightsErr)
+	}
+	return u.repo.Delete(userToDeleteOId)
+}
+
+func (u user) UpdateRole(issuerRole, userToUpdateOId, roleToSet string) error {
+	if issuerRole != string(domain.AdminRole) {
+		return fmt.Errorf("%w: you have to be admin", NotEnoughRightsErr)
+	}
+	if !domain.UserRole(roleToSet).IsValid() {
+		return fmt.Errorf("%w: unknown role '%v'", InvalidUserDataErr, roleToSet)
+	}
+	userFromDB, err := u.repo.GetByOId(userToUpdateOId)
+	if err != nil {
+		return err
+	}
+	if userFromDB.Role == domain.AdminRole {
+		return fmt.Errorf("%w: you cannot update admin", NotEnoughRightsErr)
+	}
+	return u.repo.UpdateRole(userToUpdateOId, domain.UserRole(roleToSet))
 }

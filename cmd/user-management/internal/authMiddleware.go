@@ -14,6 +14,7 @@ func jwtAuthMiddleware() echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
 		SigningMethod: "HS256",
 		SigningKey:    auth.JWTSecretKey,
+		ContextKey:    "user",
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(auth.JWTClaims)
 		},

@@ -5,6 +5,11 @@ import (
 	"net/url"
 )
 
+// success
+// swagger:response successResp200
+// nolint:unused
+type successResp200 struct{}
+
 // error entity
 // swagger:model
 type ErrorBody struct {
@@ -26,7 +31,7 @@ type unauthorizedResp401 struct {
 	Body ErrorBody
 }
 
-// user does not enough rights to perform action
+// user does not have enough rights to perform action
 // swagger:response forbiddenResp403
 // nolint:unused
 type forbiddenResp403 struct {

@@ -1,8 +1,5 @@
 {
   "securityDefinitions": {
-    "BasicAuth": {
-      "type": "basic"
-    },
     "jwt": {
       "description": "prefix `Bearer ` + JSON web token",
       "type": "apiKey",

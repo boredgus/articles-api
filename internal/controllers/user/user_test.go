@@ -55,8 +55,8 @@ func TestLoginController_Register(t *testing.T) {
 		},
 		{
 			name:      "invalid user credentials",
-			mockedRes: mockedRes{createErr: models.InvalidUserErr, jsonCode: http.StatusBadRequest},
-			wantErr:   models.InvalidUserErr,
+			mockedRes: mockedRes{createErr: models.InvalidUserDataErr, jsonCode: http.StatusBadRequest},
+			wantErr:   models.InvalidUserDataErr,
 		},
 		{
 			name:      "internal server error",
@@ -73,7 +73,7 @@ func TestLoginController_Register(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := user.NewLoginController(userModelMock).Register(ctxMock)
+			err := user.NewUserController(userModelMock).Register(ctxMock)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
@@ -138,7 +138,7 @@ func TestLoginController_Authorize(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := user.NewLoginController(userModelMock).Authorize(ctxMock)
+			err := user.NewUserController(userModelMock).Authorize(ctxMock)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return

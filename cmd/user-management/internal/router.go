@@ -15,10 +15,10 @@ func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 		}{Message: "alive"})
 	})
 	e.POST("/register", func(c echo.Context) error {
-		return app.Login.Register(NewContext(c))
+		return app.User.Register(NewContext(c))
 	})
 	e.POST("/authorize", func(c echo.Context) error {
-		return app.Login.Authorize(NewContext(c))
+		return app.User.Authorize(NewContext(c))
 	})
 	e.GET("/articles", func(c echo.Context) error {
 		return app.Article.GetForUser(NewContext((c)))
@@ -27,15 +27,21 @@ func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 		return app.Article.Get(NewContext(c))
 	})
 
-	protectedArticles := e.Group("/articles", jwtAuthMiddleware())
-	protectedArticles.POST("", func(c echo.Context) error {
+	protected := e.Group("", jwtAuthMiddleware())
+	protected.POST("/articles", func(c echo.Context) error {
 		return app.Article.Create(NewContext(c))
 	})
-	protectedArticles.PUT("/:article_id", func(c echo.Context) error {
+	protected.PUT("/articles/:article_id", func(c echo.Context) error {
 		return app.Article.Update(NewContext(c))
 	})
-	protectedArticles.DELETE("/:article_id", func(c echo.Context) error {
+	protected.DELETE("/articles/:article_id", func(c echo.Context) error {
 		return app.Article.Delete(NewContext(c))
+	})
+	protected.DELETE("/users/:user_id", func(c echo.Context) error {
+		return app.User.Delete(NewContext(c))
+	})
+	protected.PATCH("/users/:user_id/role", func(c echo.Context) error {
+		return app.User.UpdateRole(NewContext(c))
 	})
 
 	return e

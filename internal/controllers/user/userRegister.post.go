@@ -39,7 +39,7 @@ type registerResp409 struct {
 //		201: registerResp201
 //	 	409: registerResp409
 //		500: commonError
-func (c Login) Register(ctx cntrl.Context) error {
+func (c User) Register(ctx cntrl.Context) error {
 	var user domain.User
 	err := ctx.Bind(&user)
 	if err != nil {
@@ -52,7 +52,7 @@ func (c Login) Register(ctx cntrl.Context) error {
 		e := ctx.JSON(http.StatusConflict, cntrl.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}
-	if errors.Is(err, models.InvalidUserErr) || errors.Is(err, models.InvalidAPIKeyErr) {
+	if errors.Is(err, models.InvalidUserDataErr) || errors.Is(err, models.InvalidAPIKeyErr) {
 		e := ctx.JSON(http.StatusBadRequest, cntrl.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}

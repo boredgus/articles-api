@@ -13,4 +13,6 @@ type UserRepository interface {
 	Create(user User) error
 	Get(username string) (User, error)
 	GetByOId(oid string) (User, error)
+	Delete(oid string) error
+	UpdateRole(oid string, role domain.UserRole) error
 }
