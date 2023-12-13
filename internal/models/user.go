@@ -59,7 +59,7 @@ func (u user) Authorize(username, password string) (token string, err error) {
 	return u.token.Generate(auth.JWTPayload{
 		Username: userFromDB.Username,
 		UserOId:  userFromDB.OId,
-		Role:     domain.UserRoles[userFromDB.Role],
+		Role:     string(userFromDB.Role),
 	})
 }
 

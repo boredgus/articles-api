@@ -72,7 +72,8 @@ func (a ArticleService) GetForUser(username string, page, limit int) ([]domain.A
 }
 
 func (a ArticleService) checkRights(userOId, userRole, articleOId string) error {
-	if userRole == domain.UserRoles[domain.DefaultUserRole] {
+	switch domain.UserRole(userRole) {
+	case domain.DefaultUserRole:
 		err := a.repo.IsOwner(articleOId, userOId)
 		if err == ArticleNotFoundErr {
 			return fmt.Errorf("%w: user is not an owner", NotEnoughRightsErr)
@@ -80,10 +81,12 @@ func (a ArticleService) checkRights(userOId, userRole, articleOId string) error 
 		if err != nil {
 			return err
 		}
-	} else if domain.RoleToValue[userRole] == domain.DefaultUserRole {
+		return nil
+	case domain.ModeratorRole, domain.AdminRole:
+		return nil
+	default:
 		return fmt.Errorf("%w: unknown user role", NotEnoughRightsErr)
 	}
-	return nil
 }
 
 func (a ArticleService) Update(userOId, userRole string, article *domain.Article) error {
