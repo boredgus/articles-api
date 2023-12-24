@@ -8,29 +8,46 @@ services:
       dockerfile: ./docker/Dockerfile.server
     volumes:
       - ../.:/app
+    command: sleep infinity
     ports:
       - 8080:8080
     depends_on:
-      database:
+      mysql-db:
         condition: service_healthy
 
-  database:
-    container_name: ${DB_CONTAINER}
+  mysql-db:
+    container_name: ${MYSQL_CONTAINER}
     image: mysql:8.0
     restart: always
     ports:
       - 3306:3306
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_HOST=${API_CONTAINER}
+      - MYSQL_HOST=${MYSQL_CONTAINER}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
     volumes:
       - db:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      interval: 15s
-      timeout: 10s
+      interval: 5s
       retries: 10
+  
+  clickhouse-db:
+    container_name: ${CLICKHOUSE_CONTAINER}
+    image: clickhouse/clickhouse-server:23-alpine
+    restart: always
+    ports:
+      - ${CLICKHOUSE_PORT}:${CLICKHOUSE_PORT}/tcp
+      - 9000:9000/tcp
+    environment:
+      - CLICKHOUSE_DB=${CLICKHOUSE_DATABASE}
+      - CLICKHOUSE_USER=${CLICKHOUSE_USERNAME}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+    volumes:
+      - clickhouse-data:/var/log/clickhouse/
+      - clickhouse-logs:/var/log/clickhouse-server/
 
 volumes:
   db:
+  clickhouse-data:
+  clickhouse-logs:

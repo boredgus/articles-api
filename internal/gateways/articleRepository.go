@@ -8,26 +8,27 @@ import (
 	"user-management/internal/models/repo"
 )
 
-func NewArticleRepository(store Store) repo.ArticleRepository {
-	return ArticleRepository{store: store}
+func NewArticleRepository(mainStore, statsStore Store) repo.ArticleRepository {
+	return &ArticleRepository{main: mainStore, stats: statsStore}
 }
 
 type ArticleRepository struct {
-	store Store
+	main  Store
+	stats Store
 }
 
-func tagsToArrayStr(tags []string) (res string) {
-	for i, t := range tags {
+func arrayToStr(arr []string) (res string) {
+	for i, t := range arr {
 		res += "'" + t + "'"
-		if i != len(tags)-1 {
+		if i != len(arr)-1 {
 			res += ","
 		}
 	}
 	return
 }
 
-func (r ArticleRepository) CreateArticle(userOId string, article repo.ArticleData) error {
-	rows, err := r.store.Query("call CreateArticle(?,?,?,?);", userOId, article.OId, article.Theme, article.Text)
+func (r *ArticleRepository) CreateArticle(userOId string, article repo.ArticleData) error {
+	rows, err := r.main.Query("call CreateArticle(?,?,?,?);", userOId, article.OId, article.Theme, article.Text)
 	if err != nil {
 		return err
 	}
@@ -37,8 +38,8 @@ func (r ArticleRepository) CreateArticle(userOId string, article repo.ArticleDat
 	}
 	return nil
 }
-func (r ArticleRepository) DeleteArticle(oid string, tags []string) error {
-	rows, err := r.store.Query("call DeleteArticle(?);", oid)
+func (r *ArticleRepository) DeleteArticle(oid string, tags []string) error {
+	rows, err := r.main.Query("call DeleteArticle(?);", oid)
 	if err != nil {
 		return err
 	}
@@ -48,7 +49,7 @@ func (r ArticleRepository) DeleteArticle(oid string, tags []string) error {
 	}
 	return nil
 }
-func (r ArticleRepository) scan(rows *sql.Rows) (domain.Article, error) {
+func (r *ArticleRepository) scan(rows Rows) (domain.Article, error) {
 	var a domain.Article
 	var tags sql.NullString
 	var updatedAt sql.NullTime
@@ -67,13 +68,14 @@ func (r ArticleRepository) scan(rows *sql.Rows) (domain.Article, error) {
 	return a, nil
 }
 
-func (r ArticleRepository) Get(articleOId string) (a domain.Article, err error) {
-	rows, err := r.store.Query(`call GetArticle(?);`, articleOId)
+func (r *ArticleRepository) GetArticle(articleOId string) (a domain.Article, err error) {
+	rows, err := r.main.Query(`call GetArticle(?);`, articleOId)
 	if err != nil {
 		return
 	}
 	if !rows.Next() {
-		return a, models.ArticleNotFoundErr
+		rows.Close()
+		return a, models.NotFoundErr
 	}
 	a, err = r.scan(rows)
 	if err != nil {
@@ -83,8 +85,8 @@ func (r ArticleRepository) Get(articleOId string) (a domain.Article, err error) 
 	return a, nil
 }
 
-func (r ArticleRepository) GetForUser(username string, page, limit int) ([]domain.Article, error) {
-	rows, err := r.store.Query(`call GetArticlesForUser(?,?,?);`, username, page*limit, limit)
+func (r *ArticleRepository) GetForUser(username string, page, limit int) ([]domain.Article, error) {
+	rows, err := r.main.Query(`call GetArticlesForUser(?,?,?);`, username, page*limit, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -100,26 +102,26 @@ func (r ArticleRepository) GetForUser(username string, page, limit int) ([]domai
 	return res, nil
 }
 
-func (r ArticleRepository) IsOwner(articleOId, userOId string) error {
-	rows, err := r.store.Query(`call IsOwnerOfArticle(?,?);`, articleOId, userOId)
+func (r *ArticleRepository) IsOwner(articleOId, userOId string) error {
+	rows, err := r.main.Query(`call IsOwnerOfArticle(?,?);`, articleOId, userOId)
 	if err != nil {
 		return err
 	}
+	rows.Close()
 	if !rows.Next() {
-		return models.ArticleNotFoundErr
+		return models.NotFoundErr
 	}
-	rows.Close()
 	return nil
 }
-func (r ArticleRepository) UpdateArticle(oid, theme, text string) error {
-	rows, err := r.store.Query("call UpdateArticle(?,?,?);", oid, theme, text)
+func (r *ArticleRepository) UpdateArticle(oid, theme, text string) error {
+	rows, err := r.main.Query("call UpdateArticle(?,?,?);", oid, theme, text)
 	if err != nil {
 		return err
 	}
 	rows.Close()
 	return nil
 }
-func (r ArticleRepository) AddTagsForArticle(articleOId string, tags []string) error {
+func (r *ArticleRepository) AddTagsForArticle(articleOId string, tags []string) error {
 	var query string
 	args := make([]any, 0, len(tags)+2)
 	for _, t := range tags {
@@ -127,19 +129,72 @@ func (r ArticleRepository) AddTagsForArticle(articleOId string, tags []string) e
 		args = append(args, t)
 	}
 	query += "call AddTagsToArticle(?,?);\n"
-	args = append(args, articleOId, tagsToArrayStr(tags))
-	rows, err := r.store.Query(query, args...)
+	args = append(args, articleOId, arrayToStr(tags))
+	rows, err := r.main.Query(query, args...)
 	if err != nil {
 		return err
 	}
 	rows.Close()
 	return nil
 }
-func (r ArticleRepository) RemoveTagsFromArticle(articleOId string, tags []string) error {
-	rows, err := r.store.Query("call RemoveTagsForArticle(?,?);", articleOId, tagsToArrayStr(tags))
+func (r *ArticleRepository) RemoveTagsFromArticle(articleOId string, tags []string) error {
+	rows, err := r.main.Query("call RemoveTagsForArticle(?,?);", articleOId, arrayToStr(tags))
 	if err != nil {
 		return err
 	}
 	rows.Close()
 	return nil
+}
+
+func (r *ArticleRepository) GetReactionsFor(articleOIds ...string) (repo.ArticleReactions, error) {
+	rows, err := r.stats.Query(`SELECT article_id, reaction, count(reaction) AS count
+		FROM article_reaction FINAL
+		WHERE article_id IN (?)
+		GROUP BY article_id,reaction;`, articleOIds)
+	if err != nil {
+		return nil, err
+	}
+	reactions := repo.ArticleReactions{}
+	for rows.Next() {
+		var articleOId, reaction string
+		var count int
+		err := rows.Scan(&articleOId, &reaction, &count)
+		if err != nil {
+			return nil, err
+		}
+		if reactions[articleOId] == nil {
+			reactions[articleOId] = domain.ArticleReactions{}
+		}
+		reactions[articleOId][reaction] = count
+	}
+	rows.Close()
+	return reactions, nil
+}
+func (r *ArticleRepository) GetCurrentReaction(raterOId, articleOId string) (string, error) {
+	rows, err := r.stats.Query(`
+		SELECT reaction
+		FROM article_reaction FINAL
+		WHERE (article_id = ?) AND (rater_id = ?)`, articleOId, raterOId)
+	if err != nil {
+		return "", err
+	}
+	if !rows.Next() {
+		rows.Close()
+		return "", models.NotFoundErr
+	}
+	var reaction string
+	err = rows.Scan(&reaction)
+	if err != nil {
+		return "", err
+	}
+	return reaction, rows.Close()
+}
+func (r *ArticleRepository) UpdateReaction(raterOId, articleOId, reaction string, count int) error {
+	rows, err := r.stats.Query(`
+		INSERT INTO article_reaction (article_id,rater_id,reaction,votes)
+		VALUES (?,?,?,?)`, articleOId, raterOId, reaction, count)
+	if err != nil {
+		return err
+	}
+	return rows.Close()
 }

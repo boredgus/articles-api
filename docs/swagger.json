@@ -9,7 +9,7 @@
   "info": {
     "description": "Spec Documentation for article service.",
     "title": "Articles API",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "host": "localhost:8080",
   "basePath": "/",
@@ -93,7 +93,7 @@
             "$ref": "#/responses/createArticleResp201"
           },
           "400": {
-            "$ref": "#/responses/createArticleResp400"
+            "$ref": "#/responses/invalidData400"
           },
           "401": {
             "$ref": "#/responses/unauthorizedResp401"
@@ -127,7 +127,7 @@
             "$ref": "#/responses/getArticleResp200"
           },
           "404": {
-            "$ref": "#/responses/notFoundResp404"
+            "$ref": "#/responses/articleNotFound404"
           },
           "500": {
             "$ref": "#/responses/commonError"
@@ -180,7 +180,7 @@
             "$ref": "#/responses/forbiddenResp403"
           },
           "404": {
-            "$ref": "#/responses/notFoundResp404"
+            "$ref": "#/responses/articleNotFound404"
           },
           "500": {
             "$ref": "#/responses/commonError"
@@ -220,7 +220,62 @@
             "$ref": "#/responses/forbiddenResp403"
           },
           "404": {
-            "$ref": "#/responses/notFoundResp404"
+            "$ref": "#/responses/articleNotFound404"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
+          }
+        }
+      }
+    },
+    "/articles/{article_id}/reaction": {
+      "put": {
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "description": "User is forbidden to react on own articles.",
+        "tags": [
+          "articles"
+        ],
+        "summary": "updates reaction for article",
+        "operationId": "reaction_for_article",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ArticleId",
+            "description": "article identifier",
+            "name": "article_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "x-go-name": "Body",
+            "description": "reaction value to react on article",
+            "name": "payload",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/reactionPayload"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/respWithMessage"
+          },
+          "400": {
+            "$ref": "#/responses/invalidData400"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorizedResp401"
+          },
+          "403": {
+            "$ref": "#/responses/forbiddenResp403"
+          },
+          "404": {
+            "$ref": "#/responses/articleNotFound404"
           },
           "500": {
             "$ref": "#/responses/commonError"
@@ -313,19 +368,6 @@
             "name": "user_id",
             "in": "path",
             "required": true
-          },
-          {
-            "enum": [
-              "user",
-              "moderator",
-              "admin"
-            ],
-            "type": "string",
-            "x-go-name": "Role",
-            "description": "user role to set",
-            "name": "role",
-            "in": "query",
-            "required": true
           }
         ],
         "responses": {
@@ -375,13 +417,13 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/updatePayload"
+              "$ref": "#/definitions/updateRolePayload"
             }
           }
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/updateUserResp200"
+            "$ref": "#/responses/respWithMessage"
           },
           "400": {
             "$ref": "#/responses/updateUserResp400"
@@ -416,6 +458,9 @@
           "description": "identifier of article",
           "type": "string",
           "x-go-name": "OId"
+        },
+        "reactions": {
+          "$ref": "#/definitions/ArticleReactions"
         },
         "status": {
           "description": "status of article",
@@ -481,6 +526,14 @@
       },
       "x-go-package": "user-management/internal/controllers/article"
     },
+    "ArticleReactions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "x-go-package": "user-management/internal/domain"
+    },
     "ErrorBody": {
       "description": "error entity",
       "type": "object",
@@ -492,6 +545,16 @@
           "description": "error details",
           "type": "string",
           "x-go-name": "Error"
+        }
+      },
+      "x-go-package": "user-management/internal/controllers"
+    },
+    "InfoResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "x-go-name": "Message"
         }
       },
       "x-go-package": "user-management/internal/controllers"
@@ -571,7 +634,19 @@
       },
       "x-go-package": "user-management/internal/controllers/user"
     },
-    "updatePayload": {
+    "reactionPayload": {
+      "type": "object",
+      "properties": {
+        "emoji": {
+          "description": "emoji to express reaction for article. Empty string stands for withdrawing of reaction.",
+          "type": "string",
+          "x-go-name": "Emoji",
+          "example": "😂"
+        }
+      },
+      "x-go-package": "user-management/internal/controllers/article"
+    },
+    "updateRolePayload": {
       "type": "object",
       "required": [
         "role"
@@ -588,19 +663,15 @@
         }
       },
       "x-go-package": "user-management/internal/controllers/user"
-    },
-    "updateRes": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string",
-          "x-go-name": "Message"
-        }
-      },
-      "x-go-package": "user-management/internal/controllers/user"
     }
   },
   "responses": {
+    "articleNotFound404": {
+      "description": "there is no article with such id",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
     "articlesForUserResp200": {
       "description": "success",
       "schema": {
@@ -634,12 +705,6 @@
         "$ref": "#/definitions/Article"
       }
     },
-    "createArticleResp400": {
-      "description": "invalid data provided",
-      "schema": {
-        "$ref": "#/definitions/ErrorBody"
-      }
-    },
     "forbiddenResp403": {
       "description": "user does not have enough rights to perform action",
       "schema": {
@@ -652,8 +717,8 @@
         "$ref": "#/definitions/Article"
       }
     },
-    "notFoundResp404": {
-      "description": "there is no article with such id",
+    "invalidData400": {
+      "description": "invalid data provided",
       "schema": {
         "$ref": "#/definitions/ErrorBody"
       }
@@ -665,6 +730,12 @@
       "description": "user with such username already exists",
       "schema": {
         "$ref": "#/definitions/ErrorBody"
+      }
+    },
+    "respWithMessage": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/InfoResponse"
       }
     },
     "successResp200": {
@@ -686,12 +757,6 @@
       "description": "invalid article data",
       "schema": {
         "$ref": "#/definitions/ErrorBody"
-      }
-    },
-    "updateUserResp200": {
-      "description": "",
-      "schema": {
-        "$ref": "#/definitions/updateRes"
       }
     },
     "updateUserResp400": {

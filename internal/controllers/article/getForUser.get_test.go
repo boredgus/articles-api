@@ -106,7 +106,7 @@ func TestArticleController_GetForUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := NewArticleController(mdlMocks.NewUserModel(t), articleModelMock).
+			err := NewArticleController(articleModelMock).
 				GetForUser(ctxMock)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)

@@ -27,6 +27,8 @@ func (a ArticleData) CompareTags(tags []string) (old []string, new []string) {
 	return
 }
 
+type ArticleReactions map[string]domain.ArticleReactions
+
 type Article struct {
 	OId       string     `sql:"o_id"`
 	Theme     string     `sql:"theme"`
@@ -40,10 +42,14 @@ type ArticleRepository interface {
 	CreateArticle(userOId string, article ArticleData) error
 	UpdateArticle(oid, theme, text string) error
 	DeleteArticle(oid string, tags []string) error
-	Get(articleOId string) (domain.Article, error)
+	GetArticle(articleOId string) (domain.Article, error)
 	GetForUser(username string, page, limit int) ([]domain.Article, error)
 	IsOwner(articleOId, userOId string) error
 
 	AddTagsForArticle(articleOId string, tags []string) error
 	RemoveTagsFromArticle(articleOId string, tags []string) error
+
+	GetCurrentReaction(raterOId, articleOId string) (string, error)
+	UpdateReaction(raterOId, articleOId, reaction string, count int) error
+	GetReactionsFor(articleOId ...string) (ArticleReactions, error)
 }

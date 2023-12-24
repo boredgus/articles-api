@@ -78,7 +78,7 @@ func TestUserService_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := user{repo: repoMock, pswd: pswdMock}.Create(tt.args.user)
+			err := (&user{repo: repoMock, pswd: pswdMock}).Create(tt.args.user)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
@@ -160,69 +160,13 @@ func TestUserService_Authorize(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			gotToken, err := user{
+			gotToken, err := (&user{
 				repo:  repoMock,
 				token: tokenMock,
 				pswd:  pswdMock,
-			}.Authorize(validUser.Username, validUser.Password)
+			}).Authorize(validUser.Username, validUser.Password)
 			assert.Equal(t, gotToken, tt.wantToken)
 			if err != nil {
-				assert.ErrorIs(t, err, tt.wantErr)
-				return
-			}
-			assert.Nil(t, err)
-		})
-	}
-}
-
-func TestUserService_Exists(t *testing.T) {
-	type mockedRes struct {
-		user        repo.User
-		repoErr     error
-		isPswdValid bool
-	}
-	repoMock := repoMocks.NewUserRepository(t)
-	pswdMock := authMocks.NewPassword(t)
-	userData := repo.User{OId: "o_id", Username: "username", Password: "pass"}
-	setup := func(res mockedRes) func() {
-		repoCall := repoMock.EXPECT().
-			GetByOId(userData.OId).Return(res.user, res.repoErr).Once()
-		pswdCall := pswdMock.EXPECT().
-			Compare(res.user.Password, mock.Anything).Return(res.isPswdValid).Once()
-
-		return func() {
-			repoCall.Unset()
-			pswdCall.Unset()
-		}
-	}
-	someError := errors.New("some error")
-	tests := []struct {
-		name      string
-		mockedRes mockedRes
-		wantErr   error
-	}{
-		{
-			name:      "there is no user with such oid",
-			mockedRes: mockedRes{repoErr: someError},
-			wantErr:   someError,
-		},
-		{
-			name:      "password is invalid",
-			mockedRes: mockedRes{user: userData, isPswdValid: false},
-			wantErr:   InvalidAuthParameterErr,
-		},
-		{
-			name:      "success",
-			mockedRes: mockedRes{user: userData, isPswdValid: true},
-			wantErr:   nil,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cleanSetup := setup(tt.mockedRes)
-			defer cleanSetup()
-			err := user{repo: repoMock, pswd: pswdMock}.Exists(userData.OId, userData.Password)
-			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
 			}
@@ -293,7 +237,7 @@ func TestUserService_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := user{repo: repoMock}.
+			err := (&user{repo: repoMock}).
 				Delete(tt.args.issuerRole, tt.args.userToDeleteOId)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
@@ -373,7 +317,7 @@ func TestUserService_UpdateRole(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := user{repo: repoMock}.
+			err := (&user{repo: repoMock}).
 				UpdateRole(tt.args.issuerRole, tt.args.userToUpdateOId, tt.args.roleToSet)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)

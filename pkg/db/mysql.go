@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 	"user-management/config"
+	"user-management/internal/gateways"
 
 	mysql "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
@@ -17,7 +18,7 @@ func getConfig() *mysql.Config {
 	config.User = env.MySQLUsername
 	config.Passwd = env.MySQLPassword
 	config.Net = "tcp"
-	config.Addr = env.DBContainer
+	config.Addr = env.MySQLContainer
 	config.DBName = env.MySQLDatabase
 	config.ParseTime = true
 	config.MultiStatements = true
@@ -26,13 +27,13 @@ func getConfig() *mysql.Config {
 	return config
 }
 
-var once sync.Once
-var database *sql.DB
+var mysqlOnce sync.Once
+var mysqlDB *sql.DB
 
 const DBConnectionAttempts = 5
 
-func NewMySQLStore(handlers ...func(db *sql.DB)) MySQLStore {
-	once.Do(func() {
+func NewMySQLStore(handlers ...func(db *sql.DB)) gateways.Store {
+	mysqlOnce.Do(func() {
 		var db *sql.DB
 		var err error
 		for i := 0; i < DBConnectionAttempts; i++ {
@@ -51,20 +52,21 @@ func NewMySQLStore(handlers ...func(db *sql.DB)) MySQLStore {
 		cfg := config.GetConfig()
 		db.SetMaxOpenConns(cfg.MaxOpenDBConnections)
 		db.SetMaxIdleConns(cfg.MaxIdleDBConnections)
-		database = db
+		mysqlDB = db
 		for _, handler := range handlers {
-			handler(db)
+			handler(mysqlDB)
 		}
 	})
 
-	return MySQLStore{db: database}
+	return MySQLStore{db: mysqlDB}
 }
 
 type MySQLStore struct {
 	db *sql.DB
 }
 
-func (s MySQLStore) Query(q string, args ...any) (*sql.Rows, error) {
+func (s MySQLStore) Query(q string, args ...any) (gateways.Rows, error) {
+	logrus.Infof("> mysql: %+v\n", s.Stats())
 	return s.db.Query(q, args...)
 }
 func (s MySQLStore) Stats() sql.DBStats {

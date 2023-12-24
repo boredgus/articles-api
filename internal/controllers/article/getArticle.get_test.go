@@ -49,11 +49,11 @@ func TestArticleController_Get(t *testing.T) {
 		{
 			name: "article is not found",
 			mockedRes: mockedRes{
-				getErr:   models.ArticleNotFoundErr,
+				getErr:   models.NotFoundErr,
 				jsonCode: http.StatusNotFound,
 				jsonBody: mock.Anything,
 			},
-			wantErr: models.ArticleNotFoundErr,
+			wantErr: models.NotFoundErr,
 		},
 		{
 			name: "internal server error",
@@ -76,7 +76,7 @@ func TestArticleController_Get(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := NewArticleController(mdlMocks.NewUserModel(t), articleModelMock).Get(ctxMock)
+			err := NewArticleController(articleModelMock).Get(ctxMock)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return

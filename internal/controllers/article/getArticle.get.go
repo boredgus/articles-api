@@ -33,11 +33,11 @@ type getArticleResp200 struct {
 // responses:
 //
 //	200: getArticleResp200
-//	404: notFoundResp404
+//	404: articleNotFound404
 //	500: commonError
 func (a Article) Get(ctx controllers.Context) error {
 	article, err := a.articleModel.Get(ctx.PathParam("article_id"))
-	if errors.Is(err, models.ArticleNotFoundErr) {
+	if errors.Is(err, models.NotFoundErr) {
 		e := ctx.JSON(http.StatusNotFound, controllers.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}

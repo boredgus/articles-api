@@ -10,6 +10,18 @@ import (
 // nolint:unused
 type successResp200 struct{}
 
+type InfoResponse struct {
+	Message string `json:"message"`
+}
+
+// swagger:response respWithMessage
+// nolint:unused
+type updateUserResp200 struct {
+	// success
+	// in: body
+	Body InfoResponse
+}
+
 // error entity
 // swagger:model
 type ErrorBody struct {
@@ -21,6 +33,14 @@ type ErrorBody struct {
 // internal server error
 // swagger:response commonError
 type Error struct {
+}
+
+// invalid data provided
+// swagger:response invalidData400
+// nolint:unused
+type invalidData400 struct {
+	// in: body
+	body ErrorBody
 }
 
 // unauthorized
@@ -41,9 +61,9 @@ type forbiddenResp403 struct {
 }
 
 // there is no article with such id
-// swagger:response notFoundResp404
+// swagger:response articleNotFound404
 // nolint:unused
-type notFoundResp404 struct {
+type articleNotFound404 struct {
 	// in: body
 	// required: true
 	Body ErrorBody

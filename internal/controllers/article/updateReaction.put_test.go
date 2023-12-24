@@ -5,53 +5,41 @@ import (
 	"net/http"
 	"testing"
 	"user-management/internal/auth"
-	"user-management/internal/controllers"
-	"user-management/internal/domain"
 	cntlrMocks "user-management/internal/mocks/controllers"
 	mdlMocks "user-management/internal/mocks/models"
 	"user-management/internal/models"
-	"user-management/internal/views"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-func TestArticleController_Update(t *testing.T) {
+func TestArticleController_UpdateReactionForArticle(t *testing.T) {
 	type mockedRes struct {
 		bindErr       error
-		userRole      string
 		jsonCode      int
-		jsonBody      interface{}
 		noContentCode int
-		updateArticle domain.Article
 		updateErr     error
 	}
 	ctxMock := cntlrMocks.NewContext(t)
 	articleModelMock := mdlMocks.NewArticleModel(t)
-	articleId := "artice-id"
 	setup := func(res mockedRes) func() {
 		bindCall := ctxMock.EXPECT().Bind(mock.Anything).Return(res.bindErr).Maybe()
-		userOId := "user-oid"
-		pathParamCall := ctxMock.EXPECT().
-			PathParam("article_id").Return(articleId).Once().NotBefore(bindCall)
+		userOId, articleId := "user-oid", "artice-id"
 		getCall := ctxMock.EXPECT().Get("user").NotBefore(bindCall).
 			Return(jwt.NewWithClaims(jwt.SigningMethodHS256,
-				&auth.JWTClaims{JWTPayload: auth.JWTPayload{UserOId: userOId, Role: res.userRole}})).Once()
+				&auth.JWTClaims{JWTPayload: auth.JWTPayload{UserOId: userOId}})).Once()
+		pathParamCall := ctxMock.EXPECT().
+			PathParam("article_id").Return(articleId).Once().NotBefore(bindCall)
 		updateCall := articleModelMock.EXPECT().
-			Update(userOId, res.userRole, &res.updateArticle).NotBefore(getCall).
+			UpdateReaction(userOId, articleId, "").NotBefore(pathParamCall).
 			Return(res.updateErr).Maybe()
 		calls := []*mock.Call{
-			bindCall,
-			pathParamCall,
-			getCall,
-			updateCall,
+			bindCall, getCall, pathParamCall, updateCall,
 			ctxMock.EXPECT().
-				JSON(res.jsonCode, res.jsonBody).Return(nil).
-				NotBefore(bindCall).Maybe(),
+				JSON(res.jsonCode, mock.Anything).Return(nil).NotBefore(bindCall).Maybe(),
 			ctxMock.EXPECT().
-				NoContent(res.noContentCode).Return(nil).
-				NotBefore(updateCall).Maybe(),
+				NoContent(res.noContentCode).Return(nil).NotBefore(updateCall).Maybe(),
 		}
 		return func() {
 			for _, call := range calls {
@@ -60,68 +48,60 @@ func TestArticleController_Update(t *testing.T) {
 		}
 	}
 	someError := errors.New("some error")
-	artcl := domain.Article{OId: articleId, Tags: []string{}}
 	tests := []struct {
 		name      string
 		mockedRes mockedRes
 		wantErr   error
 	}{
 		{
-			name: "failed to bind article data",
+			name: "failed to bind payload",
 			mockedRes: mockedRes{
 				bindErr:  someError,
 				jsonCode: http.StatusBadRequest,
-				jsonBody: controllers.ErrorBody{Error: "failed to parse article"}},
+			},
 			wantErr: someError,
 		},
 		{
-			name: "article with such oid does not exist",
+			name: "article with such id does not exists",
 			mockedRes: mockedRes{
-				updateArticle: artcl,
-				updateErr:     models.NotFoundErr,
-				jsonCode:      http.StatusNotFound,
-				jsonBody:      mock.Anything},
+				updateErr: models.NotFoundErr,
+				jsonCode:  http.StatusNotFound,
+			},
 			wantErr: models.NotFoundErr,
 		},
 		{
-			name: "user does not have rights to change this article",
+			name: "user is forbidden to update reaction",
 			mockedRes: mockedRes{
-				updateArticle: artcl,
-				updateErr:     models.NotEnoughRightsErr,
-				jsonCode:      http.StatusForbidden,
-				jsonBody:      mock.Anything},
+				updateErr: models.NotEnoughRightsErr,
+				jsonCode:  http.StatusForbidden,
+			},
 			wantErr: models.NotEnoughRightsErr,
 		},
 		{
-			name: "article data is invalid",
+			name: "invalid reaction provided",
 			mockedRes: mockedRes{
-				updateArticle: artcl,
-				updateErr:     models.InvalidDataErr,
-				jsonCode:      http.StatusBadRequest,
-				jsonBody:      mock.Anything},
+				updateErr: models.InvalidDataErr,
+				jsonCode:  http.StatusBadRequest,
+			},
 			wantErr: models.InvalidDataErr,
 		},
 		{
 			name: "internal server error",
 			mockedRes: mockedRes{
-				updateArticle: artcl,
 				updateErr:     someError,
 				noContentCode: http.StatusInternalServerError},
 			wantErr: someError,
 		},
 		{
-			name: "success",
-			mockedRes: mockedRes{
-				updateArticle: artcl,
-				jsonCode:      http.StatusOK,
-				jsonBody:      views.NewArticleView(artcl)},
+			name:      "success",
+			mockedRes: mockedRes{jsonCode: http.StatusOK},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := NewArticleController(articleModelMock).Update(ctxMock)
+			err := NewArticleController(articleModelMock).UpdateReactionForArticle(ctxMock)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return

@@ -8,7 +8,6 @@ import (
 	"user-management/internal/controllers"
 	"user-management/internal/models"
 
-	// user "user-management/internal/controllers/user"
 	cntrlMocks "user-management/internal/mocks/controllers"
 	mdlMocks "user-management/internal/mocks/models"
 
@@ -101,7 +100,7 @@ func TestUserController_UpdateRole(t *testing.T) {
 			name: "success",
 			mockedRes: mockedRes{
 				jsonCode: http.StatusOK,
-				jsonBody: updateRes{Message: "successfuly updated role to "},
+				jsonBody: controllers.InfoResponse{Message: "successfuly updated role to "},
 			},
 		},
 	}
