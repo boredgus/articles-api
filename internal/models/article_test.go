@@ -5,6 +5,7 @@ import (
 	"testing"
 	"user-management/internal/domain"
 	repoMocks "user-management/internal/mocks/repo"
+	"user-management/internal/models/repo"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -36,13 +37,7 @@ func TestArticleService_Create(t *testing.T) {
 		{
 			name:    "article data is invalid",
 			args:    args{article: &domain.Article{Theme: ""}},
-			wantErr: InvalidArticleErr,
-		},
-		{
-			name:      "there is no user with such oid",
-			args:      args{article: &domain.Article{Theme: "error"}},
-			mockedRes: mockedRes{createErr: ArticleNotFoundErr},
-			wantErr:   UnknownUserErr,
+			wantErr: InvalidDataErr,
 		},
 		{
 			name:      "failed to insert article data to db",
@@ -77,20 +72,28 @@ func TestArticleService_GetForUser(t *testing.T) {
 		limit    int
 	}
 	type mockedRes struct {
-		getErr      error
-		getArticles []domain.Article
+		articles     []domain.Article
+		articlesErr  error
+		reactions    repo.ArticleReactions
+		reactionsErr error
 	}
 	repoMock := repoMocks.NewArticleRepository(t)
 	setup := func(res mockedRes) func() {
-		repoCall := repoMock.EXPECT().
+		getCall := repoMock.EXPECT().
 			GetForUser(mock.Anything, mock.Anything, mock.Anything).
-			Return(res.getArticles, res.getErr).Once()
+			Return(res.articles, res.articlesErr).Once()
+		reactionsCall := repoMock.EXPECT().
+			GetReactionsFor("").NotBefore(getCall).Return(res.reactions, res.reactionsErr).Once()
+
 		return func() {
-			repoCall.Unset()
+			getCall.Unset()
+			reactionsCall.Unset()
 		}
 	}
 	someError := errors.New("some error")
-	articles := []domain.Article{{Theme: "theme1"}, {Theme: "theme2"}, {Theme: "theme3"}}
+	articles := []domain.Article{{Theme: "theme1"}}
+	reactions := repo.ArticleReactions{"": {"🇫🇮": 1}}
+	articlesWithReactions := []domain.Article{{Theme: "theme1", Reactions: reactions[""]}}
 	tests := []struct {
 		name           string
 		args           args
@@ -101,18 +104,36 @@ func TestArticleService_GetForUser(t *testing.T) {
 	}{
 		{
 			name:           "failed to get articles",
-			mockedRes:      mockedRes{getArticles: []domain.Article{}, getErr: someError},
+			mockedRes:      mockedRes{articles: []domain.Article{}, articlesErr: someError},
 			wantArticle:    nil,
 			wantPagination: PaginationData{},
 			wantErr:        someError,
 		},
 		{
-			name:           "success",
+			name:           "no articles for this user",
 			args:           args{limit: 10},
-			mockedRes:      mockedRes{getArticles: articles, getErr: nil},
-			wantArticle:    articles,
-			wantPagination: PaginationData{Page: 0, Limit: 10, Count: len(articles)},
+			mockedRes:      mockedRes{articles: []domain.Article{}},
+			wantArticle:    []domain.Article{},
+			wantPagination: PaginationData{Page: 0, Limit: 10, Count: 0},
 			wantErr:        nil,
+		},
+		{
+			name: "failed to get reactions",
+			args: args{limit: 10},
+			mockedRes: mockedRes{
+				articles:     articles,
+				reactionsErr: someError},
+			wantPagination: PaginationData{},
+			wantErr:        someError,
+		},
+		{
+			name: "at least one article exists",
+			args: args{limit: 10},
+			mockedRes: mockedRes{
+				articles:  articles,
+				reactions: reactions},
+			wantArticle:    articlesWithReactions,
+			wantPagination: PaginationData{Page: 0, Limit: 10, Count: len(articlesWithReactions)},
 		},
 	}
 	for _, tt := range tests {
@@ -147,7 +168,7 @@ func TestArticleService_Update(t *testing.T) {
 	}
 	repoMock := repoMocks.NewArticleRepository(t)
 	setup := func(res mockedRes) func() {
-		getCall := repoMock.EXPECT().Get(mock.Anything).Return(res.oldArticle, res.oldArticleErr).Once()
+		getCall := repoMock.EXPECT().GetArticle(mock.Anything).Return(res.oldArticle, res.oldArticleErr).Once()
 		updateCall := repoMock.EXPECT().
 			UpdateArticle(mock.Anything, mock.Anything, mock.Anything).NotBefore(getCall).
 			Return(res.updateErr).Once()
@@ -188,7 +209,7 @@ func TestArticleService_Update(t *testing.T) {
 		{
 			name:    "article data is not valid",
 			args:    args{userRole: "admin", article: &domain.Article{Theme: ""}},
-			wantErr: InvalidArticleErr,
+			wantErr: InvalidDataErr,
 		},
 		{
 			name:      "failed to update article",
@@ -236,15 +257,20 @@ func TestArticleService_Get(t *testing.T) {
 		articleOId string
 	}
 	type mockedRes struct {
-		article domain.Article
-		err     error
+		article      domain.Article
+		getErr       error
+		reactions    repo.ArticleReactions
+		reactionsErr error
 	}
 	repoMock := repoMocks.NewArticleRepository(t)
 	setup := func(res mockedRes) func() {
 		getCall := repoMock.EXPECT().
-			Get(mock.Anything).Return(res.article, res.err).Once()
+			GetArticle(mock.Anything).Return(res.article, res.getErr).Once()
+		reactionsCall := repoMock.EXPECT().
+			GetReactionsFor("").NotBefore(getCall).Return(res.reactions, res.reactionsErr).Once()
 		return func() {
 			getCall.Unset()
+			reactionsCall.Unset()
 		}
 	}
 	someErr := errors.New("some err")
@@ -256,15 +282,27 @@ func TestArticleService_Get(t *testing.T) {
 		wantErr   error
 	}{
 		{
-			name:      "failed to fetch article",
-			mockedRes: mockedRes{article: domain.Article{}, err: someErr},
-			wantA:     domain.Article{},
-			wantErr:   someErr,
+			name: "failed to fetch article",
+			mockedRes: mockedRes{
+				article: domain.Article{},
+				getErr:  someErr},
+			wantA:   domain.Article{},
+			wantErr: someErr,
 		},
 		{
-			name:      "success",
-			mockedRes: mockedRes{article: domain.Article{}},
-			wantA:     domain.Article{},
+			name: "failed to fetch reactions",
+			mockedRes: mockedRes{
+				article:      domain.Article{},
+				reactionsErr: someErr},
+			wantA:   domain.Article{},
+			wantErr: someErr,
+		},
+		{
+			name: "success",
+			mockedRes: mockedRes{
+				article:   domain.Article{},
+				reactions: repo.ArticleReactions{"": domain.ArticleReactions{"🇫🇮": 1}}},
+			wantA: domain.Article{Reactions: domain.ArticleReactions{"🇫🇮": 1}},
 		},
 	}
 	for _, tt := range tests {
@@ -296,7 +334,7 @@ func TestArticleService_Delete(t *testing.T) {
 	repoMock := repoMocks.NewArticleRepository(t)
 	setup := func(res mockedRes) func() {
 		getCall := repoMock.EXPECT().
-			Get(mock.Anything).Return(res.article, res.getErr).Once()
+			GetArticle(mock.Anything).Return(res.article, res.getErr).Once()
 		deleteCall := repoMock.EXPECT().DeleteArticle(mock.Anything, res.article.Tags).
 			NotBefore(getCall).Return(res.deleteErr)
 		return func() {
@@ -338,7 +376,7 @@ func TestArticleService_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := ArticleService{repo: repoMock}.Delete(tt.args.userOId, tt.args.userRole, tt.args.articleOId)
+			err := NewArticleModel(repoMock).Delete(tt.args.userOId, tt.args.userRole, tt.args.articleOId)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
@@ -375,7 +413,7 @@ func TestArticleService_checkRights(t *testing.T) {
 		{
 			name:      "user with default role is trying to change not his article",
 			args:      args{userRole: string(domain.DefaultUserRole)},
-			mockedRes: mockedRes{isOwnerErr: ArticleNotFoundErr},
+			mockedRes: mockedRes{isOwnerErr: NotFoundErr},
 			wantErr:   NotEnoughRightsErr,
 		},
 		{
@@ -398,7 +436,113 @@ func TestArticleService_checkRights(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := ArticleService{repo: repoMock}.checkRights(tt.args.userOId, tt.args.userRole, tt.args.articleOId)
+			err := (&ArticleService{repoMock}).checkRights(tt.args.userOId, tt.args.userRole, tt.args.articleOId)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+				return
+			}
+			assert.Nil(t, err)
+		})
+	}
+}
+
+func TestArticleService_UpdateReaction(t *testing.T) {
+	type args struct {
+		raterOId   string
+		articleOId string
+		reaction   string
+	}
+	type mockedRes struct {
+		articleErr       error
+		isOwnerErr       error
+		oldReaction      string
+		oldReactionErr   error
+		reactionToUpdate string
+		countToAdd       int
+		updateErr        error
+	}
+	repoMock := repoMocks.NewArticleRepository(t)
+	setup := func(res mockedRes) func() {
+		articleCall := repoMock.EXPECT().GetArticle("").Return(domain.Article{}, res.articleErr).Once()
+		isOwnerCall := repoMock.EXPECT().IsOwner(mock.Anything, mock.Anything).NotBefore(articleCall).
+			Return(res.isOwnerErr).Maybe()
+		currentReactionCall := repoMock.EXPECT().
+			GetCurrentReaction("", "").NotBefore(isOwnerCall).Return(res.oldReaction, res.oldReactionErr)
+		updateCall := repoMock.EXPECT().UpdateReaction(mock.Anything, mock.Anything, res.reactionToUpdate, res.countToAdd).
+			NotBefore(currentReactionCall).Return(res.updateErr)
+		return func() {
+			articleCall.Unset()
+			isOwnerCall.Unset()
+			currentReactionCall.Unset()
+			updateCall.Unset()
+		}
+	}
+	someErr := errors.New("some err")
+	someReaction := "🇫🇮"
+	tests := []struct {
+		name      string
+		args      args
+		mockedRes mockedRes
+		wantErr   error
+	}{
+		{
+			name:    "user is owner of article",
+			wantErr: NotEnoughRightsErr,
+		},
+		{
+			name:      "failed to execute IsOwner call",
+			mockedRes: mockedRes{isOwnerErr: someErr},
+			wantErr:   someErr,
+		},
+		{
+			name:      "invalid reaction provided",
+			args:      args{reaction: " "},
+			mockedRes: mockedRes{isOwnerErr: NotFoundErr},
+			wantErr:   InvalidDataErr,
+		},
+		{
+			name: "failed to get current reaction",
+			mockedRes: mockedRes{
+				isOwnerErr:     NotFoundErr,
+				oldReactionErr: someErr,
+			},
+			wantErr: someErr,
+		},
+		{
+			name: "failed to remove current reaction",
+			mockedRes: mockedRes{
+				isOwnerErr:       NotFoundErr,
+				oldReaction:      someReaction,
+				reactionToUpdate: someReaction,
+				countToAdd:       -1,
+				updateErr:        someErr,
+			},
+			wantErr: someErr,
+		},
+		{
+			name: "failed to set new reaction",
+			args: args{reaction: someReaction},
+			mockedRes: mockedRes{
+				isOwnerErr:       NotFoundErr,
+				reactionToUpdate: someReaction,
+				countToAdd:       1,
+				updateErr:        someErr,
+			},
+			wantErr: someErr,
+		},
+		{
+			name: "ampty reaction provided",
+			mockedRes: mockedRes{
+				isOwnerErr: NotFoundErr,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanSetup := setup(tt.mockedRes)
+			defer cleanSetup()
+
+			err := NewArticleModel(repoMock).UpdateReaction(tt.args.raterOId, tt.args.articleOId, tt.args.reaction)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return

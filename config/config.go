@@ -10,14 +10,28 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type Mode int
+
+const (
+	Dev Mode = iota
+	Production
+)
+
 type config struct {
+	Mode                 Mode   `env:"MODE"`
 	JWTSecretKey         string `env:"JWT_SECRET_KEY"`
+	MySQLContainer       string `env:"MYSQL_CONTAINER"`
 	MySQLUsername        string `env:"MYSQL_USERNAME"`
 	MySQLPassword        string `env:"MYSQL_PASSWORD"`
 	MySQLDatabase        string `env:"MYSQL_DATABASE"`
 	MaxOpenDBConnections int    `env:"MAX_OPEN_DB_CONNECTIONS"`
 	MaxIdleDBConnections int    `env:"MAX_IDLE_DB_CONNECTIONS"`
-	DBContainer          string `env:"DB_CONTAINER"`
+
+	ClickhousePort      int    `env:"CLICKHOUSE_PORT"`
+	ClickhouseContainer string `env:"CLICKHOUSE_CONTAINER"`
+	ClickhouseUsername  string `env:"CLICKHOUSE_USERNAME"`
+	ClickhousePassword  string `env:"CLICKHOUSE_PASSWORD"`
+	ClickhouseDatabase  string `env:"CLICKHOUSE_DATABASE"`
 }
 
 func LoadEnvFile(envFilePath string) {

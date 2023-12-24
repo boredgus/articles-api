@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/rivo/uniseg"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,14 +28,34 @@ func (s ArticleStatus) String() string {
 	return statuses[s]
 }
 
+type ArticleReactions map[string]int
+
+type ArticleReaction string
+
+const NoReaction ArticleReaction = ""
+
+func (reaction ArticleReaction) IsValid() error {
+	if reaction == NoReaction {
+		return nil
+	}
+	if uniseg.GraphemeClusterCount(string(reaction)) > 1 {
+		return fmt.Errorf("reaction should have only one grapheme")
+	}
+	if len(reaction) == 1 {
+		return fmt.Errorf("reaction should be an emoji")
+	}
+	return nil
+}
+
 type Article struct {
-	OId       string        `json:"id"`
-	Theme     string        `json:"theme" form:"theme" validate:"required,min=1,max=200"`
-	Text      string        `json:"text" form:"text" validate:"max=500"`
-	Tags      []string      `json:"tags" form:"tags" validate:"tags"`
-	CreatedAt time.Time     `json:"created_at"`
-	UpdatedAt *time.Time    `json:"updated_at"`
-	Status    ArticleStatus `json:"status,omitempty"`
+	OId       string           `json:"id"`
+	Theme     string           `json:"theme" form:"theme" validate:"required,min=1,max=200"`
+	Text      string           `json:"text" form:"text" validate:"max=500"`
+	Tags      []string         `json:"tags" form:"tags" validate:"tags"`
+	CreatedAt time.Time        `json:"created_at"`
+	UpdatedAt *time.Time       `json:"updated_at"`
+	Status    ArticleStatus    `json:"status,omitempty"`
+	Reactions ArticleReactions `json:"reactions"`
 }
 
 var articleRequirements = Requirements{

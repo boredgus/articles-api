@@ -289,6 +289,54 @@ func (_c *ArticleModel_Update_Call) RunAndReturn(run func(string, string, *domai
 	return _c
 }
 
+// UpdateReaction provides a mock function with given fields: raterOId, articleOId, reaction
+func (_m *ArticleModel) UpdateReaction(raterOId string, articleOId string, reaction string) error {
+	ret := _m.Called(raterOId, articleOId, reaction)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateReaction")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, string) error); ok {
+		r0 = rf(raterOId, articleOId, reaction)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ArticleModel_UpdateReaction_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateReaction'
+type ArticleModel_UpdateReaction_Call struct {
+	*mock.Call
+}
+
+// UpdateReaction is a helper method to define mock.On call
+//   - raterOId string
+//   - articleOId string
+//   - reaction string
+func (_e *ArticleModel_Expecter) UpdateReaction(raterOId interface{}, articleOId interface{}, reaction interface{}) *ArticleModel_UpdateReaction_Call {
+	return &ArticleModel_UpdateReaction_Call{Call: _e.mock.On("UpdateReaction", raterOId, articleOId, reaction)}
+}
+
+func (_c *ArticleModel_UpdateReaction_Call) Run(run func(raterOId string, articleOId string, reaction string)) *ArticleModel_UpdateReaction_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *ArticleModel_UpdateReaction_Call) Return(_a0 error) *ArticleModel_UpdateReaction_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ArticleModel_UpdateReaction_Call) RunAndReturn(run func(string, string, string) error) *ArticleModel_UpdateReaction_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewArticleModel creates a new instance of ArticleModel. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewArticleModel(t interface {

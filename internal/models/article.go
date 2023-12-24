@@ -22,24 +22,25 @@ type ArticleModel interface {
 	Get(articleOId string) (domain.Article, error)
 	Update(userOId, userRole string, article *domain.Article) error
 	Delete(userOId, userRole, articleOId string) error
+	UpdateReaction(raterOId, articleOId, reaction string) error
 }
 
-var InvalidArticleErr = errors.New("invalid article")
+var NotFoundErr = errors.New("not found")
+var InvalidDataErr = errors.New("invalid data")
 var NotEnoughRightsErr = errors.New("the user does not have enough rights to perform the action")
-var ArticleNotFoundErr = errors.New("article is not found")
 var UnknownUserErr = errors.New("unknown user")
 
 func NewArticleModel(repo repo.ArticleRepository) ArticleModel {
-	return ArticleService{repo}
+	return &ArticleService{repo: repo}
 }
 
 type ArticleService struct {
 	repo repo.ArticleRepository
 }
 
-func (a ArticleService) Create(userOId string, article *domain.Article) error {
+func (a *ArticleService) Create(userOId string, article *domain.Article) error {
 	if err := article.Validate(); err != nil {
-		return fmt.Errorf("%w: %w", InvalidArticleErr, err)
+		return fmt.Errorf("%w: %w", InvalidDataErr, err)
 	}
 	id := uuid.New().String()
 	err := a.repo.CreateArticle(userOId, repo.ArticleData{
@@ -48,9 +49,6 @@ func (a ArticleService) Create(userOId string, article *domain.Article) error {
 		Text:  article.Text,
 		Tags:  article.Tags,
 	})
-	if err == ArticleNotFoundErr {
-		return UnknownUserErr
-	}
 	if err != nil {
 		return err
 	}
@@ -59,23 +57,49 @@ func (a ArticleService) Create(userOId string, article *domain.Article) error {
 	return nil
 }
 
-func (a ArticleService) Get(articleOId string) (domain.Article, error) {
-	return a.repo.Get(articleOId)
+func (a *ArticleService) Get(articleOId string) (domain.Article, error) {
+	ar, err := a.repo.GetArticle(articleOId)
+	if err != nil {
+		return domain.Article{}, err
+	}
+	reactions, err := a.repo.GetReactionsFor(articleOId)
+	if err != nil {
+		return domain.Article{}, err
+	}
+	ar.Reactions = reactions[articleOId]
+	return ar, nil
 }
 
-func (a ArticleService) GetForUser(username string, page, limit int) ([]domain.Article, PaginationData, error) {
+func (a *ArticleService) GetForUser(username string, page, limit int) ([]domain.Article, PaginationData, error) {
 	articles, err := a.repo.GetForUser(username, page, limit)
 	if err != nil {
 		return nil, PaginationData{}, err
 	}
-	return articles, PaginationData{Page: page, Limit: limit, Count: len(articles)}, nil
+	pagination := PaginationData{Page: page, Limit: limit, Count: len(articles)}
+	if len(articles) == 0 {
+		return articles, pagination, nil
+	}
+	articledOIds := make([]string, 0, len(articles))
+	for _, a := range articles {
+		articledOIds = append(articledOIds, a.OId)
+	}
+	reactions, err := a.repo.GetReactionsFor(articledOIds...)
+	if err != nil {
+		return nil, PaginationData{}, err
+	}
+	for i, a := range articles {
+		if len(reactions[a.OId]) > 0 {
+			articles[i].Reactions = reactions[a.OId]
+		}
+	}
+	return articles, pagination, nil
 }
 
-func (a ArticleService) checkRights(userOId, userRole, articleOId string) error {
+func (a *ArticleService) checkRights(userOId, userRole, articleOId string) error {
 	switch domain.UserRole(userRole) {
 	case domain.DefaultUserRole:
 		err := a.repo.IsOwner(articleOId, userOId)
-		if err == ArticleNotFoundErr {
+		if err == NotFoundErr {
 			return fmt.Errorf("%w: user is not an owner", NotEnoughRightsErr)
 		}
 		return err
@@ -86,8 +110,8 @@ func (a ArticleService) checkRights(userOId, userRole, articleOId string) error 
 	}
 }
 
-func (a ArticleService) Update(userOId, userRole string, article *domain.Article) error {
-	oldArticle, err := a.repo.Get(article.OId)
+func (a *ArticleService) Update(userOId, userRole string, article *domain.Article) error {
+	oldArticle, err := a.repo.GetArticle(article.OId)
 	if err != nil {
 		return err
 	}
@@ -96,7 +120,7 @@ func (a ArticleService) Update(userOId, userRole string, article *domain.Article
 		return err
 	}
 	if err := article.Validate(); err != nil {
-		return fmt.Errorf("%w: %w", InvalidArticleErr, err)
+		return fmt.Errorf("%w: %w", InvalidDataErr, err)
 	}
 	err = a.repo.UpdateArticle(article.OId, article.Theme, article.Text)
 	if err != nil {
@@ -122,8 +146,8 @@ func (a ArticleService) Update(userOId, userRole string, article *domain.Article
 	return nil
 }
 
-func (a ArticleService) Delete(userOId, userRole, articleOId string) error {
-	article, err := a.repo.Get(articleOId)
+func (a *ArticleService) Delete(userOId, userRole, articleOId string) error {
+	article, err := a.repo.GetArticle(articleOId)
 	if err != nil {
 		return err
 	}
@@ -132,4 +156,33 @@ func (a ArticleService) Delete(userOId, userRole, articleOId string) error {
 		return err
 	}
 	return a.repo.DeleteArticle(articleOId, article.Tags)
+}
+
+func (a *ArticleService) UpdateReaction(raterOId, articleOId, reaction string) error {
+	if _, err := a.repo.GetArticle(articleOId); err != nil {
+		return err
+	}
+	err := a.repo.IsOwner(articleOId, raterOId)
+	if err == nil {
+		return fmt.Errorf("%w: it is prohibited to give reaction for own article", NotEnoughRightsErr)
+	}
+	if err != NotFoundErr {
+		return err
+	}
+	if err = domain.ArticleReaction(reaction).IsValid(); err != nil {
+		return fmt.Errorf("%w: %w", InvalidDataErr, err)
+	}
+	oldReaction, err := a.repo.GetCurrentReaction(raterOId, articleOId)
+	if err != nil && err != NotFoundErr {
+		return err
+	}
+	if len(oldReaction) > 0 {
+		if err := a.repo.UpdateReaction(raterOId, articleOId, oldReaction, -1); err != nil {
+			return err
+		}
+	}
+	if reaction != string(domain.NoReaction) {
+		return a.repo.UpdateReaction(raterOId, articleOId, reaction, 1)
+	}
+	return nil
 }

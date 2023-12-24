@@ -28,7 +28,6 @@ func TestArticleController_Create(t *testing.T) {
 	}
 	ctxMock := cntlrMocks.NewContext(t)
 	articleModelMock := mdlMocks.NewArticleModel(t)
-	userModelMock := mdlMocks.NewUserModel(t)
 	setup := func(res mockedRes) func() {
 		bindCall := ctxMock.EXPECT().Bind(mock.Anything).Return(res.bindErr).Once()
 		userOId := "user-oid"
@@ -73,21 +72,11 @@ func TestArticleController_Create(t *testing.T) {
 			name: "invalid article data provided",
 			mockedRes: mockedRes{
 				createArticle: artcl,
-				createErr:     mdl.InvalidArticleErr,
+				createErr:     mdl.InvalidDataErr,
 				jsonCode:      http.StatusBadRequest,
-				jsonBody:      cntrs.ErrorBody{Error: mdl.InvalidArticleErr.Error()},
+				jsonBody:      cntrs.ErrorBody{Error: mdl.InvalidDataErr.Error()},
 			},
-			wantErr: mdl.InvalidArticleErr,
-		},
-		{
-			name: "invalid user_oid in token",
-			mockedRes: mockedRes{
-				createArticle: artcl,
-				createErr:     mdl.UnknownUserErr,
-				jsonCode:      http.StatusBadRequest,
-				jsonBody:      cntrs.ErrorBody{Error: mdl.UnknownUserErr.Error()},
-			},
-			wantErr: mdl.UnknownUserErr,
+			wantErr: mdl.InvalidDataErr,
 		},
 		{
 			name: "internal server error",
@@ -111,7 +100,7 @@ func TestArticleController_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := NewArticleController(userModelMock, articleModelMock).Create(ctxMock)
+			err := NewArticleController(articleModelMock).Create(ctxMock)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return

@@ -22,6 +22,8 @@ type Article struct {
 	// status of article
 	// enum: deleted,created,updated
 	Status string `json:"status"`
+	// reactions given by users
+	Reactions domain.ArticleReactions `json:"reactions"`
 }
 
 func NewArticleView(a domain.Article) Article {
@@ -33,5 +35,6 @@ func NewArticleView(a domain.Article) Article {
 		CreatedAt: a.CreatedAt,
 		UpdatedAt: a.UpdatedAt,
 		Status:    a.Status.String(),
+		Reactions: a.Reactions,
 	}
 }

@@ -40,14 +40,6 @@ type authResp200 struct {
 	body domain.Article
 }
 
-// invalid data provided
-// swagger:response createArticleResp400
-// nolint:unused
-type authResp400 struct {
-	// in: body
-	body controllers.ErrorBody
-}
-
 // swagger:route POST /articles articles create_article
 // creates new article
 // ---
@@ -61,7 +53,7 @@ type authResp400 struct {
 //
 //	201: createArticleResp201
 //	401: unauthorizedResp401
-//	400: createArticleResp400
+//	400: invalidData400
 //	500: commonError
 func (a Article) Create(ctx controllers.Context) error {
 	var data ArticleData
@@ -75,7 +67,7 @@ func (a Article) Create(ctx controllers.Context) error {
 		article.Tags = []string{}
 	}
 	err = a.articleModel.Create(ctx.Get("user").(*jwt.Token).Claims.(*auth.JWTClaims).UserOId, &article)
-	if errors.Is(err, models.InvalidArticleErr) || errors.Is(err, models.UnknownUserErr) {
+	if errors.Is(err, models.InvalidDataErr) {
 		e := ctx.JSON(http.StatusBadRequest, controllers.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}

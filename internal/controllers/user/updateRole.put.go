@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"user-management/internal/auth"
-	"user-management/internal/controllers"
+	cntr "user-management/internal/controllers"
 	"user-management/internal/models"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -35,19 +35,7 @@ type updateRoleParams struct {
 // nolint:unused
 type updateUserResp400 struct {
 	// in: body
-	Body controllers.ErrorBody
-}
-
-type updateRes struct {
-	Message string `json:"message"`
-}
-
-// swagger:response updateUserResp200
-// nolint:unused
-type updateUserResp200 struct {
-	// success
-	// in: body
-	Body updateRes
+	Body cntr.ErrorBody
 }
 
 // swagger:route PATCH /users/{user_id}/role users update_user_role
@@ -60,17 +48,17 @@ type updateUserResp200 struct {
 //
 // responses:
 //
-//	200: updateUserResp200
+//	200: respWithMessage
 //	400: updateUserResp400
 //	401: unauthorizedResp401
 //	403: forbiddenResp403
 //	404: userNotFound
 //	500: commonError
-func (u User) UpdateRole(ctx controllers.Context) error {
+func (u User) UpdateRole(ctx cntr.Context) error {
 	var payload updateRolePayload
 	err := ctx.Bind(&payload)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, controllers.ErrorBody{Error: "failed to bind data"})
+		return ctx.JSON(http.StatusBadRequest, cntr.ErrorBody{Error: "failed to bind data"})
 	}
 	err = u.userModel.UpdateRole(
 		ctx.Get("user").(*jwt.Token).Claims.(*auth.JWTClaims).Role,
@@ -78,19 +66,19 @@ func (u User) UpdateRole(ctx controllers.Context) error {
 		payload.Role,
 	)
 	if errors.Is(err, models.InvalidUserDataErr) {
-		e := ctx.JSON(http.StatusBadRequest, controllers.ErrorBody{Error: err.Error()})
+		e := ctx.JSON(http.StatusBadRequest, cntr.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}
 	if errors.Is(err, models.UserNotFoundErr) {
-		e := ctx.JSON(http.StatusNotFound, controllers.ErrorBody{Error: err.Error()})
+		e := ctx.JSON(http.StatusNotFound, cntr.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}
 	if errors.Is(err, models.NotEnoughRightsErr) {
-		e := ctx.JSON(http.StatusForbidden, controllers.ErrorBody{Error: err.Error()})
+		e := ctx.JSON(http.StatusForbidden, cntr.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}
 	if err != nil {
 		return fmt.Errorf("%v: %w", ctx.NoContent(http.StatusInternalServerError), err)
 	}
-	return ctx.JSON(http.StatusOK, updateRes{Message: "successfuly updated role to " + payload.Role})
+	return ctx.JSON(http.StatusOK, cntr.InfoResponse{Message: "successfuly updated role to " + payload.Role})
 }

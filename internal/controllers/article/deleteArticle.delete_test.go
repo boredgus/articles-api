@@ -24,7 +24,6 @@ func TestArticle_Delete(t *testing.T) {
 	}
 	ctxMock := cntlrMocks.NewContext(t)
 	articleModelMock := mdlMocks.NewArticleModel(t)
-	userModelMock := mdlMocks.NewUserModel(t)
 	articleId := "artice-id"
 	setup := func(res mockedRes) func() {
 		userOId := "user-oid"
@@ -62,11 +61,11 @@ func TestArticle_Delete(t *testing.T) {
 		{
 			name: "article with such oid does not exists",
 			mockedRes: mockedRes{
-				deleteErr: models.ArticleNotFoundErr,
+				deleteErr: models.NotFoundErr,
 				jsonCode:  http.StatusNotFound,
 				jsonBody:  mock.Anything,
 			},
-			wantErr: models.ArticleNotFoundErr,
+			wantErr: models.NotFoundErr,
 		},
 		{
 			name: "not enough rights to delete article",
@@ -96,7 +95,7 @@ func TestArticle_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := NewArticleController(userModelMock, articleModelMock).Delete(ctxMock)
+			err := NewArticleController(articleModelMock).Delete(ctxMock)
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return

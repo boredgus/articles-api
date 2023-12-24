@@ -34,6 +34,9 @@ func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 	protected.PUT("/articles/:article_id", func(c echo.Context) error {
 		return app.Article.Update(NewContext(c))
 	})
+	protected.PUT("/articles/:article_id/reaction", func(c echo.Context) error {
+		return app.Article.UpdateReactionForArticle(NewContext(c))
+	})
 	protected.DELETE("/articles/:article_id", func(c echo.Context) error {
 		return app.Article.Delete(NewContext(c))
 	})
@@ -49,6 +52,7 @@ func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 
 func GetRouter(cntrs AppController) *echo.Echo {
 	e := echo.New()
+	e.HideBanner = true
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogURI:    true,
 		LogStatus: true,

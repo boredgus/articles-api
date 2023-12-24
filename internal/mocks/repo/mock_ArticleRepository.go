@@ -164,12 +164,12 @@ func (_c *ArticleRepository_DeleteArticle_Call) RunAndReturn(run func(string, []
 	return _c
 }
 
-// Get provides a mock function with given fields: articleOId
-func (_m *ArticleRepository) Get(articleOId string) (domain.Article, error) {
+// GetArticle provides a mock function with given fields: articleOId
+func (_m *ArticleRepository) GetArticle(articleOId string) (domain.Article, error) {
 	ret := _m.Called(articleOId)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Get")
+		panic("no return value specified for GetArticle")
 	}
 
 	var r0 domain.Article
@@ -192,30 +192,87 @@ func (_m *ArticleRepository) Get(articleOId string) (domain.Article, error) {
 	return r0, r1
 }
 
-// ArticleRepository_Get_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Get'
-type ArticleRepository_Get_Call struct {
+// ArticleRepository_GetArticle_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetArticle'
+type ArticleRepository_GetArticle_Call struct {
 	*mock.Call
 }
 
-// Get is a helper method to define mock.On call
+// GetArticle is a helper method to define mock.On call
 //   - articleOId string
-func (_e *ArticleRepository_Expecter) Get(articleOId interface{}) *ArticleRepository_Get_Call {
-	return &ArticleRepository_Get_Call{Call: _e.mock.On("Get", articleOId)}
+func (_e *ArticleRepository_Expecter) GetArticle(articleOId interface{}) *ArticleRepository_GetArticle_Call {
+	return &ArticleRepository_GetArticle_Call{Call: _e.mock.On("GetArticle", articleOId)}
 }
 
-func (_c *ArticleRepository_Get_Call) Run(run func(articleOId string)) *ArticleRepository_Get_Call {
+func (_c *ArticleRepository_GetArticle_Call) Run(run func(articleOId string)) *ArticleRepository_GetArticle_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(string))
 	})
 	return _c
 }
 
-func (_c *ArticleRepository_Get_Call) Return(_a0 domain.Article, _a1 error) *ArticleRepository_Get_Call {
+func (_c *ArticleRepository_GetArticle_Call) Return(_a0 domain.Article, _a1 error) *ArticleRepository_GetArticle_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *ArticleRepository_Get_Call) RunAndReturn(run func(string) (domain.Article, error)) *ArticleRepository_Get_Call {
+func (_c *ArticleRepository_GetArticle_Call) RunAndReturn(run func(string) (domain.Article, error)) *ArticleRepository_GetArticle_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetCurrentReaction provides a mock function with given fields: raterOId, articleOId
+func (_m *ArticleRepository) GetCurrentReaction(raterOId string, articleOId string) (string, error) {
+	ret := _m.Called(raterOId, articleOId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCurrentReaction")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, string) (string, error)); ok {
+		return rf(raterOId, articleOId)
+	}
+	if rf, ok := ret.Get(0).(func(string, string) string); ok {
+		r0 = rf(raterOId, articleOId)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(raterOId, articleOId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ArticleRepository_GetCurrentReaction_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCurrentReaction'
+type ArticleRepository_GetCurrentReaction_Call struct {
+	*mock.Call
+}
+
+// GetCurrentReaction is a helper method to define mock.On call
+//   - raterOId string
+//   - articleOId string
+func (_e *ArticleRepository_Expecter) GetCurrentReaction(raterOId interface{}, articleOId interface{}) *ArticleRepository_GetCurrentReaction_Call {
+	return &ArticleRepository_GetCurrentReaction_Call{Call: _e.mock.On("GetCurrentReaction", raterOId, articleOId)}
+}
+
+func (_c *ArticleRepository_GetCurrentReaction_Call) Run(run func(raterOId string, articleOId string)) *ArticleRepository_GetCurrentReaction_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *ArticleRepository_GetCurrentReaction_Call) Return(_a0 string, _a1 error) *ArticleRepository_GetCurrentReaction_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ArticleRepository_GetCurrentReaction_Call) RunAndReturn(run func(string, string) (string, error)) *ArticleRepository_GetCurrentReaction_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -276,6 +333,77 @@ func (_c *ArticleRepository_GetForUser_Call) Return(_a0 []domain.Article, _a1 er
 }
 
 func (_c *ArticleRepository_GetForUser_Call) RunAndReturn(run func(string, int, int) ([]domain.Article, error)) *ArticleRepository_GetForUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetReactionsFor provides a mock function with given fields: articleOId
+func (_m *ArticleRepository) GetReactionsFor(articleOId ...string) (repo.ArticleReactions, error) {
+	_va := make([]interface{}, len(articleOId))
+	for _i := range articleOId {
+		_va[_i] = articleOId[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetReactionsFor")
+	}
+
+	var r0 repo.ArticleReactions
+	var r1 error
+	if rf, ok := ret.Get(0).(func(...string) (repo.ArticleReactions, error)); ok {
+		return rf(articleOId...)
+	}
+	if rf, ok := ret.Get(0).(func(...string) repo.ArticleReactions); ok {
+		r0 = rf(articleOId...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(repo.ArticleReactions)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(...string) error); ok {
+		r1 = rf(articleOId...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ArticleRepository_GetReactionsFor_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetReactionsFor'
+type ArticleRepository_GetReactionsFor_Call struct {
+	*mock.Call
+}
+
+// GetReactionsFor is a helper method to define mock.On call
+//   - articleOId ...string
+func (_e *ArticleRepository_Expecter) GetReactionsFor(articleOId ...interface{}) *ArticleRepository_GetReactionsFor_Call {
+	return &ArticleRepository_GetReactionsFor_Call{Call: _e.mock.On("GetReactionsFor",
+		append([]interface{}{}, articleOId...)...)}
+}
+
+func (_c *ArticleRepository_GetReactionsFor_Call) Run(run func(articleOId ...string)) *ArticleRepository_GetReactionsFor_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]string, len(args)-0)
+		for i, a := range args[0:] {
+			if a != nil {
+				variadicArgs[i] = a.(string)
+			}
+		}
+		run(variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *ArticleRepository_GetReactionsFor_Call) Return(_a0 repo.ArticleReactions, _a1 error) *ArticleRepository_GetReactionsFor_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ArticleRepository_GetReactionsFor_Call) RunAndReturn(run func(...string) (repo.ArticleReactions, error)) *ArticleRepository_GetReactionsFor_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -418,6 +546,55 @@ func (_c *ArticleRepository_UpdateArticle_Call) Return(_a0 error) *ArticleReposi
 }
 
 func (_c *ArticleRepository_UpdateArticle_Call) RunAndReturn(run func(string, string, string) error) *ArticleRepository_UpdateArticle_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateReaction provides a mock function with given fields: raterOId, articleOId, reaction, count
+func (_m *ArticleRepository) UpdateReaction(raterOId string, articleOId string, reaction string, count int) error {
+	ret := _m.Called(raterOId, articleOId, reaction, count)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateReaction")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, string, int) error); ok {
+		r0 = rf(raterOId, articleOId, reaction, count)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ArticleRepository_UpdateReaction_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateReaction'
+type ArticleRepository_UpdateReaction_Call struct {
+	*mock.Call
+}
+
+// UpdateReaction is a helper method to define mock.On call
+//   - raterOId string
+//   - articleOId string
+//   - reaction string
+//   - count int
+func (_e *ArticleRepository_Expecter) UpdateReaction(raterOId interface{}, articleOId interface{}, reaction interface{}, count interface{}) *ArticleRepository_UpdateReaction_Call {
+	return &ArticleRepository_UpdateReaction_Call{Call: _e.mock.On("UpdateReaction", raterOId, articleOId, reaction, count)}
+}
+
+func (_c *ArticleRepository_UpdateReaction_Call) Run(run func(raterOId string, articleOId string, reaction string, count int)) *ArticleRepository_UpdateReaction_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string), args[1].(string), args[2].(string), args[3].(int))
+	})
+	return _c
+}
+
+func (_c *ArticleRepository_UpdateReaction_Call) Return(_a0 error) *ArticleRepository_UpdateReaction_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ArticleRepository_UpdateReaction_Call) RunAndReturn(run func(string, string, string, int) error) *ArticleRepository_UpdateReaction_Call {
 	_c.Call.Return(run)
 	return _c
 }

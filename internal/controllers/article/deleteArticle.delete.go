@@ -33,12 +33,12 @@ type deleteArticleParams struct {
 //	200: successResp200
 //	401: unauthorizedResp401
 //	403: forbiddenResp403
-//	404: notFoundResp404
+//	404: articleNotFound404
 //	500: commonError
 func (a Article) Delete(ctx controllers.Context) error {
 	claims := ctx.Get("user").(*jwt.Token).Claims.(*auth.JWTClaims)
 	err := a.articleModel.Delete(claims.UserOId, claims.Role, ctx.PathParam("article_id"))
-	if errors.Is(err, models.ArticleNotFoundErr) {
+	if errors.Is(err, models.NotFoundErr) {
 		e := ctx.JSON(http.StatusNotFound, controllers.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}

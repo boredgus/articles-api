@@ -57,7 +57,7 @@ type updateArticleResp400 struct {
 //	400: updateArticleResp400
 //	401: unauthorizedResp401
 //	403: forbiddenResp403
-//	404: notFoundResp404
+//	404: articleNotFound404
 //	500: commonError
 func (a Article) Update(ctx controllers.Context) error {
 	var data ArticleData
@@ -76,7 +76,7 @@ func (a Article) Update(ctx controllers.Context) error {
 	}
 	claims := ctx.Get("user").(*jwt.Token).Claims.(*auth.JWTClaims)
 	err = a.articleModel.Update(claims.UserOId, claims.Role, &article)
-	if errors.Is(err, models.ArticleNotFoundErr) {
+	if errors.Is(err, models.NotFoundErr) {
 		e := ctx.JSON(http.StatusNotFound, controllers.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}
@@ -84,7 +84,7 @@ func (a Article) Update(ctx controllers.Context) error {
 		e := ctx.JSON(http.StatusForbidden, controllers.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}
-	if errors.Is(err, models.InvalidArticleErr) {
+	if errors.Is(err, models.InvalidDataErr) {
 		e := ctx.JSON(http.StatusBadRequest, controllers.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}

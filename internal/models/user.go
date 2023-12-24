@@ -13,7 +13,6 @@ import (
 type UserModel interface {
 	Create(user domain.User) error
 	Authorize(username, password string) (string, error)
-	Exists(oid, password string) error
 	Delete(issuerRole, userToDeleteOId string) error
 	UpdateRole(issuerRole, userToUpdateOId, roleToSet string) error
 }
@@ -25,7 +24,7 @@ var UsernameDuplicationErr = errors.New("user with such username already exists"
 var UserNotFoundErr = errors.New("user not found")
 
 func NewUserModel(repo repo.UserRepository) UserModel {
-	return user{repo: repo, token: auth.NewJWT(), pswd: auth.NewPassword()}
+	return &user{repo: repo, token: auth.NewJWT(), pswd: auth.NewPassword()}
 }
 
 type user struct {
@@ -34,7 +33,7 @@ type user struct {
 	pswd  auth.Password
 }
 
-func (u user) Create(user domain.User) error {
+func (u *user) Create(user domain.User) error {
 	if err := user.Validate(); err != nil {
 		return fmt.Errorf("%w: %w", InvalidUserDataErr, err)
 	}
@@ -50,7 +49,7 @@ func (u user) Create(user domain.User) error {
 	})
 }
 
-func (u user) Authorize(username, password string) (token string, err error) {
+func (u *user) Authorize(username, password string) (token string, err error) {
 	userFromDB, err := u.repo.Get(username)
 	if err != nil {
 		return "", InvalidAuthParameterErr
@@ -65,18 +64,7 @@ func (u user) Authorize(username, password string) (token string, err error) {
 	})
 }
 
-func (u user) Exists(oid, password string) error {
-	userFromDB, err := u.repo.GetByOId(oid)
-	if err != nil {
-		return err
-	}
-	if !u.pswd.Compare(userFromDB.Password, password) {
-		return InvalidAuthParameterErr
-	}
-	return nil
-}
-
-func (u user) Delete(issuerRole, userToDeleteOId string) error {
+func (u *user) Delete(issuerRole, userToDeleteOId string) error {
 	if issuerRole != string(domain.AdminRole) {
 		return fmt.Errorf("%w: you have to be admin", NotEnoughRightsErr)
 	}
@@ -90,7 +78,7 @@ func (u user) Delete(issuerRole, userToDeleteOId string) error {
 	return u.repo.Delete(userToDeleteOId)
 }
 
-func (u user) UpdateRole(issuerRole, userToUpdateOId, roleToSet string) error {
+func (u *user) UpdateRole(issuerRole, userToUpdateOId, roleToSet string) error {
 	if issuerRole != string(domain.AdminRole) {
 		return fmt.Errorf("%w: you have to be admin", NotEnoughRightsErr)
 	}

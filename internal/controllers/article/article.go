@@ -11,13 +11,13 @@ type ArticleController interface {
 	GetForUser(ctx controllers.Context) error
 	Update(ctx controllers.Context) error
 	Delete(ctx controllers.Context) error
+	UpdateReactionForArticle(ctx controllers.Context) error
 }
 
-func NewArticleController(user models.UserModel, article models.ArticleModel) ArticleController {
-	return Article{userModel: user, articleModel: article}
+func NewArticleController(article models.ArticleModel) ArticleController {
+	return Article{articleModel: article}
 }
 
 type Article struct {
 	articleModel models.ArticleModel
-	userModel    models.UserModel
 }

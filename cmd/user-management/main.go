@@ -2,7 +2,7 @@
 //
 // Spec Documentation for article service.
 //
-// Version: 1.1.0
+// Version: 1.2.0
 //
 // Schemes:
 //   - http
@@ -35,7 +35,8 @@ func init() {
 func main() {
 	router := infrastructure.GetRouter(
 		infrastructure.NewAppController(
-			db.NewMySQLStore(func(db *sql.DB) { migrations.InitMigrations(db, "mysql") }),
+			db.NewMySQLStore(func(db *sql.DB) { migrations.InitMySQLMigrations(db) }),
+			db.NewClickHouseStore(func(db *sql.DB) { migrations.InitClickHouseMigrations(db) }),
 		),
 	)
 	router.Logger.Fatal(router.Start(":8080"))
