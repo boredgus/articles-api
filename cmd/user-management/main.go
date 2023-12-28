@@ -37,6 +37,7 @@ func main() {
 		infrastructure.NewAppController(
 			db.NewMySQLStore(func(db *sql.DB) { migrations.InitMySQLMigrations(db) }),
 			db.NewClickHouseStore(func(db *sql.DB) { migrations.InitClickHouseMigrations(db) }),
+			db.NewRedisStore(),
 		),
 	)
 	router.Logger.Fatal(router.Start(":8080"))

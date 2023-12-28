@@ -47,7 +47,19 @@ services:
       - clickhouse-data:/var/log/clickhouse/
       - clickhouse-logs:/var/log/clickhouse-server/
 
+  cache:
+    container_name: ${REDIS_CONTAINER}
+    image: redis:7.2.3-alpine
+    restart: always
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    command: >
+      --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+
 volumes:
   db:
   clickhouse-data:
   clickhouse-logs:
+  redis-data:

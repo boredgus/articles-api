@@ -12,6 +12,10 @@ packages:
     interfaces:
       Context:
         config:
+  user-management/internal/gateways:
+    interfaces:
+      CacheStore:
+      Serializer:
   user-management/internal/models:
     interfaces:
       UserModel:

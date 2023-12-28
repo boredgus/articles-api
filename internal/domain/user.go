@@ -3,6 +3,7 @@ package domain
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
@@ -75,9 +76,9 @@ func parseError(err error, requirements Requirements) error {
 		return nil
 	}
 
-	msg := ""
+	msgBuilder := strings.Builder{}
 	for _, err := range err.(validator.ValidationErrors) {
-		msg += requirements[err.Field()] + " ; "
+		msgBuilder.WriteString(requirements[err.Field()] + " ; ")
 	}
-	return fmt.Errorf(msg)
+	return fmt.Errorf(msgBuilder.String())
 }
