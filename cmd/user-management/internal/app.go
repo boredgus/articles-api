@@ -12,10 +12,14 @@ type AppController struct {
 	Article article.ArticleController
 }
 
-func NewAppController(mainStore, statsStore gateways.Store) AppController {
+func NewAppController(mainStore, statsStore gateways.Store, cacheStore gateways.CacheStore) AppController {
 	return AppController{
 		User: user.NewUserController(models.NewUserModel(gateways.NewUserRepository(mainStore))),
 		Article: article.NewArticleController(
-			models.NewArticleModel(gateways.NewArticleRepository(mainStore, statsStore))),
+			models.NewArticleModel(
+				gateways.NewCachedArticleRepository(
+					gateways.NewArticleRepository(mainStore, statsStore),
+					cacheStore),
+			)),
 	}
 }

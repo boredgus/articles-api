@@ -1,6 +1,8 @@
 package gateways
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 type Rows interface {
 	Next() bool
@@ -11,4 +13,9 @@ type Rows interface {
 type Store interface {
 	Query(query string, args ...any) (Rows, error)
 	Stats() sql.DBStats
+}
+
+type CacheStore interface {
+	Get(key string, value any) error
+	Set(key string, value any) error
 }

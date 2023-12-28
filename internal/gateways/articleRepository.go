@@ -17,14 +17,15 @@ type ArticleRepository struct {
 	stats Store
 }
 
-func arrayToStr(arr []string) (res string) {
+func arrayToStr(arr []string) string {
+	strBuilder := strings.Builder{}
 	for i, t := range arr {
-		res += "'" + t + "'"
-		if i != len(arr)-1 {
-			res += ","
+		if i > 0 {
+			strBuilder.WriteString(",")
 		}
+		strBuilder.WriteString("'" + t + "'")
 	}
-	return
+	return strBuilder.String()
 }
 
 func (r *ArticleRepository) CreateArticle(userOId string, article repo.ArticleData) error {

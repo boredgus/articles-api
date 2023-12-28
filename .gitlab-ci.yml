@@ -13,6 +13,6 @@ lint-via-tool:
 
 unit-tests:
   stage: test
-  coverage: '/coverage: \d+.\d+% of statements/'
+  coverage: '/\d+.\d+%/'
   script:
     - make tests

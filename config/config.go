@@ -32,6 +32,11 @@ type config struct {
 	ClickhouseUsername  string `env:"CLICKHOUSE_USERNAME"`
 	ClickhousePassword  string `env:"CLICKHOUSE_PASSWORD"`
 	ClickhouseDatabase  string `env:"CLICKHOUSE_DATABASE"`
+
+	RedisPort              string `env:"REDIS_PORT"`
+	RedisContainer         string `env:"REDIS_CONTAINER"`
+	RedisPassword          string `env:"REDIS_PASSWORD"`
+	RedisExpirationMinutes int64  `env:"REDIS_EXPIRATION_MINUTES"`
 }
 
 func LoadEnvFile(envFilePath string) {
