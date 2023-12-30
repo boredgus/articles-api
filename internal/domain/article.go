@@ -5,7 +5,10 @@ import (
 	"strings"
 	"time"
 
+	grpc "user-management/grpc"
+
 	"github.com/go-playground/validator/v10"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/rivo/uniseg"
 	"github.com/sirupsen/logrus"
 )
@@ -28,7 +31,7 @@ func (s ArticleStatus) String() string {
 	return statuses[s]
 }
 
-type ArticleReactions map[string]int
+type ArticleReactions map[string]int32
 
 type ArticleReaction string
 
@@ -64,7 +67,7 @@ var articleRequirements = Requirements{
 	"Tags":  "tag cannot have spaces",
 }
 
-func (a Article) Validate() error {
+func (a *Article) Validate() error {
 	validate := validator.New()
 	err := validate.RegisterValidation("tags", func(fl validator.FieldLevel) bool {
 		for i := 0; i < fl.Field().Len(); i++ {
@@ -78,4 +81,29 @@ func (a Article) Validate() error {
 		logrus.Warnln("failed to register custom tag validation")
 	}
 	return parseError(validate.Struct(a), articleRequirements)
+}
+
+func (a *Article) ToProto() *grpc.Article {
+	var updatedAt *timestamp.Timestamp
+	if a.UpdatedAt != nil {
+		updatedAt = &timestamp.Timestamp{Seconds: a.UpdatedAt.Unix()}
+	}
+	return &grpc.Article{
+		Id:        a.OId,
+		Theme:     a.Theme,
+		Text:      a.Text,
+		Tags:      a.Tags,
+		Reactions: a.Reactions,
+		Status:    grpc.ArticleStatus(a.Status),
+		CreatedAt: &timestamp.Timestamp{Seconds: a.CreatedAt.Unix()},
+		UpdatedAt: updatedAt,
+	}
+}
+
+func FromProtoData(protoDTO *grpc.ArticleData) *Article {
+	return &Article{
+		Theme: protoDTO.Theme,
+		Text:  protoDTO.Text,
+		Tags:  protoDTO.Tags,
+	}
 }
