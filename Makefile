@@ -37,3 +37,10 @@ validate-docs:
 serve-docs:
 	make validate-docs
 	swagger serve --flavor=swagger --port=3033 $(specFile)
+
+# grpc server
+generate-grpc-server:
+	protoc --go_out=grpc --go-grpc_out=grpc grpc/article_api.proto
+
+start-grpc-server:
+	go run cmd/article-server/main.go

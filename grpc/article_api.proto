@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package main;
+option go_package = "./";
+
+import "google/protobuf/timestamp.proto";
+
+service ArticleService {
+  rpc GetArticle(GetArticleRequest) returns (GetArticleReply) {}
+  rpc GetArticles(GetArticlesRequest) returns (GetArticlesReply) {}
+  rpc CreateArticle(CreateArticleRequest) returns (CreateArticleReply) {}
+  rpc UpdateArticle(UpdateArticleRequest) returns (UpdateArticleReply) {}
+  rpc DeleteArticle(DeleteArticleRequest) returns (MessageReply) {}
+  rpc UpdateReaction(UpdateReactionRequest) returns (MessageReply) {}
+}
+
+message MessageReply {
+  string message = 1;
+}
+
+enum ArticleStatus {
+  INITIAL_STATUS = 0;
+  DELETED_STATUS = -1;
+  UPDATED_STATUS = 1;
+}
+
+message Article {
+  string id = 1;
+  string theme = 2;
+  string text = 3;
+  repeated string tags = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  ArticleStatus status = 7;
+  map<string,int32> reactions = 8;
+}
+
+message GetArticleRequest {
+  string article_id = 1;
+}
+message GetArticleReply {
+  Article article = 1;
+}
+
+message PaginationData {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 count = 3;
+}
+message GetArticlesRequest {
+  string username = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+message GetArticlesReply {
+  repeated Article articles = 1;
+  PaginationData pagination = 2;
+}
+
+message ArticleData {
+  string theme = 1;
+  string text = 2;
+  repeated string tags = 3;
+}
+
+message CreateArticleRequest {
+  string user_id = 1;
+  ArticleData article = 2;
+}
+message CreateArticleReply {
+  Article article = 1;
+}
+
+message UpdateArticleRequest {
+  string article_id = 1;
+  ArticleData article = 2;
+  string user_id = 3;
+  string user_role = 4;
+}
+message UpdateArticleReply {
+  Article article = 1;
+}
+
+message DeleteArticleRequest {
+  string article_id = 1;
+  string user_id = 2;
+  string user_role = 3;
+}
+
+message UpdateReactionRequest {
+  string rater_id = 1;
+  string article_id = 2;
+  string reaction = 3;
+}

@@ -166,7 +166,7 @@ func (r *ArticleRepository) GetReactionsFor(articleOIds ...string) (repo.Article
 		if reactions[articleOId] == nil {
 			reactions[articleOId] = domain.ArticleReactions{}
 		}
-		reactions[articleOId][reaction] = count
+		reactions[articleOId][reaction] = int32(count)
 	}
 	rows.Close()
 	return reactions, nil
