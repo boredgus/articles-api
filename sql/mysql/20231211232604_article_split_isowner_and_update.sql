@@ -26,7 +26,7 @@ create procedure if not exists CreateArticle (
     insert into article (o_id, user_id, theme, text)
 		select p_article_oid, u.id, p_theme, p_text
 		from user as u
-		where user.o_id=p_user_oid;
+		where u.o_id=p_user_oid;
 
     select id
     from article
