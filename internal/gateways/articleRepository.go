@@ -184,8 +184,7 @@ func (r *ArticleRepository) GetCurrentReaction(raterOId, articleOId string) (str
 		return "", models.NotFoundErr
 	}
 	var reaction string
-	err = rows.Scan(&reaction)
-	if err != nil {
+	if err = rows.Scan(&reaction); err != nil {
 		return "", err
 	}
 	return reaction, rows.Close()
