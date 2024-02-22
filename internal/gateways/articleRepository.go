@@ -148,7 +148,7 @@ func (r *ArticleRepository) RemoveTagsFromArticle(articleOId string, tags []stri
 }
 
 func (r *ArticleRepository) GetReactionsFor(articleOIds ...string) (repo.ArticleReactions, error) {
-	rows, err := r.stats.Query(`SELECT article_id, reaction, count(reaction) AS count
+	rows, err := r.stats.Query(`SELECT article_id, reaction, sum(votes)
 		FROM article_reaction FINAL
 		WHERE article_id IN (?)
 		GROUP BY article_id,reaction;`, articleOIds)
