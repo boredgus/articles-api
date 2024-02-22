@@ -176,6 +176,9 @@ func (a *ArticleService) UpdateReaction(raterOId, articleOId, reaction string) e
 	if err != nil && err != NotFoundErr {
 		return err
 	}
+	if reaction == oldReaction {
+		return nil
+	}
 	if len(oldReaction) > 0 {
 		if err := a.repo.UpdateReaction(raterOId, articleOId, oldReaction, -1); err != nil {
 			return err
