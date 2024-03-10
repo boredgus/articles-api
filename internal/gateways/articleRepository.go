@@ -173,7 +173,7 @@ func (r *ArticleRepository) GetReactionsFor(articleOIds ...string) (repo.Article
 }
 func (r *ArticleRepository) GetCurrentReaction(raterOId, articleOId string) (string, error) {
 	rows, err := r.stats.Query(`
-		SELECT reaction
+		SELECT reaction, votes
 		FROM article_reaction FINAL
 		WHERE (article_id = ?) AND (rater_id = ?)`, articleOId, raterOId)
 	if err != nil {
@@ -184,7 +184,8 @@ func (r *ArticleRepository) GetCurrentReaction(raterOId, articleOId string) (str
 		return "", models.NotFoundErr
 	}
 	var reaction string
-	if err = rows.Scan(&reaction); err != nil {
+	var n int
+	if err = rows.Scan(&reaction, &n); err != nil {
 		return "", err
 	}
 	return reaction, rows.Close()
