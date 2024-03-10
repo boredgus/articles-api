@@ -35,7 +35,7 @@ func init() {
 func main() {
 	router := infrastructure.GetRouter(
 		infrastructure.NewAppController(
-			db.NewMySQLStore(func(db *sql.DB) { migrations.InitMySQLMigrations(db) }),
+			db.NewPostrgreSQLStore(func(db *sql.DB) { migrations.InitPostgreSQLMigrations(db) }),
 			db.NewClickHouseStore(func(db *sql.DB) { migrations.InitClickHouseMigrations(db) }),
 			db.NewRedisStore(),
 		),

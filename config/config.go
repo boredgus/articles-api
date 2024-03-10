@@ -37,6 +37,11 @@ type config struct {
 	RedisContainer         string `env:"REDIS_CONTAINER"`
 	RedisPassword          string `env:"REDIS_PASSWORD"`
 	RedisExpirationMinutes int64  `env:"REDIS_EXPIRATION_MINUTES"`
+
+	PostgreSQLContainer string `env:"POSTGRESQL_CONTAINER"`
+	PostgreSQLUser      string `env:"POSTGRESQL_USER"`
+	PostgreSQLPassword  string `env:"POSTGRESQL_PASSWORD"`
+	PostgreSQLDatabase  string `env:"POSTGRESQL_DB"`
 }
 
 func LoadEnvFile(envFilePath string) {

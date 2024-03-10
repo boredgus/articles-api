@@ -2,6 +2,7 @@ package gateways
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 	"user-management/internal/domain"
 	"user-management/internal/models"
@@ -17,19 +18,23 @@ type ArticleRepository struct {
 	stats Store
 }
 
-func arrayToStr(arr []string) string {
+func arrayToStr(arr []string, isDouble bool) string {
 	strBuilder := strings.Builder{}
 	for i, t := range arr {
 		if i > 0 {
 			strBuilder.WriteString(",")
 		}
-		strBuilder.WriteString("'" + t + "'")
+		if isDouble {
+			strBuilder.WriteString("''" + t + "''")
+		} else {
+			strBuilder.WriteString("'" + t + "'")
+		}
 	}
 	return strBuilder.String()
 }
 
 func (r *ArticleRepository) CreateArticle(userOId string, article repo.ArticleData) error {
-	rows, err := r.main.Query("call CreateArticle(?,?,?,?);", userOId, article.OId, article.Theme, article.Text)
+	rows, err := r.main.Query("call articlesdb.CreateArticle($1,$2,$3,$4);", userOId, article.OId, article.Theme, article.Text)
 	if err != nil {
 		return err
 	}
@@ -40,7 +45,7 @@ func (r *ArticleRepository) CreateArticle(userOId string, article repo.ArticleDa
 	return nil
 }
 func (r *ArticleRepository) DeleteArticle(oid string, tags []string) error {
-	rows, err := r.main.Query("call DeleteArticle(?);", oid)
+	rows, err := r.main.Query("call articlesdb.DeleteArticle($1);", oid)
 	if err != nil {
 		return err
 	}
@@ -70,7 +75,7 @@ func (r *ArticleRepository) scan(rows Rows) (domain.Article, error) {
 }
 
 func (r *ArticleRepository) GetArticle(articleOId string) (a domain.Article, err error) {
-	rows, err := r.main.Query(`call GetArticle(?);`, articleOId)
+	rows, err := r.main.Query(`select * from articlesdb.GetArticle($1);`, articleOId)
 	if err != nil {
 		return
 	}
@@ -87,7 +92,7 @@ func (r *ArticleRepository) GetArticle(articleOId string) (a domain.Article, err
 }
 
 func (r *ArticleRepository) GetForUser(username string, page, limit int) ([]domain.Article, error) {
-	rows, err := r.main.Query(`call GetArticlesForUser(?,?,?);`, username, page*limit, limit)
+	rows, err := r.main.Query(`select * from articlesdb.GetArticlesForUser($1,$2,$3);`, username, page*limit, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -104,18 +109,18 @@ func (r *ArticleRepository) GetForUser(username string, page, limit int) ([]doma
 }
 
 func (r *ArticleRepository) IsOwner(articleOId, userOId string) error {
-	rows, err := r.main.Query(`call IsOwnerOfArticle(?,?);`, articleOId, userOId)
+	rows, err := r.main.Query(`select * from articlesdb.IsOwnerOfArticle($1,$2);`, articleOId, userOId)
 	if err != nil {
 		return err
 	}
-	rows.Close()
 	if !rows.Next() {
 		return models.NotFoundErr
 	}
+	rows.Close()
 	return nil
 }
 func (r *ArticleRepository) UpdateArticle(oid, theme, text string) error {
-	rows, err := r.main.Query("call UpdateArticle(?,?,?);", oid, theme, text)
+	rows, err := r.main.Query("call articlesdb.UpdateArticle($1,$2,$3);", oid, theme, text)
 	if err != nil {
 		return err
 	}
@@ -123,23 +128,19 @@ func (r *ArticleRepository) UpdateArticle(oid, theme, text string) error {
 	return nil
 }
 func (r *ArticleRepository) AddTagsForArticle(articleOId string, tags []string) error {
-	var query string
-	args := make([]any, 0, len(tags)+2)
+	var builder strings.Builder
 	for _, t := range tags {
-		query += "call CreateTag(?);\n"
-		args = append(args, t)
+		builder.WriteString(fmt.Sprintf("call articlesdb.CreateTag('%v');\n", t))
 	}
-	query += "call AddTagsToArticle(?,?);\n"
-	args = append(args, articleOId, arrayToStr(tags))
-	rows, err := r.main.Query(query, args...)
+	builder.WriteString(fmt.Sprintf("call articlesdb.AddTagsToArticle('%v','%v');\n", articleOId, arrayToStr(tags, true)))
+	rows, err := r.main.Query(builder.String())
 	if err != nil {
 		return err
 	}
-	rows.Close()
-	return nil
+	return rows.Close()
 }
 func (r *ArticleRepository) RemoveTagsFromArticle(articleOId string, tags []string) error {
-	rows, err := r.main.Query("call RemoveTagsForArticle(?,?);", articleOId, arrayToStr(tags))
+	rows, err := r.main.Query("call articlesdb.RemoveTagsForArticle($1,$2);", articleOId, arrayToStr(tags, false))
 	if err != nil {
 		return err
 	}
@@ -162,6 +163,9 @@ func (r *ArticleRepository) GetReactionsFor(articleOIds ...string) (repo.Article
 		err := rows.Scan(&articleOId, &reaction, &count)
 		if err != nil {
 			return nil, err
+		}
+		if count == 0 {
+			continue
 		}
 		if reactions[articleOId] == nil {
 			reactions[articleOId] = domain.ArticleReactions{}

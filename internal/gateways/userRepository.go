@@ -1,10 +1,10 @@
 package gateways
 
 import (
-	"strings"
 	"user-management/internal/domain"
 	"user-management/internal/models"
 	"user-management/internal/models/repo"
+	e "user-management/pkg/db/errors"
 )
 
 func NewUserRepository(store Store) repo.UserRepository {
@@ -16,18 +16,20 @@ type UserRepository struct {
 }
 
 func (r *UserRepository) Create(user repo.User) error {
-	rows, err := r.store.Query(`call CreateUser(?,?,?,?);`,
+	rows, err := r.store.Query(`call articlesdb.CreateUser($1,$2,$3,$4);`,
 		user.OId, user.Username, user.Password, user.Role)
-	if err != nil && strings.Contains(err.Error(), "Error 1062") {
+	if e.IsPqErrorCode(err, e.UniqueViolationError) {
 		return models.UsernameDuplicationErr
 	}
-	rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	return rows.Close()
 }
 
 func (r *UserRepository) Get(username string) (repo.User, error) {
 	var user repo.User
-	rows, err := r.store.Query(`call GetUserByUsername(?);`, username)
+	rows, err := r.store.Query(`select * from articlesdb.GetUserByUsername($1);`, username)
 	if err != nil {
 		return user, err
 	}
@@ -45,7 +47,7 @@ func (r *UserRepository) Get(username string) (repo.User, error) {
 
 func (r *UserRepository) GetByOId(oid string) (repo.User, error) {
 	var user repo.User
-	rows, err := r.store.Query(`call GetUserByOId(?);`, oid)
+	rows, err := r.store.Query(`select * from articlesdb.GetUserByOId($1);`, oid)
 	if err != nil {
 		return user, err
 	}
@@ -62,7 +64,7 @@ func (r *UserRepository) GetByOId(oid string) (repo.User, error) {
 }
 
 func (r *UserRepository) Delete(oid string) error {
-	rows, err := r.store.Query("call DeleteUser(?);", oid)
+	rows, err := r.store.Query("call DeleteUser($1);", oid)
 	if err != nil {
 		return err
 	}
@@ -71,7 +73,7 @@ func (r *UserRepository) Delete(oid string) error {
 }
 
 func (r *UserRepository) UpdateRole(oid string, role domain.UserRole) error {
-	rows, err := r.store.Query("call UpdateUserRole(?,?);", oid, role)
+	rows, err := r.store.Query("call UpdateUserRole($1,$2);", oid, role)
 	if err != nil {
 		return err
 	}
