@@ -36,6 +36,3 @@ jobs:
     
     - name: Deploy
       run: echo "deploying..."
-    
-    - name: Use data from previous step
-      run: echo "${{ steps.tests_job.outputs.result_string }}"
