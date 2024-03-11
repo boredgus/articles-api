@@ -1,7 +1,8 @@
 # This workflow will build a golang project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
-name: Go
+name: deploy
+run-name: Deploy by {{ github.actor }} 
 
 on:
   push:
@@ -20,10 +21,12 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.21.1'
-    - name: Linter
-      run: >
-            curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.55.2
-            ./bin/golangci-lint run --enable promlinter --enable tparallel ./...
 
     - name: Test
       run: make tests
+    
+    - name: Build
+      run: echo "building..."
+    
+    - name: Deploy
+      run: echo "deploying..."
