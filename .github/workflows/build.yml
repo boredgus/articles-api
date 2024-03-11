@@ -22,12 +22,12 @@ jobs:
     - name: Linter golangci-lint
       uses: golangci/golangci-lint-action@v4
       with:
-          version: v1.54
+        version: v1.54
 
     - name: Test
       id: tests_job
       run: |
-        echo "custom message before testing" >> $GITHUB_OUTPUT
+        echo "custom message before testing\n" >> $GITHUB_OUTPUT
         make tests
     
     - name: Build
