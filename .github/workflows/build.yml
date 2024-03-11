@@ -27,7 +27,7 @@ jobs:
     - name: Test
       id: tests_job
       run: |
-        echo "custom message before testing\n" >> $GITHUB_OUTPUT
+        echo result_string="custom message before testing\n" >> $GITHUB_OUTPUT
         make tests
     
     - name: Build
@@ -37,4 +37,4 @@ jobs:
       run: echo "deploying..."
     
     - name: Use data from previous step
-      run: echo "${{ join(steps.tests_job.outputs,'\n') }}"
+      run: echo "${{ steps.tests_job.outputs.result_string }}"
