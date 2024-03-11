@@ -27,7 +27,7 @@ jobs:
     - name: Test
       id: tests_job
       run: |
-        echo "custom message before testing"
+        echo "custom message before testing" >> $GITHUB_OUTPUT
         make tests
     
     - name: Build
