@@ -26,7 +26,7 @@ jobs:
 
     - name: Test
       id: tests_job
-      run: >
+      run: |
         echo "custom message before testing"
         make tests
     
