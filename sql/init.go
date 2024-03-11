@@ -46,3 +46,5 @@ func InitPostgreSQLMigrations(db *sql.DB) {
 	goose.SetTableName("public.goose_db_version")
 	initMigrations(string(goose.DialectPostgres), db)
 }
+
+type UnusedTypeToBeDeleted struct{}
