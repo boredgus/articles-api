@@ -1,0 +1,40 @@
+name: build
+run-name: Build by ${{ github.actor }} 
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21.1'
+
+    - name: Linter golangci-lint
+      uses: golangci/golangci-lint-action@v4
+      with:
+          version: v1.54
+
+    - name: Test
+      id: tests_job
+      run: >
+        echo "custom message before testing"
+        make tests
+    
+    - name: Build
+      run: echo "building..."
+    
+    - name: Deploy
+      run: echo "deploying..."
+    
+    - name: Use data from previous step
+      run: echo "${{ join(steps.tests_job.outputs,'\n') }}"
