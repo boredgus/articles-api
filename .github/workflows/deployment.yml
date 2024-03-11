@@ -2,7 +2,7 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
 name: deploy
-run-name: Deploy by {{ github.actor }} 
+run-name: Deploy by ${{ github.actor }} 
 
 on:
   push:
