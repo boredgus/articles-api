@@ -2,7 +2,9 @@ package internal
 
 import (
 	"net/http"
+	"strings"
 
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
@@ -50,6 +52,8 @@ func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 	return e
 }
 
+const MetricsPath = "/metrics"
+
 func GetRouter(cntrs AppController) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
@@ -58,6 +62,9 @@ func GetRouter(cntrs AppController) *echo.Echo {
 		LogStatus: true,
 		LogMethod: true,
 		LogError:  true,
+		Skipper: func(c echo.Context) bool {
+			return strings.HasPrefix(c.Path(), MetricsPath)
+		},
 		LogValuesFunc: func(c echo.Context, values middleware.RequestLoggerValues) error {
 			logrus.WithFields(logrus.Fields{
 				"method": values.Method,
@@ -71,6 +78,11 @@ func GetRouter(cntrs AppController) *echo.Echo {
 	}))
 
 	e.Use(middleware.CORS())
+
+	e.Use(echoprometheus.NewMiddlewareWithConfig(echoprometheus.MiddlewareConfig{
+		Subsystem: "articles_service",
+	}))
+	e.GET(MetricsPath, echoprometheus.NewHandler())
 
 	registerRoutes(e, cntrs)
 
