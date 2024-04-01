@@ -1,8 +1,8 @@
 package auth
 
 import (
+	"a-article/internal/domain"
 	"testing"
-	"user-management/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -1,12 +1,12 @@
 package server
 
 import (
+	pb "a-article/grpc"
+	"a-article/internal/domain"
+	"a-article/internal/models"
 	"context"
 	"errors"
 	"fmt"
-	pb "user-management/grpc"
-	"user-management/internal/domain"
-	"user-management/internal/models"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

@@ -1,9 +1,9 @@
 package repo
 
 import (
+	"a-article/internal/domain"
 	"slices"
 	"time"
-	"user-management/internal/domain"
 )
 
 type ArticleData struct {

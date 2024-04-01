@@ -1,14 +1,14 @@
 package article
 
 import (
+	"a-article/internal/auth"
+	"a-article/internal/controllers"
+	"a-article/internal/domain"
+	"a-article/internal/models"
+	"a-article/internal/views"
 	"errors"
 	"fmt"
 	"net/http"
-	"user-management/internal/auth"
-	"user-management/internal/controllers"
-	"user-management/internal/domain"
-	"user-management/internal/models"
-	"user-management/internal/views"
 
 	"github.com/golang-jwt/jwt/v5"
 )

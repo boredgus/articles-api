@@ -1,9 +1,9 @@
 package internal
 
 import (
+	"a-article/internal/controllers"
 	"net/http"
 	"net/url"
-	"user-management/internal/controllers"
 
 	"github.com/labstack/echo/v4"
 )

@@ -1,12 +1,12 @@
 package user
 
 import (
+	"a-article/internal/auth"
+	"a-article/internal/controllers"
+	"a-article/internal/models"
 	"errors"
 	"fmt"
 	"net/http"
-	"user-management/internal/auth"
-	"user-management/internal/controllers"
-	"user-management/internal/models"
 
 	"github.com/golang-jwt/jwt/v5"
 )

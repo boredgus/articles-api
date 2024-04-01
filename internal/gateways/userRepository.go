@@ -1,10 +1,10 @@
 package gateways
 
 import (
-	"user-management/internal/domain"
-	"user-management/internal/models"
-	"user-management/internal/models/repo"
-	e "user-management/pkg/db/errors"
+	"a-article/internal/domain"
+	"a-article/internal/models"
+	"a-article/internal/models/repo"
+	e "a-article/pkg/db/errors"
 )
 
 func NewUserRepository(store Store) repo.UserRepository {

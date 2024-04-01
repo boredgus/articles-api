@@ -1,11 +1,11 @@
 package models
 
 import (
+	"a-article/internal/auth"
+	"a-article/internal/domain"
+	"a-article/internal/models/repo"
 	"errors"
 	"fmt"
-	"user-management/internal/auth"
-	"user-management/internal/domain"
-	"user-management/internal/models/repo"
 
 	"github.com/google/uuid"
 )

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net"
 
-	"user-management/config"
-	pb "user-management/grpc"
-	server "user-management/grpc/server"
-	"user-management/internal/gateways"
-	"user-management/internal/models"
-	"user-management/pkg/db"
+	"a-article/config"
+	pb "a-article/grpc"
+	server "a-article/grpc/server"
+	"a-article/internal/gateways"
+	"a-article/internal/models"
+	"a-article/pkg/db"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"

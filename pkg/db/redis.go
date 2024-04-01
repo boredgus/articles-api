@@ -1,12 +1,12 @@
 package db
 
 import (
+	"a-article/config"
+	"a-article/internal/gateways"
 	"context"
 	"fmt"
 	"sync"
 	"time"
-	"user-management/config"
-	"user-management/internal/gateways"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"

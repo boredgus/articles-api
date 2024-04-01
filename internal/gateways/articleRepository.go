@@ -1,12 +1,12 @@
 package gateways
 
 import (
+	"a-article/internal/domain"
+	"a-article/internal/models"
+	"a-article/internal/models/repo"
 	"database/sql"
 	"fmt"
 	"strings"
-	"user-management/internal/domain"
-	"user-management/internal/models"
-	"user-management/internal/models/repo"
 )
 
 func NewArticleRepository(mainStore, statsStore Store) repo.ArticleRepository {

@@ -1,8 +1,8 @@
 package article
 
 import (
-	"user-management/internal/controllers"
-	"user-management/internal/models"
+	"a-article/internal/controllers"
+	"a-article/internal/models"
 )
 
 type ArticleController interface {

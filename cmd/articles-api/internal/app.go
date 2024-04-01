@@ -1,10 +1,10 @@
 package internal
 
 import (
-	"user-management/internal/controllers/article"
-	user "user-management/internal/controllers/user"
-	"user-management/internal/gateways"
-	"user-management/internal/models"
+	"a-article/internal/controllers/article"
+	user "a-article/internal/controllers/user"
+	"a-article/internal/gateways"
+	"a-article/internal/models"
 )
 
 type AppController struct {

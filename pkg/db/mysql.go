@@ -1,11 +1,11 @@
 package db
 
 import (
+	"a-article/config"
+	"a-article/internal/gateways"
 	"database/sql"
 	"sync"
 	"time"
-	"user-management/config"
-	"user-management/internal/gateways"
 
 	mysql "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"

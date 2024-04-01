@@ -1,17 +1,17 @@
 package article
 
 import (
+	"a-article/internal/controllers"
+	"a-article/internal/domain"
+	cntlrMocks "a-article/internal/mocks/controllers"
+	mdlMocks "a-article/internal/mocks/models"
+	"a-article/internal/models"
+	"a-article/internal/tools"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
-	"user-management/internal/controllers"
-	"user-management/internal/domain"
-	cntlrMocks "user-management/internal/mocks/controllers"
-	mdlMocks "user-management/internal/mocks/models"
-	"user-management/internal/models"
-	"user-management/internal/tools"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

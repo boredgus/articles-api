@@ -1,12 +1,12 @@
 package user
 
 import (
+	cntrl "a-article/internal/controllers"
+	"a-article/internal/domain"
+	"a-article/internal/models"
 	"errors"
 	"fmt"
 	"net/http"
-	cntrl "user-management/internal/controllers"
-	"user-management/internal/domain"
-	"user-management/internal/models"
 )
 
 // swagger:parameters registration

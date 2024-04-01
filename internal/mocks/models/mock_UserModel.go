@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	domain "user-management/internal/domain"
+	domain "a-article/internal/domain"
 
 	mock "github.com/stretchr/testify/mock"
 )

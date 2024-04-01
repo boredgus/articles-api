@@ -1,14 +1,14 @@
 package models
 
 import (
+	"a-article/internal/auth"
+	"a-article/internal/domain"
+	authMocks "a-article/internal/mocks/auth"
+	repoMocks "a-article/internal/mocks/repo"
+	"a-article/internal/models/repo"
 	"errors"
 	"fmt"
 	"testing"
-	"user-management/internal/auth"
-	"user-management/internal/domain"
-	authMocks "user-management/internal/mocks/auth"
-	repoMocks "user-management/internal/mocks/repo"
-	"user-management/internal/models/repo"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

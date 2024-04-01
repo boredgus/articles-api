@@ -1,11 +1,11 @@
 package models
 
 import (
+	"a-article/internal/domain"
+	repoMocks "a-article/internal/mocks/repo"
+	"a-article/internal/models/repo"
 	"errors"
 	"testing"
-	"user-management/internal/domain"
-	repoMocks "user-management/internal/mocks/repo"
-	"user-management/internal/models/repo"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

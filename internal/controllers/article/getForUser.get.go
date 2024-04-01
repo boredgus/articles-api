@@ -1,12 +1,12 @@
 package article
 
 import (
+	"a-article/internal/controllers"
+	"a-article/internal/models"
+	"a-article/internal/tools"
+	"a-article/internal/views"
 	"fmt"
 	"net/http"
-	"user-management/internal/controllers"
-	"user-management/internal/models"
-	"user-management/internal/tools"
-	"user-management/internal/views"
 )
 
 // swagger:model

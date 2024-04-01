@@ -1,10 +1,10 @@
 package auth
 
 import (
+	"a-article/config"
 	"errors"
 	"fmt"
 	"time"
-	"user-management/config"
 
 	"github.com/golang-jwt/jwt/v5"
 )

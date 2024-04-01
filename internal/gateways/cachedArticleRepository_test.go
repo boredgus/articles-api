@@ -1,11 +1,11 @@
 package gateways
 
 import (
+	"a-article/internal/domain"
+	gtwMocks "a-article/internal/mocks/gateways"
+	repoMocks "a-article/internal/mocks/repo"
 	"fmt"
 	"testing"
-	"user-management/internal/domain"
-	gtwMocks "user-management/internal/mocks/gateways"
-	repoMocks "user-management/internal/mocks/repo"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

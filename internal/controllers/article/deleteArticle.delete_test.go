@@ -1,13 +1,13 @@
 package article
 
 import (
+	"a-article/internal/auth"
+	cntlrMocks "a-article/internal/mocks/controllers"
+	mdlMocks "a-article/internal/mocks/models"
+	"a-article/internal/models"
 	"errors"
 	"net/http"
 	"testing"
-	"user-management/internal/auth"
-	cntlrMocks "user-management/internal/mocks/controllers"
-	mdlMocks "user-management/internal/mocks/models"
-	"user-management/internal/models"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"

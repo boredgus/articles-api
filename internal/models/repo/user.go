@@ -1,6 +1,6 @@
 package repo
 
-import "user-management/internal/domain"
+import "a-article/internal/domain"
 
 type User struct {
 	OId      string          `sql:"o_id"`

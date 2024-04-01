@@ -1,11 +1,11 @@
 package auth
 
 import (
+	"a-article/internal/domain"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"strings"
-	"user-management/internal/domain"
 )
 
 type Token[T any] interface {

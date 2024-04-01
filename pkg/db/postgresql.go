@@ -1,11 +1,11 @@
 package db
 
 import (
+	"a-article/config"
+	"a-article/internal/gateways"
 	"database/sql"
 	"fmt"
 	"sync"
-	"user-management/config"
-	"user-management/internal/gateways"
 
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"

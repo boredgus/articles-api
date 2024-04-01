@@ -1,13 +1,13 @@
 package server
 
 import (
+	pb "a-article/grpc"
+	"a-article/internal/domain"
+	mdlMocks "a-article/internal/mocks/models"
+	"a-article/internal/models"
 	"context"
 	"fmt"
 	"testing"
-	pb "user-management/grpc"
-	"user-management/internal/domain"
-	mdlMocks "user-management/internal/mocks/models"
-	"user-management/internal/models"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"

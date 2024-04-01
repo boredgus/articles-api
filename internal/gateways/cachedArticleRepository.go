@@ -1,9 +1,9 @@
 package gateways
 
 import (
+	"a-article/internal/domain"
+	"a-article/internal/models/repo"
 	"fmt"
-	"user-management/internal/domain"
-	"user-management/internal/models/repo"
 
 	"github.com/sirupsen/logrus"
 )

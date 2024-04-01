@@ -1,11 +1,11 @@
 package db
 
 import (
+	"a-article/config"
+	"a-article/internal/gateways"
 	"database/sql"
 	"fmt"
 	"sync"
-	"user-management/config"
-	"user-management/internal/gateways"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/sirupsen/logrus"

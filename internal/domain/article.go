@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	grpc "user-management/grpc"
+	grpc "a-article/grpc"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/golang/protobuf/ptypes/timestamp"

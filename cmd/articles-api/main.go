@@ -20,11 +20,11 @@
 package main
 
 import (
+	infrastructure "a-article/cmd/articles-api/internal"
+	"a-article/config"
+	"a-article/pkg/db"
+	migrations "a-article/sql"
 	"database/sql"
-	infrastructure "user-management/cmd/user-management/internal"
-	"user-management/config"
-	"user-management/pkg/db"
-	migrations "user-management/sql"
 )
 
 func init() {

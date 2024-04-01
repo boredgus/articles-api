@@ -43,4 +43,4 @@ generate-grpc-server:
 	protoc --go_out=grpc --go-grpc_out=grpc grpc/article_api.proto
 
 start-grpc-server:
-	go run cmd/article-server/main.go
+	go run cmd/grpc-articles-server/main.go

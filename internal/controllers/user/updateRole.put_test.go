@@ -1,15 +1,15 @@
 package user
 
 import (
+	"a-article/internal/auth"
+	"a-article/internal/controllers"
+	"a-article/internal/models"
 	"fmt"
 	"net/http"
 	"testing"
-	"user-management/internal/auth"
-	"user-management/internal/controllers"
-	"user-management/internal/models"
 
-	cntrlMocks "user-management/internal/mocks/controllers"
-	mdlMocks "user-management/internal/mocks/models"
+	cntrlMocks "a-article/internal/mocks/controllers"
+	mdlMocks "a-article/internal/mocks/models"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"

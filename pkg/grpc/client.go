@@ -1,7 +1,7 @@
 package grpc
 
 import (
-	pb "user-management/grpc"
+	pb "a-article/grpc"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"

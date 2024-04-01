@@ -1,9 +1,9 @@
 package internal
 
 import (
+	"a-article/internal/auth"
+	"a-article/internal/controllers"
 	"net/http"
-	"user-management/internal/auth"
-	"user-management/internal/controllers"
 
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"

@@ -1,10 +1,10 @@
 package auth
 
 import (
+	mocks "a-article/internal/mocks/utils"
 	"strings"
 	"testing"
 	"time"
-	mocks "user-management/internal/mocks/utils"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"

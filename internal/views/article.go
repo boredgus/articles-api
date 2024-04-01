@@ -1,8 +1,8 @@
 package views
 
 import (
+	"a-article/internal/domain"
 	"time"
-	"user-management/internal/domain"
 )
 
 // swagger:model

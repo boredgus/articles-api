@@ -1,4 +1,4 @@
-module user-management
+module a-article
 
 go 1.21.1
 
