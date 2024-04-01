@@ -3,24 +3,24 @@ outpkg: mocks
 dir: "internal/mocks/{{.PackageName}}"
 mockname: "{{.InterfaceName}}"
 packages:
-  user-management/internal/auth:
+  a-article/internal/auth:
     interfaces:
       Token:
       Password:
-  user-management/internal/controllers:
+  a-article/internal/controllers:
     config:
     interfaces:
       Context:
         config:
-  user-management/internal/gateways:
+  a-article/internal/gateways:
     interfaces:
       CacheStore:
       Serializer:
-  user-management/internal/models:
+  a-article/internal/models:
     interfaces:
       UserModel:
       ArticleModel:
-  user-management/internal/models/repo:
+  a-article/internal/models/repo:
     interfaces:
       UserRepository:
       ArticleRepository:
