@@ -9,7 +9,7 @@
   "info": {
     "description": "Spec Documentation for article service.",
     "title": "Articles API",
-    "version": "1.2.0"
+    "version": "1.2.1"
   },
   "host": "localhost:8080",
   "basePath": "/",
@@ -287,7 +287,7 @@
       "post": {
         "description": "Checks whether user with such username exists and compares his password with given one.",
         "tags": [
-          "login"
+          "auth"
         ],
         "summary": "authorizes user",
         "operationId": "authorization",
@@ -315,13 +315,61 @@
         }
       }
     },
+    "/confirm_signup": {
+      "post": {
+        "description": "Compares given passcode with one sent to email and creates new user.",
+        "tags": [
+          "auth"
+        ],
+        "summary": "completes signup",
+        "operationId": "confirm_signup",
+        "parameters": [
+          {
+            "x-go-name": "Body",
+            "name": "params",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "passcode": {
+                  "type": "string",
+                  "x-go-name": "Passcode"
+                },
+                "username": {
+                  "type": "string",
+                  "x-go-name": "Username"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "$ref": "#/responses/successResp200"
+          },
+          "400": {
+            "$ref": "#/responses/confirmSignupResp400"
+          },
+          "404": {
+            "$ref": "#/responses/userNotFound"
+          },
+          "409": {
+            "$ref": "#/responses/registerResp409"
+          },
+          "500": {
+            "$ref": "#/responses/commonError"
+          }
+        }
+      }
+    },
     "/register": {
       "post": {
-        "description": "Checks whether user with provided username exists and validates provided password",
+        "description": "Checks whether user with provided username exists, validates provided password, and sends email with generated passcode to provided email.",
         "tags": [
-          "login"
+          "auth"
         ],
-        "summary": "creates new user",
+        "summary": "starts signup of new user",
         "operationId": "registration",
         "parameters": [
           {
@@ -335,8 +383,11 @@
           }
         ],
         "responses": {
-          "201": {
-            "$ref": "#/responses/registerResp201"
+          "200": {
+            "$ref": "#/responses/registerResp200"
+          },
+          "400": {
+            "$ref": "#/responses/registerResp400"
           },
           "409": {
             "$ref": "#/responses/registerResp409"
@@ -497,7 +548,7 @@
           "x-go-name": "UpdatedAt"
         }
       },
-      "x-go-package": "user-management/internal/views"
+      "x-go-package": "a-article/internal/views"
     },
     "ArticleData": {
       "type": "object",
@@ -524,15 +575,15 @@
           "x-go-name": "Theme"
         }
       },
-      "x-go-package": "user-management/internal/controllers/article"
+      "x-go-package": "a-article/internal/controllers/article"
     },
     "ArticleReactions": {
       "type": "object",
       "additionalProperties": {
         "type": "integer",
-        "format": "int64"
+        "format": "int32"
       },
-      "x-go-package": "user-management/internal/domain"
+      "x-go-package": "a-article/internal/domain"
     },
     "ErrorBody": {
       "description": "error entity",
@@ -547,7 +598,7 @@
           "x-go-name": "Error"
         }
       },
-      "x-go-package": "user-management/internal/controllers"
+      "x-go-package": "a-article/internal/controllers"
     },
     "InfoResponse": {
       "type": "object",
@@ -557,7 +608,7 @@
           "x-go-name": "Message"
         }
       },
-      "x-go-package": "user-management/internal/controllers"
+      "x-go-package": "a-article/internal/controllers"
     },
     "PaginationData": {
       "type": "object",
@@ -578,7 +629,7 @@
           "x-go-name": "Page"
         }
       },
-      "x-go-package": "user-management/internal/models"
+      "x-go-package": "a-article/internal/models"
     },
     "User": {
       "description": "user credentials",
@@ -595,13 +646,13 @@
           "example": "qweQWE123."
         },
         "username": {
-          "description": "unique username",
+          "description": "unique username in email format",
           "type": "string",
           "x-go-name": "Username",
           "example": "username"
         }
       },
-      "x-go-package": "user-management/internal/domain"
+      "x-go-package": "a-article/internal/domain"
     },
     "articles": {
       "type": "object",
@@ -617,7 +668,7 @@
           "$ref": "#/definitions/PaginationData"
         }
       },
-      "x-go-package": "user-management/internal/controllers/article"
+      "x-go-package": "a-article/internal/controllers/article"
     },
     "authResult": {
       "description": "access token and user id",
@@ -632,7 +683,7 @@
           "x-go-name": "Token"
         }
       },
-      "x-go-package": "user-management/internal/controllers/user"
+      "x-go-package": "a-article/internal/controllers/user"
     },
     "reactionPayload": {
       "type": "object",
@@ -644,7 +695,7 @@
           "example": "😂"
         }
       },
-      "x-go-package": "user-management/internal/controllers/article"
+      "x-go-package": "a-article/internal/controllers/article"
     },
     "updateRolePayload": {
       "type": "object",
@@ -662,7 +713,7 @@
           "x-go-name": "Role"
         }
       },
-      "x-go-package": "user-management/internal/controllers/user"
+      "x-go-package": "a-article/internal/controllers/user"
     }
   },
   "responses": {
@@ -699,6 +750,12 @@
     "commonError": {
       "description": "internal server error"
     },
+    "confirmSignupResp400": {
+      "description": "passcode is not correct or is expired",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
+    },
     "createArticleResp201": {
       "description": "successfully created",
       "schema": {
@@ -723,8 +780,14 @@
         "$ref": "#/definitions/ErrorBody"
       }
     },
-    "registerResp201": {
-      "description": "user created"
+    "registerResp200": {
+      "description": "passcode was sent to provided email to configm signup"
+    },
+    "registerResp400": {
+      "description": "invalid values for credentials are provided",
+      "schema": {
+        "$ref": "#/definitions/ErrorBody"
+      }
     },
     "registerResp409": {
       "description": "user with such username already exists",
@@ -766,7 +829,7 @@
       }
     },
     "userNotFound": {
-      "description": "user with such id not found",
+      "description": "user with such id or username not found",
       "schema": {
         "$ref": "#/definitions/ErrorBody"
       }

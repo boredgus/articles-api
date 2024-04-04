@@ -21,20 +21,27 @@ type confirmSignupParams struct {
 	} `json:"params"`
 }
 
-// swagger:route POST /confirm_signup users confirm_signup
-// completes signup with passcode
+// passcode is not correct or is expired
+// swagger:response confirmSignupResp400
+// nolint:unused
+type confirmSignupResp400 struct {
+	// in: body
+	Body cntr.ErrorBody
+}
+
+// swagger:route POST /confirm_signup auth confirm_signup
+// completes signup
 // ---
+// Compares given passcode with one sent to email and creates new user.
 //
 // responses:
 //
 //		201: successResp200
-//		400: forbiddenResp403
+//		400: confirmSignupResp400
 //		404: userNotFound
 //	  409: registerResp409
 //		500: commonError
 func (u User) ConfirmSignup(ctx cntr.Context) error {
-	fmt.Println("> params", ctx.FormValue("username"), ctx.FormValue("passcode"))
-
 	email := ctx.FormValue("username")
 	err := u.userModel.ConfirmSignup(email, ctx.FormValue("passcode"))
 	if errors.Is(err, models.UsernameDuplicationErr) {

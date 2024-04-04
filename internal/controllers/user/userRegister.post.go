@@ -22,6 +22,14 @@ type registerParams struct {
 // nolint:unused
 type registerResp200 struct{}
 
+// invalid values for credentials are provided
+// swagger:response registerResp400
+// nolint:unused
+type registerResp400 struct {
+	// in: body
+	Body cntrl.ErrorBody
+}
+
 // user with such username already exists
 // swagger:response registerResp409
 // nolint:unused
@@ -30,13 +38,15 @@ type registerResp409 struct {
 	body cntrl.ErrorBody
 }
 
-// swagger:route POST /register login registration
+// swagger:route POST /register auth registration
 // starts signup of new user
 // ---
-// Checks whether user with provided username exists and validates provided password
+// Checks whether user with provided username exists, validates provided password, and sends email with generated passcode to provided email.
+//
 // responses:
 //
 //		200: registerResp200
+//		400: registerResp400
 //	 	409: registerResp409
 //		500: commonError
 func (c User) Register(ctx cntrl.Context) error {
