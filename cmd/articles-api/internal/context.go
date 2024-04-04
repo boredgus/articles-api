@@ -24,6 +24,9 @@ func (c EchoContext) Get(key string) interface{} {
 func (c EchoContext) QueryParams() url.Values {
 	return c.echo.QueryParams()
 }
+func (c EchoContext) FormValue(key string) string {
+	return c.echo.FormValue(key)
+}
 func (c EchoContext) FormParams() (url.Values, error) {
 	return c.echo.FormParams()
 }

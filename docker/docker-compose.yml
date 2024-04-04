@@ -6,9 +6,9 @@ services:
     build:
       context: ../
       dockerfile: ./docker/Dockerfile.server
-    # volumes:
-    #   - ../.:/app
-    # command: sleep infinity
+    volumes:
+      - ../.:/app
+    command: sleep infinity
     ports:
       - 8080:8080
     depends_on:
@@ -105,6 +105,15 @@ services:
     restart: unless-stopped
     volumes:
       - /:/host:ro,rslave
+  
+  queue:
+    image: rabbimq:3.13.0-alpine
+    container_name: ${RABBITMQ_CONTAINER}
+    ports:
+      - ${RABBITMQ_PORT}:${RABBITMQ_PORT}
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
 
 
 volumes:

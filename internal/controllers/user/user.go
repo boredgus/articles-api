@@ -7,6 +7,7 @@ import (
 
 type UserController interface {
 	Register(ctx controllers.Context) error
+	ConfirmSignup(ctx controllers.Context) error
 	Authorize(ctx controllers.Context) error
 	Delete(ctx controllers.Context) error
 	UpdateRole(ctx controllers.Context) error

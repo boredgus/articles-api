@@ -19,6 +19,9 @@ func registerRoutes(e *echo.Echo, app AppController) *echo.Echo {
 	e.POST("/register", func(c echo.Context) error {
 		return app.User.Register(NewContext(c))
 	})
+	e.POST("/confirm_signup", func(c echo.Context) error {
+		return app.User.ConfirmSignup(NewContext(c))
+	})
 	e.POST("/authorize", func(c echo.Context) error {
 		return app.User.Authorize(NewContext(c))
 	})

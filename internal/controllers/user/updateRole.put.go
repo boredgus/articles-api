@@ -65,7 +65,7 @@ func (u User) UpdateRole(ctx cntr.Context) error {
 		ctx.PathParam("user_id"),
 		payload.Role,
 	)
-	if errors.Is(err, models.InvalidUserDataErr) {
+	if errors.Is(err, models.InvalidDataErr) {
 		e := ctx.JSON(http.StatusBadRequest, cntr.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}

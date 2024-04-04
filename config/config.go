@@ -42,6 +42,11 @@ type config struct {
 	PostgreSQLUser      string `env:"POSTGRESQL_USER"`
 	PostgreSQLPassword  string `env:"POSTGRESQL_PASSWORD"`
 	PostgreSQLDatabase  string `env:"POSTGRESQL_DB"`
+
+	RabbitMQContainer string `env:"RABBITMQ_CONTAINER"`
+	RabbitMQPort      string `env:"RABBITMQ_PORT"`
+	RabbitMQUser      string `env:"RABBITMQ_DEFAULT_USER"`
+	RabbitMQPass      string `env:"RABBITMQ_DEFAULT_PASS"`
 }
 
 func LoadEnvFile(envFilePath string) {

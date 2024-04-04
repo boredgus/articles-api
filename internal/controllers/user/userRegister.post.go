@@ -17,10 +17,10 @@ type registerParams struct {
 	Body domain.User `json:"user"`
 }
 
-// user created
-// swagger:response registerResp201
+// passcode was sent to provided email to configm signup
+// swagger:response registerResp200
 // nolint:unused
-type registerResp201 struct{}
+type registerResp200 struct{}
 
 // user with such username already exists
 // swagger:response registerResp409
@@ -31,15 +31,16 @@ type registerResp409 struct {
 }
 
 // swagger:route POST /register login registration
-// creates new user
+// starts signup of new user
 // ---
 // Checks whether user with provided username exists and validates provided password
 // responses:
 //
-//		201: registerResp201
+//		200: registerResp200
 //	 	409: registerResp409
 //		500: commonError
 func (c User) Register(ctx cntrl.Context) error {
+	// TODO: use separate input/output types instead of entities in controllers
 	var user domain.User
 	err := ctx.Bind(&user)
 	if err != nil {
@@ -47,12 +48,12 @@ func (c User) Register(ctx cntrl.Context) error {
 		return fmt.Errorf("%v: %w", e, err)
 	}
 
-	err = c.userModel.Create(user)
+	err = c.userModel.RequestSignup(user)
 	if errors.Is(err, models.UsernameDuplicationErr) {
 		e := ctx.JSON(http.StatusConflict, cntrl.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}
-	if errors.Is(err, models.InvalidUserDataErr) || errors.Is(err, models.InvalidAPIKeyErr) {
+	if errors.Is(err, models.InvalidDataErr) {
 		e := ctx.JSON(http.StatusBadRequest, cntrl.ErrorBody{Error: err.Error()})
 		return fmt.Errorf("%v: %w", e, err)
 	}
@@ -61,5 +62,5 @@ func (c User) Register(ctx cntrl.Context) error {
 		return fmt.Errorf("%v: %w", e, err)
 	}
 
-	return ctx.NoContent(http.StatusCreated)
+	return ctx.JSON(http.StatusOK, cntrl.InfoResponse{Message: "passcode was sent to " + user.Username})
 }

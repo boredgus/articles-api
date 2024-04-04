@@ -29,7 +29,7 @@ func TestLoginController_Register(t *testing.T) {
 			ctxMock.EXPECT().JSON(res.jsonCode, mock.Anything).Return(nil).NotBefore(bindCall).Maybe(),
 			ctxMock.EXPECT().NoContent(res.noContentCode).Return(nil).NotBefore(bindCall).Maybe(),
 			userModelMock.EXPECT().
-				Create(mock.Anything).Return(res.createErr).NotBefore(bindCall).Once(),
+				RequestSignup(mock.Anything).Return(res.createErr).NotBefore(bindCall).Once(),
 		}
 		return func() {
 			for _, call := range calls {
@@ -55,8 +55,8 @@ func TestLoginController_Register(t *testing.T) {
 		},
 		{
 			name:      "invalid user credentials",
-			mockedRes: mockedRes{createErr: models.InvalidUserDataErr, jsonCode: http.StatusBadRequest},
-			wantErr:   models.InvalidUserDataErr,
+			mockedRes: mockedRes{createErr: models.InvalidDataErr, jsonCode: http.StatusBadRequest},
+			wantErr:   models.InvalidDataErr,
 		},
 		{
 			name:      "internal server error",

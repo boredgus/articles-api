@@ -1,21 +1,23 @@
 package auth
 
 import (
+	"fmt"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
-func NewPassword() Pswd {
-	return Pswd{}
+func NewCryptor() Crptr {
+	return Crptr{}
 }
 
-type Password interface {
-	Hash(str string) (string, error)
-	Compare(hash, password string) bool
+type Cryptor interface {
+	Encrypt(str string) (string, error)
+	Compare(hash, comparedStr string) bool
 }
 
-type Pswd struct{}
+type Crptr struct{}
 
-func (p Pswd) Hash(str string) (string, error) {
+func (p Crptr) Encrypt(str string) (string, error) {
 	res, err := bcrypt.GenerateFromPassword([]byte(str), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
@@ -23,6 +25,8 @@ func (p Pswd) Hash(str string) (string, error) {
 	return string(res), nil
 }
 
-func (p Pswd) Compare(hash, password string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
+func (p Crptr) Compare(hash, comparedStr string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(comparedStr))
+	fmt.Printf("> comparing '%s' with '%s': %v\n\n\n", comparedStr, hash, err)
+	return err == nil
 }

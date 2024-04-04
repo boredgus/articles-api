@@ -20,7 +20,7 @@ type updateArticleParams struct {
 	UserId string `json:"user_id"`
 }
 
-// user with such id not found
+// user with such id or username not found
 // swagger:response userNotFound
 // nolint:unused
 type userNotFoundResp struct {

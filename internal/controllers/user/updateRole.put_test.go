@@ -64,11 +64,11 @@ func TestUserController_UpdateRole(t *testing.T) {
 		{
 			name: "invalid role value",
 			mockedRes: mockedRes{
-				updateErr: models.InvalidUserDataErr,
+				updateErr: models.InvalidDataErr,
 				jsonCode:  http.StatusBadRequest,
-				jsonBody:  controllers.ErrorBody{Error: models.InvalidUserDataErr.Error()},
+				jsonBody:  controllers.ErrorBody{Error: models.InvalidDataErr.Error()},
 			},
-			wantErr: models.InvalidUserDataErr,
+			wantErr: models.InvalidDataErr,
 		},
 		{
 			name: "user not found",

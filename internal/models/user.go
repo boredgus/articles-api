@@ -6,56 +6,107 @@ import (
 	"a-article/internal/models/repo"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 type UserModel interface {
-	Create(user domain.User) error
+	ConfirmSignup(username, passcode string) error
+	RequestSignup(user domain.User) error
 	Authorize(username, password string) (string, error)
 	Delete(issuerRole, userToDeleteOId string) error
 	UpdateRole(issuerRole, userToUpdateOId, roleToSet string) error
 }
 
-var InvalidUserDataErr = errors.New("invalid user data")
-var InvalidAPIKeyErr = errors.New("invalid api key")
 var InvalidAuthParameterErr = errors.New("username or password is invalid")
 var UsernameDuplicationErr = errors.New("user with such username already exists")
 var UserNotFoundErr = errors.New("user not found")
+var ExpiredPasscodeErr = errors.New("passcode is expired")
 
 func NewUserModel(repo repo.UserRepository) UserModel {
-	return &user{repo: repo, token: auth.NewJWT(), pswd: auth.NewPassword()}
+	return &user{repo: repo, token: auth.NewJWT(), crptr: auth.NewCryptor()}
 }
 
 type user struct {
 	repo  repo.UserRepository
 	token auth.Token[auth.JWTPayload]
-	pswd  auth.Password
+	crptr auth.Cryptor
 }
 
-func (u *user) Create(user domain.User) error {
+func (u *user) RequestSignup(user domain.User) error {
 	if err := user.Validate(); err != nil {
-		return fmt.Errorf("%w: %w", InvalidUserDataErr, err)
+		return fmt.Errorf("%w: %w", InvalidDataErr, err)
 	}
-	hashedPswd, err := u.pswd.Hash(user.Password)
+	_, err := u.repo.Get(user.Username)
+	if err == nil {
+		return UsernameDuplicationErr
+	}
+	if !errors.Is(err, NotFoundErr) {
+		return err
+	}
+	encryptedPswd, err := u.crptr.Encrypt(user.Password)
 	if err != nil {
 		return err
 	}
-	return u.repo.Create(repo.User{
+	passcode, err := auth.GeneratePasscode()
+	if err != nil {
+		return err
+	}
+	encryptedPasscode, err := u.crptr.Encrypt(passcode)
+	if err != nil {
+		return err
+	}
+	if err := u.repo.RegisterSignupRequest(repo.SignupRequest{
+		Email:    user.Username,
+		Password: encryptedPswd,
+		Passcode: encryptedPasscode,
+	}); err != nil {
+		return err
+	}
+	// TODO: send email with passcode to provided email
+	fmt.Println(">>>> PASSCODE TO BE SENT:" + passcode)
+	return nil
+}
+
+func (u *user) ConfirmSignup(email, passcode string) error {
+	_, err := u.repo.Get(email)
+	if err == nil {
+		return UsernameDuplicationErr
+	}
+	if !errors.Is(err, NotFoundErr) {
+		return err
+	}
+	reqData, err := u.repo.GetSignupRequest(email)
+	if err != nil {
+		return err
+	}
+	if reqData.AttemptedAt.Add(auth.PasscodeExpiresAfter).Before(time.Now().UTC()) {
+		return ExpiredPasscodeErr
+	}
+	if !u.crptr.Compare(reqData.Passcode, passcode) {
+		return fmt.Errorf("%w: passcode does not match", InvalidDataErr)
+	}
+
+	if err := u.repo.Create(repo.User{
 		OId:      uuid.New().String(),
-		Username: user.Username,
-		Password: hashedPswd,
+		Username: reqData.Email,
+		Password: reqData.Password,
 		Role:     domain.DefaultUserRole,
-	})
+	}); err != nil {
+		return err
+	}
+	// TODO: send welcome email to new user
+	return nil
 }
 
 func (u *user) Authorize(username, password string) (token string, err error) {
 	userFromDB, err := u.repo.Get(username)
-	if err != nil {
+	if errors.Is(err, NotFoundErr) || !u.crptr.Compare(userFromDB.Password, password) {
 		return "", InvalidAuthParameterErr
 	}
-	if !u.pswd.Compare(userFromDB.Password, password) {
-		return "", InvalidAuthParameterErr
+	if err != nil {
+		return "", err
 	}
 	return u.token.Generate(auth.JWTPayload{
 		Username: userFromDB.Username,
@@ -83,7 +134,7 @@ func (u *user) UpdateRole(issuerRole, userToUpdateOId, roleToSet string) error {
 		return fmt.Errorf("%w: you have to be admin", NotEnoughRightsErr)
 	}
 	if !domain.UserRole(roleToSet).IsValid() {
-		return fmt.Errorf("%w: unknown role '%v'", InvalidUserDataErr, roleToSet)
+		return fmt.Errorf("%w: unknown role '%v'", InvalidDataErr, roleToSet)
 	}
 	userFromDB, err := u.repo.GetByOId(userToUpdateOId)
 	if err != nil {

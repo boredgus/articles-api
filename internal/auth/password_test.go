@@ -10,7 +10,7 @@ func TestPassword_Hash(t *testing.T) {
 	}
 	tests := []struct {
 		name         string
-		p            Pswd
+		p            Crptr
 		args         args
 		resultLength int
 		wantErr      bool
@@ -36,7 +36,7 @@ func TestPassword_Hash(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewPassword().Hash(tt.args.str)
+			got, err := NewCryptor().Encrypt(tt.args.str)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Password.Hash() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -55,7 +55,7 @@ func TestPassword_Compare(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		p    Pswd
+		p    Crptr
 		args args
 		want bool
 	}{
@@ -101,7 +101,7 @@ func TestPassword_Compare(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewPassword().Compare(tt.args.hash, tt.args.password); got != tt.want {
+			if got := NewCryptor().Compare(tt.args.hash, tt.args.password); got != tt.want {
 				t.Errorf("Password.Compare() = %v, want %v", got, tt.want)
 			}
 		})

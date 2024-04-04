@@ -16,7 +16,7 @@ type InfoResponse struct {
 
 // swagger:response respWithMessage
 // nolint:unused
-type updateUserResp200 struct {
+type infoResp200 struct {
 	// success
 	// in: body
 	Body InfoResponse
@@ -72,6 +72,7 @@ type articleNotFound404 struct {
 type Context interface {
 	Get(key string) interface{}
 	QueryParams() url.Values
+	FormValue(key string) string
 	FormParams() (url.Values, error)
 	Request() *http.Request
 	PathParam(name string) string

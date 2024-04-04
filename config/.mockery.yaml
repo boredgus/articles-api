@@ -6,7 +6,7 @@ packages:
   a-article/internal/auth:
     interfaces:
       Token:
-      Password:
+      Cryptor:
   a-article/internal/controllers:
     config:
     interfaces:

@@ -23,12 +23,12 @@ func TestUserService_Create(t *testing.T) {
 		hashErr   error
 	}
 	repoMock := repoMocks.NewUserRepository(t)
-	pswdMock := authMocks.NewPassword(t)
+	pswdMock := authMocks.NewCryptor(t)
 	setup := func(res mockedRes) func() {
 		repoCall := repoMock.EXPECT().
 			Create(mock.Anything).Return(res.createErr).Once()
 		pswdCall := pswdMock.EXPECT().
-			Hash(mock.Anything).Return("", res.hashErr).Once()
+			Encrypt(mock.Anything).Return("", res.hashErr).Once()
 
 		return func() {
 			repoCall.Unset()
@@ -47,13 +47,7 @@ func TestUserService_Create(t *testing.T) {
 			name:      "invalid user data",
 			mockedRes: mockedRes{},
 			args:      args{user: domain.NewUser("qw", "er")},
-			wantErr:   InvalidUserDataErr,
-		},
-		{
-			name:      "invalid api key on protected user creation",
-			mockedRes: mockedRes{},
-			args:      args{user: validUser},
-			wantErr:   InvalidAPIKeyErr,
+			wantErr:   InvalidDataErr,
 		},
 		{
 			name:      "password hashing failed",
@@ -78,7 +72,7 @@ func TestUserService_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cleanSetup := setup(tt.mockedRes)
 			defer cleanSetup()
-			err := (&user{repo: repoMock, pswd: pswdMock}).Create(tt.args.user)
+			err := (&user{repo: repoMock, crptr: pswdMock}).RequestSignup(tt.args.user)
 			if err != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
 				return
@@ -97,7 +91,7 @@ func TestUserService_Authorize(t *testing.T) {
 		tokenErr    error
 	}
 	repoMock := repoMocks.NewUserRepository(t)
-	pswdMock := authMocks.NewPassword(t)
+	pswdMock := authMocks.NewCryptor(t)
 	tokenMock := authMocks.NewToken[auth.JWTPayload](t)
 	setup := func(res mockedRes) func() {
 		repoCall := repoMock.EXPECT().
@@ -163,7 +157,7 @@ func TestUserService_Authorize(t *testing.T) {
 			gotToken, err := (&user{
 				repo:  repoMock,
 				token: tokenMock,
-				pswd:  pswdMock,
+				crptr: pswdMock,
 			}).Authorize(validUser.Username, validUser.Password)
 			assert.Equal(t, gotToken, tt.wantToken)
 			if err != nil {
@@ -285,7 +279,7 @@ func TestUserService_UpdateRole(t *testing.T) {
 			name:      "unknown role provided",
 			args:      args{issuerRole: "admin"},
 			mockedRes: mockedRes{userFromDB: repo.User{Role: domain.AdminRole}},
-			wantErr:   InvalidUserDataErr,
+			wantErr:   InvalidDataErr,
 		},
 		{
 			name:      "failed to get user from db",

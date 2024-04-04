@@ -32,10 +32,10 @@ func NewUser(name, pswd string) User {
 // user credentials
 // swagger:model
 type User struct {
-	// unique username
+	// unique username in email format
 	// required: true
 	// example: username
-	Username string `json:"username" form:"username" validate:"required,min=4,max=20"`
+	Username string `json:"username" form:"username" validate:"required,email,max=70"`
 	// secret password
 	// required: true
 	// example: qweQWE123.
@@ -46,7 +46,7 @@ type Requirements map[string]string
 
 var userRequirements = Requirements{
 	"Password": "password should have lenth between 8 and 20, at least one lowercase letter, at least one uppercase letter, at least one number, at least one of special symbols .;_*/",
-	"Username": "username should have length between 4 and 20",
+	"Username": "username should be an email and less than 70 symbols",
 }
 
 var passwordRules = []*regexp.Regexp{
