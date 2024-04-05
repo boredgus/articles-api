@@ -3,6 +3,7 @@ package models
 import (
 	"a-article/internal/auth"
 	"a-article/internal/domain"
+	"a-article/internal/mailing"
 	"a-article/internal/models/repo"
 	"errors"
 	"fmt"
@@ -25,13 +26,19 @@ var UserNotFoundErr = errors.New("user not found")
 var ExpiredPasscodeErr = errors.New("passcode is expired")
 
 func NewUserModel(repo repo.UserRepository) UserModel {
-	return &user{repo: repo, token: auth.NewJWT(), crptr: auth.NewCryptor()}
+	return &user{
+		repo:    repo,
+		token:   auth.NewJWT(),
+		crptr:   auth.NewCryptor(),
+		mailman: mailing.NewMailman(),
+	}
 }
 
 type user struct {
-	repo  repo.UserRepository
-	token auth.Token[auth.JWTPayload]
-	crptr auth.Cryptor
+	repo    repo.UserRepository
+	token   auth.Token[auth.JWTPayload]
+	crptr   auth.Cryptor
+	mailman mailing.Mailman
 }
 
 func (u *user) RequestSignup(user domain.User) error {
@@ -64,8 +71,7 @@ func (u *user) RequestSignup(user domain.User) error {
 	}); err != nil {
 		return err
 	}
-	// TODO: send email with passcode to provided email
-	fmt.Println(">>>> PASSCODE TO BE SENT:" + passcode)
+	u.mailman.ConfirmSignupEmail(user.Username, passcode)
 	return nil
 }
 
@@ -96,7 +102,7 @@ func (u *user) ConfirmSignup(email, passcode string) error {
 	}); err != nil {
 		return err
 	}
-	// TODO: send welcome email to new user
+	u.mailman.WelcomeEmail(reqData.Email)
 	return nil
 }
 

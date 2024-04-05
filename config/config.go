@@ -18,8 +18,12 @@ const (
 )
 
 type config struct {
-	Mode                 Mode   `env:"MODE"`
-	JWTSecretKey         string `env:"JWT_SECRET_KEY"`
+	Mode         Mode   `env:"MODE"`
+	JWTSecretKey string `env:"JWT_SECRET_KEY"`
+
+	BrevoAPIKey  string `env:"BREVO_API_KEY"`
+	SMTPUsername string `env:"SMTP_USERNAME"`
+
 	MySQLContainer       string `env:"MYSQL_CONTAINER"`
 	MySQLUsername        string `env:"MYSQL_USERNAME"`
 	MySQLPassword        string `env:"MYSQL_PASSWORD"`

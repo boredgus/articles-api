@@ -5,15 +5,28 @@ services:
     container_name: ${API_CONTAINER}
     build:
       context: ../
-      dockerfile: ./docker/Dockerfile.server
-    volumes:
-      - ../.:/app
-    command: sleep infinity
+      dockerfile: ./docker/Dockerfile.articles-api
+    # volumes:
+    #   - ../.:/app
+    # command: sleep infinity
     ports:
       - 8080:8080
     depends_on:
       postgres-db:
         condition: service_healthy
+      queue:
+        condition: service_started
+
+  mailing-service:
+    container_name: mailing-service
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile.mailing-service
+    ports:
+      - 8081:8081
+    depends_on:
+      queue:
+        condition: service_started
 
   # mysql-db:
   #   container_name: ${MYSQL_CONTAINER}
@@ -107,7 +120,7 @@ services:
       - /:/host:ro,rslave
   
   queue:
-    image: rabbimq:3.13.0-alpine
+    image: rabbitmq:3.13.1-alpine
     container_name: ${RABBITMQ_CONTAINER}
     ports:
       - ${RABBITMQ_PORT}:${RABBITMQ_PORT}
