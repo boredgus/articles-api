@@ -15,6 +15,7 @@ func init() {
 
 func main() {
 	var consumer broker.Consumer = broker.NewRabbitMQ()
+	var mailingService = mailing.NewEmailService()
 	consumer.Consume(mailing.MailingQueue, func(d broker.Delivery) {
 		logrus.Infof("%+v", string(d.Data()))
 		var emailData mailing.Email
@@ -22,6 +23,6 @@ func main() {
 			logrus.Errorf("failed to unmarshal message: %v", err)
 			return
 		}
-		mailing.NewEmailService().SendEmail(emailData)
+		mailingService.SendEmail(emailData)
 	})
 }
