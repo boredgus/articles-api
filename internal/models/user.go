@@ -27,18 +27,20 @@ var ExpiredPasscodeErr = errors.New("passcode is expired")
 
 func NewUserModel(repo repo.UserRepository) UserModel {
 	return &user{
-		repo:    repo,
-		token:   auth.NewJWT(),
-		crptr:   auth.NewCryptor(),
-		mailman: mailing.NewMailman(),
+		repo:             repo,
+		token:            auth.NewJWT(),
+		crptr:            auth.NewCryptor(),
+		mailman:          mailing.NewMailman(),
+		generatePasscode: auth.GeneratePasscode,
 	}
 }
 
 type user struct {
-	repo    repo.UserRepository
-	token   auth.Token[auth.JWTPayload]
-	crptr   auth.Cryptor
-	mailman mailing.Mailman
+	repo             repo.UserRepository
+	token            auth.Token[auth.JWTPayload]
+	crptr            auth.Cryptor
+	mailman          mailing.Mailman
+	generatePasscode func() (string, error)
 }
 
 func (u *user) RequestSignup(user domain.User) error {
@@ -56,7 +58,7 @@ func (u *user) RequestSignup(user domain.User) error {
 	if err != nil {
 		return err
 	}
-	passcode, err := auth.GeneratePasscode()
+	passcode, err := u.generatePasscode()
 	if err != nil {
 		return err
 	}
@@ -108,7 +110,7 @@ func (u *user) ConfirmSignup(email, passcode string) error {
 
 func (u *user) Authorize(username, password string) (token string, err error) {
 	userFromDB, err := u.repo.Get(username)
-	if errors.Is(err, NotFoundErr) || !u.crptr.Compare(userFromDB.Password, password) {
+	if errors.Is(err, NotFoundErr) || (err == nil && !u.crptr.Compare(userFromDB.Password, password)) {
 		return "", InvalidAuthParameterErr
 	}
 	if err != nil {

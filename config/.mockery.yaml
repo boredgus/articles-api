@@ -24,3 +24,6 @@ packages:
     interfaces:
       UserRepository:
       ArticleRepository:
+  a-article/internal/mailing:
+    interfaces:
+      Mailman:

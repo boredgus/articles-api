@@ -65,7 +65,7 @@ func TestLoginController_Register(t *testing.T) {
 		},
 		{
 			name:      "success",
-			mockedRes: mockedRes{noContentCode: http.StatusCreated},
+			mockedRes: mockedRes{jsonCode: http.StatusOK},
 			wantErr:   nil,
 		},
 	}
