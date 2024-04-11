@@ -12,7 +12,7 @@ type Mailman interface {
 	WelcomeEmail(email string)
 }
 
-const MailingQueue = "mailing"
+const MailingExchange = "mailing"
 
 type mailing struct {
 	broker broker.Publisher
@@ -20,6 +20,13 @@ type mailing struct {
 
 func NewMailman() Mailman {
 	return &mailing{broker: broker.NewRabbitMQ()}
+}
+
+func (m *mailing) publishMessage(data []byte) {
+	m.broker.Publish(MailingExchange, MailingExchange, broker.Publishing{
+		ContentType: "application/json",
+		Body:        data,
+	})
 }
 
 func (m *mailing) ConfirmSignupEmail(email, passcode string) {
@@ -30,8 +37,9 @@ func (m *mailing) ConfirmSignupEmail(email, passcode string) {
 	})
 	if err != nil {
 		logrus.Errorf("failed to marshal email message data: %v", err)
+		return
 	}
-	m.broker.Publish(msg, MailingQueue)
+	m.publishMessage(msg)
 }
 
 func (m *mailing) WelcomeEmail(email string) {
@@ -41,6 +49,7 @@ func (m *mailing) WelcomeEmail(email string) {
 	})
 	if err != nil {
 		logrus.Errorf("failed to marshal email message data: %v", err)
+		return
 	}
-	m.broker.Publish(msg, MailingQueue)
+	m.publishMessage(msg)
 }
