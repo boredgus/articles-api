@@ -1,7 +1,7 @@
 package mailing
 
 import (
-	broker "a-article/pkg/messageBroker"
+	broker "a-article/pkg/msgbroker"
 	"encoding/json"
 
 	"github.com/sirupsen/logrus"
@@ -18,8 +18,8 @@ type mailing struct {
 	broker broker.Publisher
 }
 
-func NewMailman() Mailman {
-	return &mailing{broker: broker.NewRabbitMQ()}
+func NewMailman(broker broker.Publisher) Mailman {
+	return &mailing{broker: broker}
 }
 
 func (m *mailing) publishMessage(data []byte) {

@@ -1,4 +1,4 @@
-package messagbroker
+package msgbroker
 
 import "github.com/sirupsen/logrus"
 

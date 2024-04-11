@@ -20,9 +20,10 @@
 package main
 
 import (
-	infrastructure "a-article/cmd/articles-api/internal"
+	"a-article/cmd/articles-api/internal"
 	"a-article/config"
 	"a-article/pkg/db"
+	"a-article/pkg/msgbroker"
 	migrations "a-article/sql"
 	"database/sql"
 )
@@ -33,11 +34,14 @@ func init() {
 
 //go:generate swagger generate spec --scan-models --input=../../docs/init.json --output=../../docs/swagger.json
 func main() {
-	router := infrastructure.GetRouter(
-		infrastructure.NewAppController(
-			db.NewPostrgreSQLStore(func(db *sql.DB) { migrations.InitPostgreSQLMigrations(db) }),
-			db.NewClickHouseStore(func(db *sql.DB) { migrations.InitClickHouseMigrations(db) }),
-			db.NewRedisStore(),
+	router := internal.GetRouter(
+		internal.NewAppController(
+			internal.AppParams{
+				MainStore:     db.NewPostrgreSQLStore(func(db *sql.DB) { migrations.InitPostgreSQLMigrations(db) }),
+				StatsStore:    db.NewClickHouseStore(func(db *sql.DB) { migrations.InitClickHouseMigrations(db) }),
+				CacheStore:    db.NewRedisStore(),
+				MessageBroker: msgbroker.NewRabbitMQ(),
+			},
 		),
 	)
 	router.Logger.Fatal(router.Start(":8080"))

@@ -5,6 +5,7 @@ import (
 	user "a-article/internal/controllers/user"
 	"a-article/internal/gateways"
 	"a-article/internal/models"
+	"a-article/pkg/msgbroker"
 )
 
 type AppController struct {
@@ -12,14 +13,21 @@ type AppController struct {
 	Article article.ArticleController
 }
 
-func NewAppController(mainStore, statsStore gateways.Store, cacheStore gateways.CacheStore) AppController {
+type AppParams struct {
+	MainStore     gateways.Store
+	StatsStore    gateways.Store
+	CacheStore    gateways.CacheStore
+	MessageBroker msgbroker.Broker
+}
+
+func NewAppController(params AppParams) AppController {
 	return AppController{
-		User: user.NewUserController(models.NewUserModel(gateways.NewUserRepository(mainStore))),
+		User: user.NewUserController(models.NewUserModel(gateways.NewUserRepository(params.MainStore), params.MessageBroker)),
 		Article: article.NewArticleController(
 			models.NewArticleModel(
 				gateways.NewCachedArticleRepository(
-					gateways.NewArticleRepository(mainStore, statsStore),
-					cacheStore),
+					gateways.NewArticleRepository(params.MainStore, params.StatsStore),
+					params.CacheStore),
 			)),
 	}
 }

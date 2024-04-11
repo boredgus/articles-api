@@ -5,6 +5,7 @@ import (
 	"a-article/internal/domain"
 	"a-article/internal/mailing"
 	"a-article/internal/models/repo"
+	broker "a-article/pkg/msgbroker"
 	"errors"
 	"fmt"
 	"time"
@@ -25,12 +26,12 @@ var UsernameDuplicationErr = errors.New("user with such username already exists"
 var UserNotFoundErr = errors.New("user not found")
 var ExpiredPasscodeErr = errors.New("passcode is expired")
 
-func NewUserModel(repo repo.UserRepository) UserModel {
+func NewUserModel(repo repo.UserRepository, messageBroker broker.Publisher) UserModel {
 	return &user{
 		repo:             repo,
 		token:            auth.NewJWT(),
 		crptr:            auth.NewCryptor(),
-		mailman:          mailing.NewMailman(),
+		mailman:          mailing.NewMailman(messageBroker),
 		generatePasscode: auth.GeneratePasscode,
 	}
 }

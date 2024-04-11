@@ -3,7 +3,7 @@ package main
 import (
 	"a-article/config"
 	"a-article/internal/mailing"
-	broker "a-article/pkg/messageBroker"
+	broker "a-article/pkg/msgbroker"
 	"encoding/json"
 
 	"github.com/sirupsen/logrus"
